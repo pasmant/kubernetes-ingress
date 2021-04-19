@@ -33,6 +33,8 @@ const (
 	appProtectAgentStartCmd  = "/opt/app_protect/bin/bd_agent"
 )
 
+const appProtectDosAgentStartCmd  = "/root/entrypoint.sh"
+
 // ServerConfig holds the config data for an upstream server in NGINX Plus.
 type ServerConfig struct {
 	MaxFails    int
@@ -77,6 +79,7 @@ type Manager interface {
 	AppProtectAgentQuit()
 	AppProtectPluginStart(appDone chan error)
 	AppProtectPluginQuit()
+	AppProtectDosAgentStart(apaDone chan error, debug bool)
 }
 
 // LocalManager updates NGINX configuration, starts, reloads and quits NGINX,
@@ -510,4 +513,29 @@ func (lm *LocalManager) AppProtectPluginQuit() {
 	if err := shellOut(killcmd); err != nil {
 		glog.Fatalf("Failed to quit AppProtect Plugin: %v", err)
 	}
+}
+
+// AppProtectDosAgentStart starts the AppProtectDos agent
+func (lm *LocalManager) AppProtectDosAgentStart(apaDone chan error, debug bool) {
+// 	if debug {
+// 		glog.V(3).Info("Starting AppProtect Agent in debug mode")
+// 		err := os.Remove(appProtectLogConfigFileName)
+// 		if err != nil {
+// 			glog.Fatalf("Failed removing App Protect Log configuration file")
+// 		}
+// 		err = createFileAndWrite(appProtectLogConfigFileName, []byte(appProtectDebugLogConfigFileContent))
+// 		if err != nil {
+// 			glog.Fatalf("Failed Writing App Protect Log configuration file")
+// 		}
+// 	}
+	glog.V(3).Info("Starting AppProtectDos Agent")
+
+	cmd := exec.Command(appProtectDosAgentStartCmd)
+	if err := cmd.Start(); err != nil {
+		glog.Fatalf("Failed to start AppProtectDos Agent: %v", err)
+	}
+	lm.appProtectAgentPid = cmd.Process.Pid
+	go func() {
+		apaDone <- cmd.Wait()
+	}()
 }

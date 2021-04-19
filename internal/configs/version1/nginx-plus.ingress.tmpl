@@ -72,7 +72,11 @@ server {
 	app_protect_security_log_enable {{$server.AppProtectLogEnable}};
 	{{if $server.AppProtectLogConf}}app_protect_security_log {{$server.AppProtectLogConf}};{{end}}
 	{{- end}}
-	
+
+	{{- if $server.AppProtectDosEnable}}
+	app_protect_dos_enable {{$server.AppProtectDosEnable}};
+	{{- end}}
+
 	{{if not $server.GRPCOnly}}
 	{{range $proxyHideHeader := $server.ProxyHideHeaders}}
 	proxy_hide_header {{$proxyHideHeader}};{{end}}

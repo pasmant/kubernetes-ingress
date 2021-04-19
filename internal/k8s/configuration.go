@@ -346,6 +346,7 @@ type Configuration struct {
 
 	isPlus                  bool
 	appProtectEnabled       bool
+	appProtectDosEnabled    bool
 	internalRoutesEnabled   bool
 	isTLSPassthroughEnabled bool
 
@@ -357,6 +358,7 @@ func NewConfiguration(
 	hasCorrectIngressClass func(interface{}) bool,
 	isPlus bool,
 	appProtectEnabled bool,
+	appProtectDosEnabled bool,
 	internalRoutesEnabled bool,
 	virtualServerValidator *validation.VirtualServerValidator,
 	globalConfigurationValidator *validation.GlobalConfigurationValidator,
@@ -383,6 +385,7 @@ func NewConfiguration(
 		appLogConfReferenceChecker:   newAppProtectResourceReferenceChecker(configs.AppProtectLogConfAnnotation),
 		isPlus:                       isPlus,
 		appProtectEnabled:            appProtectEnabled,
+		appProtectDosEnabled:         appProtectDosEnabled,
 		internalRoutesEnabled:        internalRoutesEnabled,
 		isTLSPassthroughEnabled:      isTLSPassthroughEnabled,
 	}
@@ -399,7 +402,7 @@ func (c *Configuration) AddOrUpdateIngress(ing *networking.Ingress) ([]ResourceC
 	if !c.hasCorrectIngressClass(ing) {
 		delete(c.ingresses, key)
 	} else {
-		validationError = validateIngress(ing, c.isPlus, c.appProtectEnabled, c.internalRoutesEnabled).ToAggregate()
+		validationError = validateIngress(ing, c.isPlus, c.appProtectEnabled, c.appProtectDosEnabled, c.internalRoutesEnabled).ToAggregate()
 		if validationError != nil {
 			delete(c.ingresses, key)
 		} else {

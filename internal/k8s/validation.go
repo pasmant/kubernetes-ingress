@@ -51,6 +51,7 @@ const (
 	failTimeoutAnnotation                 = "nginx.org/fail-timeout"
 	appProtectEnableAnnotation            = "appprotect.f5.com/app-protect-enable"
 	appProtectSecurityLogEnableAnnotation = "appprotect.f5.com/app-protect-security-log-enable"
+    appProtectDosEnableAnnotation         = "appprotect.f5.com/app-protect-dos-enable"
 	internalRouteAnnotation               = "nsm.nginx.com/internal-route"
 	websocketServicesAnnotation           = "nginx.org/websocket-services"
 	sslServicesAnnotation                 = "nginx.org/ssl-services"
@@ -66,6 +67,7 @@ type annotationValidationContext struct {
 	value                 string
 	isPlus                bool
 	appProtectEnabled     bool
+	appProtectDosEnabled  bool
 	internalRoutesEnabled bool
 	fieldPath             *field.Path
 }
@@ -225,6 +227,11 @@ var (
 			validateRequiredAnnotation,
 			validateBoolAnnotation,
 		},
+        appProtectDosEnableAnnotation: {
+            validateAppProtectDosOnlyAnnotation,
+            validateRequiredAnnotation,
+            validateBoolAnnotation,
+        },
 		internalRouteAnnotation: {
 			validateInternalRoutesOnlyAnnotation,
 			validateRequiredAnnotation,
@@ -270,6 +277,7 @@ func validateIngress(
 	ing *networking.Ingress,
 	isPlus bool,
 	appProtectEnabled bool,
+	appProtectDosEnabled bool,
 	internalRoutesEnabled bool,
 ) field.ErrorList {
 	allErrs := field.ErrorList{}
@@ -278,6 +286,7 @@ func validateIngress(
 		getSpecServices(ing.Spec),
 		isPlus,
 		appProtectEnabled,
+		appProtectDosEnabled,
 		internalRoutesEnabled,
 		field.NewPath("annotations"),
 	)...)
@@ -298,6 +307,7 @@ func validateIngressAnnotations(
 	specServices map[string]bool,
 	isPlus bool,
 	appProtectEnabled bool,
+	appProtectDosEnabled bool,
 	internalRoutesEnabled bool,
 	fieldPath *field.Path,
 ) field.ErrorList {
@@ -312,6 +322,7 @@ func validateIngressAnnotations(
 				value:                 value,
 				isPlus:                isPlus,
 				appProtectEnabled:     appProtectEnabled,
+				appProtectDosEnabled:  appProtectDosEnabled,
 				internalRoutesEnabled: internalRoutesEnabled,
 				fieldPath:             fieldPath.Child(name),
 			}
@@ -403,6 +414,14 @@ func validateAppProtectOnlyAnnotation(context *annotationValidationContext) fiel
 	allErrs := field.ErrorList{}
 	if !context.appProtectEnabled {
 		return append(allErrs, field.Forbidden(context.fieldPath, "annotation requires AppProtect"))
+	}
+	return allErrs
+}
+
+func validateAppProtectDosOnlyAnnotation(context *annotationValidationContext) field.ErrorList {
+	allErrs := field.ErrorList{}
+	if !context.appProtectDosEnabled {
+		return append(allErrs, field.Forbidden(context.fieldPath, "annotation requires AppProtectDos"))
 	}
 	return allErrs
 }

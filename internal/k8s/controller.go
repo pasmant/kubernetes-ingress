@@ -122,6 +122,7 @@ type LoadBalancerController struct {
 	watchIngressLink              bool
 	isNginxPlus                   bool
 	appProtectEnabled             bool
+	appProtectDosEnabled          bool
 	recorder                      record.EventRecorder
 	defaultServerSecret           string
 	ingressClass                  string
@@ -163,6 +164,7 @@ type NewLoadBalancerControllerInput struct {
 	NginxConfigurator            *configs.Configurator
 	DefaultServerSecret          string
 	AppProtectEnabled            bool
+	AppProtectDosEnabled         bool
 	IsNginxPlus                  bool
 	IngressClass                 string
 	UseIngressClassOnly          bool
@@ -197,6 +199,7 @@ func NewLoadBalancerController(input NewLoadBalancerControllerInput) *LoadBalanc
 		configurator:                 input.NginxConfigurator,
 		defaultServerSecret:          input.DefaultServerSecret,
 		appProtectEnabled:            input.AppProtectEnabled,
+		appProtectDosEnabled:         input.AppProtectDosEnabled,
 		isNginxPlus:                  input.IsNginxPlus,
 		ingressClass:                 input.IngressClass,
 		useIngressClassOnly:          input.UseIngressClassOnly,
@@ -304,6 +307,7 @@ func NewLoadBalancerController(input NewLoadBalancerControllerInput) *LoadBalanc
 		lbc.HasCorrectIngressClass,
 		input.IsNginxPlus,
 		input.AppProtectEnabled,
+        input.AppProtectDosEnabled,
 		input.InternalRoutesEnabled,
 		input.VirtualServerValidator,
 		input.GlobalConfigurationValidator,
@@ -506,7 +510,7 @@ func (lbc *LoadBalancerController) Run() {
 	if lbc.watchIngressLink {
 		go lbc.ingressLinkInformer.Run(lbc.ctx.Done())
 	}
-	if lbc.appProtectEnabled {
+	if lbc.appProtectEnabled || lbc.appProtectDosEnabled {
 		go lbc.dynInformerFactory.Start(lbc.ctx.Done())
 	}
 

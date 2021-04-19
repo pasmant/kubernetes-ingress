@@ -548,6 +548,7 @@ func GenerateNginxMainConfig(staticCfgParams *StaticConfigParams, config *Config
 		VariablesHashBucketSize:            config.VariablesHashBucketSize,
 		VariablesHashMaxSize:               config.VariablesHashMaxSize,
 		AppProtectLoadModule:               staticCfgParams.MainAppProtectLoadModule,
+		AppProtectDosLoadModule:            staticCfgParams.MainAppProtectDosLoadModule,
 		AppProtectFailureModeAction:        config.MainAppProtectFailureModeAction,
 		AppProtectCookieSeed:               config.MainAppProtectCookieSeed,
 		AppProtectCPUThresholds:            config.MainAppProtectCPUThresholds,

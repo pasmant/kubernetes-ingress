@@ -69,6 +69,8 @@ var (
 
 	appProtect = flag.Bool("enable-app-protect", false, "Enable support for NGINX App Protect. Requires -nginx-plus.")
 
+	appProtectDos = flag.Bool("enable-app-protect-dos", false, "Enable support for NGINX App Protect dos. Requires -nginx-plus.")
+
 	ingressClass = flag.String("ingress-class", "nginx",
 		`A class of the Ingress controller.
 
@@ -91,9 +93,9 @@ var (
 
 	defaultServerSecret = flag.String("default-server-tls-secret", "",
 		`A Secret with a TLS certificate and key for TLS termination of the default server. Format: <namespace>/<name>.
-	If not set, than the certificate and key in the file "/etc/nginx/secrets/default" are used. 
+	If not set, than the certificate and key in the file "/etc/nginx/secrets/default" are used.
 	If "/etc/nginx/secrets/default" doesn't exist, the Ingress Controller will configure NGINX to reject TLS connections to the default server.
-	If a secret is set, but the Ingress controller is not able to fetch it from Kubernetes API or it is not set and the Ingress Controller 
+	If a secret is set, but the Ingress controller is not able to fetch it from Kubernetes API or it is not set and the Ingress Controller
 	fails to read the file "/etc/nginx/secrets/default", the Ingress controller will fail to start.`)
 
 	versionFlag = flag.Bool("version", false, "Print the version and git-commit hash and exit")
@@ -237,6 +239,10 @@ func main() {
 		glog.Fatal("NGINX App Protect support is for NGINX Plus only")
 	}
 
+    if *appProtectDos && !*nginxPlus {
+        glog.Fatal("NGINX App Protect Dos support is for NGINX Plus only")
+    }
+
 	if *spireAgentAddress != "" && !*nginxPlus {
 		glog.Fatal("spire-agent-address support is for NGINX Plus only")
 	}
@@ -306,7 +312,7 @@ func main() {
 	}
 
 	var dynClient dynamic.Interface
-	if *appProtect || *ingressLink != "" {
+	if *appProtectDos || *appProtect || *ingressLink != "" {
 		dynClient, err = dynamic.NewForConfig(config)
 		if err != nil {
 			glog.Fatalf("Failed to create dynamic client: %v.", err)
@@ -430,7 +436,15 @@ func main() {
 		nginxManager.AppProtectPluginStart(aPPluginDone)
 	}
 
-	var sslRejectHandshake bool
+	var aPPDosAgentDone chan error
+
+	if *appProtectDos {
+		aPPDosAgentDone = make(chan error, 1)
+
+		nginxManager.AppProtectDosAgentStart(aPPDosAgentDone, *nginxDebug)
+	}
+
+    var sslRejectHandshake bool
 
 	if *defaultServerSecret != "" {
 		secret, err := getAndValidateSecret(kubeClient, *defaultServerSecret)
@@ -519,6 +533,7 @@ func main() {
 		EnableSnippets:                 *enableSnippets,
 		NginxServiceMesh:               *spireAgentAddress != "",
 		MainAppProtectLoadModule:       *appProtect,
+		MainAppProtectDosLoadModule:    *appProtectDos,
 		EnableLatencyMetrics:           *enableLatencyMetrics,
 		EnablePreviewPolicies:          *enablePreviewPolicies,
 		SSLRejectHandshake:             sslRejectHandshake,
@@ -615,6 +630,7 @@ func main() {
 		NginxConfigurator:            cnf,
 		DefaultServerSecret:          *defaultServerSecret,
 		AppProtectEnabled:            *appProtect,
+		AppProtectDosEnabled:         *appProtectDos,
 		IsNginxPlus:                  *nginxPlus,
 		IngressClass:                 *ingressClass,
 		UseIngressClassOnly:          *useIngressClassOnly,

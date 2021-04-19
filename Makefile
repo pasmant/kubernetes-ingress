@@ -69,6 +69,11 @@ debian-image-plus: build ## Create Docker image for Ingress Controller (nginx pl
 debian-image-nap-plus: build ## Create Docker image for Ingress Controller (nginx plus with nap)
 	$(DOCKER_CMD) $(PLUS_ARGS) --build-arg BUILD_OS=debian-plus-ap
 
+#$(DOCKER_CMD) $(PLUS_ARGS) --build-arg BUILD_OS=debian-plus-ap-dos
+.PHONY: debian-image-nap-dos-plus
+debian-image-nap-dos-plus: build ## Create Docker image for Ingress Controller (nginx plus with nap dos)
+	$(DOCKER_CMD) $(PLUS_ARGS) --build-arg BUILD_OS=debian-plus-ap-dos
+
 .PHONY: openshift-image
 openshift-image: build ## Create Docker image for Ingress Controller (openshift)
 	$(DOCKER_CMD) --build-arg BUILD_OS=openshift
@@ -90,7 +95,7 @@ debian-image-opentracing-plus: build ## Create Docker image for Ingress Controll
 	$(DOCKER_CMD) $(PLUS_ARGS) --build-arg BUILD_OS=opentracing-plus
 
 .PHONY: all-images ## Create all the Docker images for Ingress Controller
-all-images: debian-image alpine-image debian-image-plus openshift-image debian-image-opentracing debian-image-opentracing-plus openshift-image-plus openshift-image-nap-plus debian-image-nap-plus
+all-images: debian-image alpine-image debian-image-plus openshift-image debian-image-opentracing debian-image-opentracing-plus openshift-image-plus openshift-image-nap-plus debian-image-nap-plus debian-image-nap-dos-plus
 
 .PHONY: push
 push: ## Docker push to $PREFIX and $TAG

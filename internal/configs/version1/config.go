@@ -99,6 +99,7 @@ type Server struct {
 	AppProtectPolicy    string
 	AppProtectLogConf   string
 	AppProtectLogEnable string
+	AppProtectDosEnable string
 
 	SpiffeCerts bool
 }
@@ -196,6 +197,7 @@ type MainConfig struct {
 	AppProtectCookieSeed               string
 	AppProtectCPUThresholds            string
 	AppProtectPhysicalMemoryThresholds string
+	AppProtectDosLoadModule            bool
 	InternalRouteServer                bool
 	InternalRouteServerName            string
 	LatencyMetrics                     bool

@@ -46,6 +46,7 @@ var minionBlacklist = map[string]bool{
 	"appprotect.f5.com/app_protect_policy":              true,
 	"appprotect.f5.com/app_protect_security_log_enable": true,
 	"appprotect.f5.com/app_protect_security_log":        true,
+    "appprotect.f5.com/app_protect_dos_enable":          true,
 }
 
 var minionInheritanceList = map[string]bool{
@@ -66,7 +67,7 @@ var minionInheritanceList = map[string]bool{
 	"nginx.org/fail-timeout":             true,
 }
 
-func parseAnnotations(ingEx *IngressEx, baseCfgParams *ConfigParams, isPlus bool, hasAppProtect bool, enableInternalRoutes bool) ConfigParams {
+func parseAnnotations(ingEx *IngressEx, baseCfgParams *ConfigParams, isPlus bool, hasAppProtect bool, hasAppProtectDos bool, enableInternalRoutes bool) ConfigParams {
 	cfgParams := *baseCfgParams
 
 	if lbMethod, exists := ingEx.Ingress.Annotations["nginx.org/lb-method"]; exists {
@@ -373,6 +374,19 @@ func parseAnnotations(ingEx *IngressEx, baseCfgParams *ConfigParams, isPlus bool
 		}
 
 	}
+    if hasAppProtectDos {
+        if appProtectDosEnable, exists, err := GetMapKeyAsBool(ingEx.Ingress.Annotations, "appprotect.f5.com/app-protect-dos-enable", ingEx.Ingress); exists {
+            if err != nil {
+                glog.Error(err)
+            } else {
+                if appProtectDosEnable {
+                    cfgParams.AppProtectDosEnable = "on"
+                } else {
+                    cfgParams.AppProtectDosEnable = "off"
+                }
+            }
+        }
+    }
 	if enableInternalRoutes {
 		if spiffeServerCerts, exists, err := GetMapKeyAsBool(ingEx.Ingress.Annotations, nginxMeshInternalRouteAnnotation, ingEx.Ingress); exists {
 			if err != nil {

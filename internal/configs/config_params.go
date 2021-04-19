@@ -52,6 +52,7 @@ type ConfigParams struct {
 	MainAppProtectCookieSeed               string
 	MainAppProtectCPUThresholds            string
 	MainAppProtectPhysicalMemoryThresholds string
+    AppProtectDosEnable                    string
 	ProxyBuffering                         bool
 	ProxyBuffers                           string
 	ProxyBufferSize                        string
@@ -113,6 +114,7 @@ type StaticConfigParams struct {
 	NginxServiceMesh               bool
 	EnableInternalRoutes           bool
 	MainAppProtectLoadModule       bool
+	MainAppProtectDosLoadModule    bool
 	PodName                        string
 	EnableLatencyMetrics           bool
 	EnablePreviewPolicies          bool

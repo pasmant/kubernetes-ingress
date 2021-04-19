@@ -115,6 +115,34 @@ COPY --chown=nginx:0 build/log-default.json /etc/nginx
 # COPY build/*.crt  /usr/local/share/ca-certificates/
 # RUN update-ca-certificates
 
+############################################# Base image for Debian with NGINX Plus and App Protect Dos #############################################
+FROM debian-plus as debian-plus-ap-dos
+ARG IC_VERSION
+
+LABEL version=debian-nginx-plus-ap-dos-$NGINX_PLUS_VERSION-$IC_VERSION
+
+#ENV APPPROTECT_DOS_MODULE_VERSION 23+3.332.0-1~buster
+#ENV APPPROTECT_DOS_PLUGIN_VERSION 3.332.0-1~buster
+
+ARG REPO_PATH=https://sea-artifactory.olympus.f5net.com/artifactory/f5-beappprotect-debian
+ARG APP_PROTECT_DOS_VER=23
+
+COPY --chown=nginx:0 entrypoint.sh /root/
+
+RUN mkdir -p /shared/cores /var/log/adm && chmod 777 /shared/cores /var/log/adm
+
+RUN --mount=type=secret,id=nginx-repo.crt,dst=/etc/ssl/nginx/nginx-repo.crt,mode=0644 \
+      --mount=type=secret,id=nginx-repo.key,dst=/etc/ssl/nginx/nginx-repo.key,mode=0644 \
+      set -x \
+      apt-get update && apt-get -y install ca-certificates && \
+      printf "deb [trusted=yes] ${REPO_PATH} buster app-protect-dos\n" | \
+      tee /etc/apt/sources.list.d/app-protect-dos.list && \
+      apt-get update && \
+      apt-get clean all && apt-get -o DPkg::Options::="--force-confold" \
+        -y install app-protect-dos=${APP_PROTECT_DOS_VER}* && chmod +x /root/entrypoint.sh && \
+      apt-get install sudo && \
+      apt-get -qq install --no-install-recommends  vim > /dev/null && \
+      apt-get -y install procps
 
 ############################################# Base image for Openshift #############################################
 FROM registry.access.redhat.com/ubi8/ubi:8.3 AS openshift-base
