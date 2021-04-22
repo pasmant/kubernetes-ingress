@@ -510,7 +510,7 @@ func (lbc *LoadBalancerController) Run() {
 	if lbc.watchIngressLink {
 		go lbc.ingressLinkInformer.Run(lbc.ctx.Done())
 	}
-	if lbc.appProtectEnabled || lbc.appProtectDosEnabled {
+	if lbc.appProtectEnabled {
 		go lbc.dynInformerFactory.Start(lbc.ctx.Done())
 	}
 
@@ -776,7 +776,7 @@ func (lbc *LoadBalancerController) syncPolicy(task task) {
 
 	if polExists {
 		pol := obj.(*conf_v1.Policy)
-		err := validation.ValidatePolicy(pol, lbc.isNginxPlus, lbc.enablePreviewPolicies, lbc.appProtectEnabled)
+		err := validation.ValidatePolicy(pol, lbc.isNginxPlus, lbc.enablePreviewPolicies, lbc.appProtectEnabled, lbc.appProtectDosEnabled)
 		if err != nil {
 			msg := fmt.Sprintf("Policy %v/%v is invalid and was rejected: %v", pol.Namespace, pol.Name, err)
 			lbc.recorder.Eventf(pol, api_v1.EventTypeWarning, "Rejected", msg)
@@ -1922,7 +1922,7 @@ func (lbc *LoadBalancerController) updatePoliciesStatus() error {
 	for _, obj := range lbc.policyLister.List() {
 		pol := obj.(*conf_v1.Policy)
 
-		err := validation.ValidatePolicy(pol, lbc.isNginxPlus, lbc.enablePreviewPolicies, lbc.appProtectEnabled)
+		err := validation.ValidatePolicy(pol, lbc.isNginxPlus, lbc.enablePreviewPolicies, lbc.appProtectEnabled, lbc.appProtectDosEnabled)
 		if err != nil {
 			msg := fmt.Sprintf("Policy %v/%v is invalid and was rejected: %v", pol.Namespace, pol.Name, err)
 			err = lbc.statusUpdater.UpdatePolicyStatus(pol, conf_v1.StateInvalid, "Rejected", msg)
@@ -2421,7 +2421,7 @@ func (lbc *LoadBalancerController) getAllPolicies() []*conf_v1.Policy {
 	for _, obj := range lbc.policyLister.List() {
 		pol := obj.(*conf_v1.Policy)
 
-		err := validation.ValidatePolicy(pol, lbc.isNginxPlus, lbc.enablePreviewPolicies, lbc.appProtectEnabled)
+		err := validation.ValidatePolicy(pol, lbc.isNginxPlus, lbc.enablePreviewPolicies, lbc.appProtectEnabled, lbc.appProtectDosEnabled)
 		if err != nil {
 			glog.V(3).Infof("Skipping invalid Policy %s/%s: %v", pol.Namespace, pol.Name, err)
 			continue
@@ -2458,7 +2458,7 @@ func (lbc *LoadBalancerController) getPolicies(policies []conf_v1.PolicyReferenc
 
 		policy := policyObj.(*conf_v1.Policy)
 
-		err = validation.ValidatePolicy(policy, lbc.isNginxPlus, lbc.enablePreviewPolicies, lbc.appProtectEnabled)
+		err = validation.ValidatePolicy(policy, lbc.isNginxPlus, lbc.enablePreviewPolicies, lbc.appProtectEnabled, lbc.appProtectDosEnabled)
 		if err != nil {
 			errors = append(errors, fmt.Errorf("Policy %s is invalid: %v", policyKey, err))
 			continue

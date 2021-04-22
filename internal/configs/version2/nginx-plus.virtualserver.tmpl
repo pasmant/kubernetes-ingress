@@ -329,6 +329,13 @@ server {
             {{ end }}
         {{ end }}
 
+        {{- with $l.Bados }}
+        app_protect_dos_enable {{ .Enable }};
+            {{- if .Name }}
+        app_protect_dos_name "{{ .Name }}";
+            {{- end }}
+        {{- end }}
+
         {{ range $e := $l.ErrorPages }}
         error_page {{ $e.Codes }} {{ if ne 0 $e.ResponseCode }}={{ $e.ResponseCode }}{{ end }} "{{ $e.Name }}";
         {{ end }}

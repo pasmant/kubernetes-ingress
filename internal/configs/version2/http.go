@@ -71,6 +71,7 @@ type Server struct {
 	EgressMTLS                *EgressMTLS
 	OIDC                      *OIDC
 	WAF                       *WAF
+	Bados                     *Bados
 	PoliciesErrorReturn       *Return
 	VSNamespace               string
 	VSName                    string
@@ -123,6 +124,12 @@ type WAF struct {
 	ApLogConf           string
 }
 
+// Bados defines Bados configuration.
+type Bados struct {
+	Enable              string
+	Name                string
+}
+
 // Location defines a location.
 type Location struct {
 	Path                     string
@@ -161,6 +168,7 @@ type Location struct {
 	EgressMTLS               *EgressMTLS
 	OIDC                     bool
 	WAF                      *WAF
+	Bados                    *Bados
 	PoliciesErrorReturn      *Return
 	ServiceName              string
 	IsVSR                    bool

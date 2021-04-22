@@ -597,6 +597,7 @@ func (vsc *virtualServerConfigurator) GenerateVirtualServerConfig(vsEx *VirtualS
 			EgressMTLS:                policiesCfg.EgressMTLS,
 			OIDC:                      vsc.oidcPolCfg.oidc,
 			WAF:                       policiesCfg.WAF,
+			Bados:                     policiesCfg.Bados,
 			PoliciesErrorReturn:       policiesCfg.ErrorReturn,
 			VSNamespace:               vsEx.VirtualServer.Namespace,
 			VSName:                    vsEx.VirtualServer.Name,
@@ -618,6 +619,7 @@ type policiesCfg struct {
 	EgressMTLS      *version2.EgressMTLS
 	OIDC            bool
 	WAF             *version2.WAF
+	Bados           *version2.Bados
 	ErrorReturn     *version2.Return
 }
 
@@ -988,6 +990,30 @@ func (p *policiesCfg) addWAFConfig(
 	return res
 }
 
+func (p *policiesCfg) addBadosConfig(
+	Bados *conf_v1.Bados,
+	polKey string,
+) *validationResults {
+	res := newValidationResults()
+	if p.Bados != nil {
+		res.addWarningf("Multiple Bados policies in the same context is not valid. Bados policy %s will be ignored", polKey)
+		return res
+	}
+
+	if Bados.Enable {
+		p.Bados = &version2.Bados{Enable: "on"}
+	} else {
+		p.Bados = &version2.Bados{Enable: "off"}
+	}
+
+    if Bados.Name != "" {
+        p.Bados.Name = Bados.Name
+	}
+
+	return res
+}
+
+
 func (vsc *virtualServerConfigurator) generatePolicies(
 	ownerDetails policyOwnerDetails,
 	policyRefs []conf_v1.PolicyReference,
@@ -1036,6 +1062,8 @@ func (vsc *virtualServerConfigurator) generatePolicies(
 				res = config.addOIDCConfig(pol.Spec.OIDC, key, polNamespace, policyOpts.secretRefs, vsc.oidcPolCfg)
 			case pol.Spec.WAF != nil:
 				res = config.addWAFConfig(pol.Spec.WAF, key, polNamespace, policyOpts.apResources)
+            case pol.Spec.Bados != nil:
+                res = config.addBadosConfig(pol.Spec.Bados, key)
 			default:
 				res = newValidationResults()
 			}
@@ -1116,6 +1144,7 @@ func addPoliciesCfgToLocation(cfg policiesCfg, location *version2.Location) {
 	location.EgressMTLS = cfg.EgressMTLS
 	location.OIDC = cfg.OIDC
 	location.WAF = cfg.WAF
+    location.Bados = cfg.Bados
 	location.PoliciesErrorReturn = cfg.ErrorReturn
 }
 

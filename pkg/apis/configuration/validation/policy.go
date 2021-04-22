@@ -15,12 +15,12 @@ import (
 )
 
 // ValidatePolicy validates a Policy.
-func ValidatePolicy(policy *v1.Policy, isPlus, enablePreviewPolicies, enableAppProtect bool) error {
-	allErrs := validatePolicySpec(&policy.Spec, field.NewPath("spec"), isPlus, enablePreviewPolicies, enableAppProtect)
+func ValidatePolicy(policy *v1.Policy, isPlus, enablePreviewPolicies, enableAppProtect bool, enableAppProtectDos bool) error {
+	allErrs := validatePolicySpec(&policy.Spec, field.NewPath("spec"), isPlus, enablePreviewPolicies, enableAppProtect, enableAppProtectDos)
 	return allErrs.ToAggregate()
 }
 
-func validatePolicySpec(spec *v1.PolicySpec, fieldPath *field.Path, isPlus, enablePreviewPolicies, enableAppProtect bool) field.ErrorList {
+func validatePolicySpec(spec *v1.PolicySpec, fieldPath *field.Path, isPlus, enablePreviewPolicies, enableAppProtect bool, enableAppProtectDos bool) field.ErrorList {
 	allErrs := field.ErrorList{}
 
 	fieldCount := 0
@@ -100,10 +100,27 @@ func validatePolicySpec(spec *v1.PolicySpec, fieldPath *field.Path, isPlus, enab
 		fieldCount++
 	}
 
+    if spec.Bados != nil {
+        if !enablePreviewPolicies {
+            allErrs = append(allErrs, field.Forbidden(fieldPath.Child("bados"),
+                "bados is a preview policy. Preview policies must be enabled to use via cli argument -enable-preview-policies"))
+        }
+        if !isPlus {
+            allErrs = append(allErrs, field.Forbidden(fieldPath.Child("bados"), "bados is only supported in NGINX Plus"))
+        }
+        if !enableAppProtectDos {
+            allErrs = append(allErrs, field.Forbidden(fieldPath.Child("bados"),
+                "App Protect dos must be enabled via cli argument -enable-appprotect-dos to use bados policy"))
+        }
+
+        allErrs = append(allErrs, validateBados(spec.Bados, fieldPath.Child("bados"))...)
+        fieldCount++
+    }
+
 	if fieldCount != 1 {
 		msg := "must specify exactly one of: `accessControl`, `rateLimit`, `ingressMTLS`, `egressMTLS`"
 		if isPlus {
-			msg = fmt.Sprint(msg, ", `jwt`, `oidc`, `waf`")
+			msg = fmt.Sprint(msg, ", `jwt`, `oidc`, `waf`, `bados`")
 		}
 		allErrs = append(allErrs, field.Invalid(fieldPath, "", msg))
 	}
@@ -281,6 +298,18 @@ func validateLogConf(logConf, logDest string, fieldPath *field.Path) field.Error
 	if err != nil {
 		allErrs = append(allErrs, field.Invalid(fieldPath.Child("logDest"), logDest, err.Error()))
 	}
+	return allErrs
+}
+
+func validateBados(bados *v1.Bados, fieldPath *field.Path) field.ErrorList {
+	allErrs := field.ErrorList{}
+
+    if bados.Name != "" {
+            for _, msg := range validation.IsQualifiedName(bados.Name) {
+                allErrs = append(allErrs, field.Invalid(fieldPath.Child("name"), bados.Name, msg))
+            }
+        }
+
 	return allErrs
 }
 
