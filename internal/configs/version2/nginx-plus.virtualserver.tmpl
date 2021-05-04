@@ -191,6 +191,17 @@ server {
         {{ end }}
     {{ end }}
 
+    {{- with $s.Bados }}
+    app_protect_dos_enable {{ .Enable }};
+        {{- if .Name }}
+    app_protect_dos_name "{{ .Name }}";
+        {{- end }}
+
+        {{- if .ApDosPolicy }}
+            app_protect_dos_policy_file {{ .ApDosPolicy }};
+        {{- end }}
+    {{- end }}
+
     {{ range $snippet := $s.Snippets }}
     {{- $snippet }}
     {{ end }}
@@ -331,8 +342,13 @@ server {
 
         {{- with $l.Bados }}
         app_protect_dos_enable {{ .Enable }};
+
             {{- if .Name }}
         app_protect_dos_name "{{ .Name }}";
+            {{- end }}
+
+            {{- if .ApDosPolicy }}
+        app_protect_dos_policy_file {{ .ApDosPolicy }};
             {{- end }}
         {{- end }}
 

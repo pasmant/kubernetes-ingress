@@ -162,6 +162,8 @@ spec:
                       type: boolean
                     name:
                       type: string
+                    apDosPolicy:
+                      type: string
             status:
               description: PolicyStatus is the status of the policy resource
               type: object

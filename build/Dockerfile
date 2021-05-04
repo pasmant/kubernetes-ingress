@@ -125,11 +125,11 @@ LABEL version=debian-nginx-plus-ap-dos-$NGINX_PLUS_VERSION-$IC_VERSION
 #ENV APPPROTECT_DOS_PLUGIN_VERSION 3.332.0-1~buster
 
 ARG REPO_PATH=https://sea-artifactory.olympus.f5net.com/artifactory/f5-beappprotect-debian
-ARG APP_PROTECT_DOS_VER=23
+ARG APP_PROTECT_DOS_VER=24
 
 COPY --chown=nginx:0 entrypoint.sh /root/
 
-RUN mkdir -p /shared/cores /var/log/adm && chmod 777 /shared/cores /var/log/adm
+RUN mkdir -p /shared/cores /var/log/adm /etc/app_protect_dos /var/run/adm/ && chmod 777 /shared/cores /var/log/adm /etc/app_protect_dos /var/run/adm/
 
 RUN --mount=type=secret,id=nginx-repo.crt,dst=/etc/ssl/nginx/nginx-repo.crt,mode=0644 \
       --mount=type=secret,id=nginx-repo.key,dst=/etc/ssl/nginx/nginx-repo.key,mode=0644 \

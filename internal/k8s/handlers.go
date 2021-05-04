@@ -598,3 +598,30 @@ func createAppProtectUserSigHandlers(lbc *LoadBalancerController) cache.Resource
 	}
 	return handlers
 }
+
+func createAppProtectDosPolicyHandlers(lbc *LoadBalancerController) cache.ResourceEventHandlerFuncs {
+	handlers := cache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			pol := obj.(*unstructured.Unstructured)
+			glog.V(3).Infof("Adding AppProtectDosPolicy: %v", pol.GetName())
+			lbc.AddSyncQueue(pol)
+		},
+		UpdateFunc: func(oldObj, obj interface{}) {
+			oldPol := oldObj.(*unstructured.Unstructured)
+			newPol := obj.(*unstructured.Unstructured)
+			updated, err := compareSpecs(oldPol, newPol)
+			if err != nil {
+				glog.V(3).Infof("Error when comparing policy %v", err)
+				lbc.AddSyncQueue(newPol)
+			}
+			if updated {
+				glog.V(3).Infof("ApDosPolicy %v changed, syncing", oldPol.GetName())
+				lbc.AddSyncQueue(newPol)
+			}
+		},
+		DeleteFunc: func(obj interface{}) {
+			lbc.AddSyncQueue(obj)
+		},
+	}
+	return handlers
+}

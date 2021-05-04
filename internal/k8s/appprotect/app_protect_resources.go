@@ -23,6 +23,13 @@ var appProtectUserSigRequiredSlices = [][]string{
 	{"spec", "signatures"},
 }
 
+var appProtectDosPolicyRequiredFields = [][]string {
+	{"spec", "mitigation_mode"},
+	{"spec", "use_automation_tools_detection"},
+    {"spec", "signatures"},
+	{"spec", "bad_actors"},
+}
+
 func validateRequiredFields(policy *unstructured.Unstructured, fieldsList [][]string) error {
 	for _, fields := range fieldsList {
 		field, found, err := unstructured.NestedMap(policy.Object, fields...)
@@ -52,6 +59,19 @@ func validateRequiredSlices(policy *unstructured.Unstructured, fieldsList [][]st
 func validateRequiredStrings(policy *unstructured.Unstructured, fieldsList [][]string) error {
 	for _, fields := range fieldsList {
 		field, found, err := unstructured.NestedString(policy.Object, fields...)
+		if err != nil {
+			return fmt.Errorf("Error checking for required field %v: %v", field, err)
+		}
+		if !found {
+			return fmt.Errorf("Required field %v not found", field)
+		}
+	}
+	return nil
+}
+
+func validateRequiredFieldsNoCopy(policy *unstructured.Unstructured, fieldsList [][]string) error {
+	for _, fields := range fieldsList {
+		field, found, err := unstructured.NestedFieldNoCopy(policy.Object, fields...)
 		if err != nil {
 			return fmt.Errorf("Error checking for required field %v: %v", field, err)
 		}
@@ -118,6 +138,18 @@ func ValidateAppProtectLogDestination(dstAntn string) error {
 
 	if net.ParseIP(ipstr) == nil {
 		return fmt.Errorf("Error parsing host: %v is not a valid ip address", ipstr)
+	}
+
+	return nil
+}
+
+// ValidateAppProtectDosPolicy validates Policy resource
+func ValidateAppProtectDosPolicy(policy *unstructured.Unstructured) error {
+	polName := policy.GetName()
+
+	err := validateRequiredFieldsNoCopy(policy, appProtectDosPolicyRequiredFields)
+	if err != nil {
+		return fmt.Errorf("Error validating App Protect Dos Policy %v: %v", polName, err)
 	}
 
 	return nil

@@ -63,6 +63,7 @@ type VirtualServerEx struct {
 	SecretRefs          map[string]*secrets.SecretReference
 	ApPolRefs           map[string]*unstructured.Unstructured
 	LogConfRefs         map[string]*unstructured.Unstructured
+    ApDosPolRefs        map[string]*unstructured.Unstructured
 }
 
 func (vsx *VirtualServerEx) String() string {
@@ -993,6 +994,8 @@ func (p *policiesCfg) addWAFConfig(
 func (p *policiesCfg) addBadosConfig(
 	Bados *conf_v1.Bados,
 	polKey string,
+	polNamespace string,
+    apResources map[string]string,
 ) *validationResults {
 	res := newValidationResults()
 	if p.Bados != nil {
@@ -1009,6 +1012,26 @@ func (p *policiesCfg) addBadosConfig(
     if Bados.Name != "" {
         p.Bados.Name = Bados.Name
 	}
+
+    if Bados.ApDosPolicy != "" {
+        apPolKey := Bados.ApDosPolicy
+        hasNamepace := strings.Contains(apPolKey, "/")
+        if !hasNamepace {
+            apPolKey = fmt.Sprintf("%v/%v", polNamespace, apPolKey)
+        }
+
+        for key, value := range apResources {
+            glog.Warningf("apResources key: %s value %s", key, value)
+        }
+
+        if apPolPath, exists := apResources[apPolKey]; exists {
+            p.Bados.ApDosPolicy = apPolPath
+        } else {
+            res.addWarningf("Bados policy %s references an invalid or non-existing App Protect Dos policy %s %v", polKey, apPolKey)
+            res.isError = true
+            return res
+        }
+    }
 
 	return res
 }
@@ -1063,7 +1086,7 @@ func (vsc *virtualServerConfigurator) generatePolicies(
 			case pol.Spec.WAF != nil:
 				res = config.addWAFConfig(pol.Spec.WAF, key, polNamespace, policyOpts.apResources)
             case pol.Spec.Bados != nil:
-                res = config.addBadosConfig(pol.Spec.Bados, key)
+                res = config.addBadosConfig(pol.Spec.Bados, key, polNamespace, policyOpts.apResources)
 			default:
 				res = newValidationResults()
 			}

@@ -337,12 +337,13 @@ type Configuration struct {
 	globalConfigurationValidator *validation.GlobalConfigurationValidator
 	transportServerValidator     *validation.TransportServerValidator
 
-	secretReferenceChecker     *secretReferenceChecker
-	serviceReferenceChecker    *serviceReferenceChecker
-	endpointReferenceChecker   *serviceReferenceChecker
-	policyReferenceChecker     *policyReferenceChecker
-	appPolicyReferenceChecker  *appProtectResourceReferenceChecker
-	appLogConfReferenceChecker *appProtectResourceReferenceChecker
+	secretReferenceChecker          *secretReferenceChecker
+	serviceReferenceChecker         *serviceReferenceChecker
+	endpointReferenceChecker        *serviceReferenceChecker
+	policyReferenceChecker          *policyReferenceChecker
+	appPolicyReferenceChecker       *appProtectResourceReferenceChecker
+	appLogConfReferenceChecker      *appProtectResourceReferenceChecker
+    appDosPolicyReferenceChecker    *appProtectResourceReferenceChecker
 
 	isPlus                  bool
 	appProtectEnabled       bool
@@ -383,6 +384,7 @@ func NewConfiguration(
 		policyReferenceChecker:       newPolicyReferenceChecker(),
 		appPolicyReferenceChecker:    newAppProtectResourceReferenceChecker(configs.AppProtectPolicyAnnotation),
 		appLogConfReferenceChecker:   newAppProtectResourceReferenceChecker(configs.AppProtectLogConfAnnotation),
+		appDosPolicyReferenceChecker: newAppProtectResourceReferenceChecker(configs.AppProtectDosPolicyAnnotation),
 		isPlus:                       isPlus,
 		appProtectEnabled:            appProtectEnabled,
 		appProtectDosEnabled:         appProtectDosEnabled,
@@ -835,6 +837,11 @@ func (c *Configuration) FindResourcesForAppProtectPolicyAnnotation(policyNamespa
 // FindResourcesForAppProtectLogConfAnnotation finds resources that reference the specified AppProtect LogConf.
 func (c *Configuration) FindResourcesForAppProtectLogConfAnnotation(logConfNamespace string, logConfName string) []Resource {
 	return c.findResourcesForResourceReference(logConfNamespace, logConfName, c.appLogConfReferenceChecker)
+}
+
+// FindResourcesForAppProtectDosPolicyAnnotation finds resources that reference the specified AppProtectDos policy via annotation.
+func (c *Configuration) FindResourcesForAppProtectDosPolicyAnnotation(policyNamespace string, policyName string) []Resource {
+	return c.findResourcesForResourceReference(policyNamespace, policyName, c.appDosPolicyReferenceChecker)
 }
 
 func (c *Configuration) findResourcesForResourceReference(namespace string, name string, checker resourceReferenceChecker) []Resource {

@@ -128,6 +128,7 @@ type WAF struct {
 type Bados struct {
 	Enable              string
 	Name                string
+	ApDosPolicy         string
 }
 
 // Location defines a location.

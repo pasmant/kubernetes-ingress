@@ -118,6 +118,7 @@ const (
 	appProtectPolicy
 	appProtectLogConf
 	appProtectUserSig
+	appProtectDosPolicy
 	ingressLink
 )
 
@@ -160,7 +161,9 @@ func newTask(key string, obj interface{}) (task, error) {
 			k = ingressLink
 		} else if objectKind == appprotect.UserSigGVK.Kind {
 			k = appProtectUserSig
-		} else {
+		} else if objectKind == appprotect.DosPolicyGVK.Kind {
+          k = appProtectDosPolicy
+        } else {
 			return task{}, fmt.Errorf("Unknown unstructured kind: %v", objectKind)
 		}
 	default:

@@ -443,6 +443,7 @@ type SecurityLog struct {
 // Bados defines an Bados policy.
 // policy status: preview
 type Bados struct {
-	Enable      bool         `json:"enable"`
-	Name        string       `json:"name"`
+	Enable      bool   `json:"enable"`
+	Name        string `json:"name"`
+    ApDosPolicy string `json:"apDosPolicy"`
 }

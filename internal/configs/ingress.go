@@ -19,20 +19,22 @@ import (
 const emptyHost = ""
 const appProtectPolicyKey = "policy"
 const appProtectLogConfKey = "logconf"
+const appProtectDosPolicyKey = "policyDos"
 
 // IngressEx holds an Ingress along with the resources that are referenced in this Ingress.
 type IngressEx struct {
-	Ingress           *networking.Ingress
-	Endpoints         map[string][]string
-	HealthChecks      map[string]*api_v1.Probe
-	ExternalNameSvcs  map[string]bool
-	PodsByIP          map[string]PodInfo
-	ValidHosts        map[string]bool
-	ValidMinionPaths  map[string]bool
-	AppProtectPolicy  *unstructured.Unstructured
-	AppProtectLogConf *unstructured.Unstructured
-	AppProtectLogDst  string
-	SecretRefs        map[string]*secrets.SecretReference
+	Ingress             *networking.Ingress
+	Endpoints           map[string][]string
+	HealthChecks        map[string]*api_v1.Probe
+	ExternalNameSvcs    map[string]bool
+	PodsByIP            map[string]PodInfo
+	ValidHosts          map[string]bool
+	ValidMinionPaths    map[string]bool
+	AppProtectPolicy    *unstructured.Unstructured
+	AppProtectLogConf   *unstructured.Unstructured
+	AppProtectLogDst    string
+	AppProtectDosPolicy *unstructured.Unstructured
+	SecretRefs          map[string]*secrets.SecretReference
 }
 
 // JWTKey represents a secret that holds JSON Web Key.
@@ -145,6 +147,10 @@ func generateNginxCfg(ingEx *IngressEx, apResources map[string]string, isMinion 
 			server.AppProtectPolicy = apResources[appProtectPolicyKey]
 			server.AppProtectLogConf = apResources[appProtectLogConfKey]
 		}
+
+        if hasAppProtectDos {
+            server.AppProtectDosPolicy = apResources[appProtectDosPolicyKey]
+        }
 
 		if !isMinion && cfgParams.JWTKey != "" {
 			jwtAuth, redirectLoc, warnings := generateJWTConfig(ingEx.Ingress, ingEx.SecretRefs, &cfgParams, getNameForRedirectLocation(ingEx.Ingress))
