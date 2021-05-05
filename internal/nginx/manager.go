@@ -33,7 +33,10 @@ const (
 	appProtectAgentStartCmd  = "/opt/app_protect/bin/bd_agent"
 )
 
-const appProtectDosAgentStartCmd  = "/root/entrypoint.sh"
+const (
+    appProtectDosAgentInstallCmd = "/usr/bin/adminstall"
+    appProtectDosAgentStartCmd   = "/usr/bin/admd -d --standalone > /var/log/adm/admd.log 2>&1"
+)
 
 // ServerConfig holds the config data for an upstream server in NGINX Plus.
 type ServerConfig struct {
@@ -79,7 +82,8 @@ type Manager interface {
 	AppProtectAgentQuit()
 	AppProtectPluginStart(appDone chan error)
 	AppProtectPluginQuit()
-	AppProtectDosAgentStart(apaDone chan error, debug bool)
+	AppProtectDosAgentStart(apdaDone chan error, debug bool)
+	AppProtectDosAgentQuit()
 }
 
 // LocalManager updates NGINX configuration, starts, reloads and quits NGINX,
@@ -104,6 +108,7 @@ type LocalManager struct {
 	OpenTracing                  bool
 	appProtectPluginPid          int
 	appProtectAgentPid           int
+	appProtectDosAgentPid        int
 }
 
 // NewLocalManager creates a LocalManager.
@@ -515,8 +520,17 @@ func (lm *LocalManager) AppProtectPluginQuit() {
 	}
 }
 
+// AppProtectDosAgentQuit gracefully ends AppProtect Agent.
+func (lm *LocalManager) AppProtectDosAgentQuit() {
+	glog.V(3).Info("Quitting AppProtectDos Agent")
+	killcmd := fmt.Sprintf("kill %d", lm.appProtectDosAgentPid)
+	if err := shellOut(killcmd); err != nil {
+		glog.Fatalf("Failed to quit AppProtect Agent: %v", err)
+	}
+}
+
 // AppProtectDosAgentStart starts the AppProtectDos agent
-func (lm *LocalManager) AppProtectDosAgentStart(apaDone chan error, debug bool) {
+func (lm *LocalManager) AppProtectDosAgentStart(apdaDone chan error, debug bool) {
 // 	if debug {
 // 		glog.V(3).Info("Starting AppProtect Agent in debug mode")
 // 		err := os.Remove(appProtectLogConfigFileName)
@@ -530,12 +544,19 @@ func (lm *LocalManager) AppProtectDosAgentStart(apaDone chan error, debug bool) 
 // 	}
 	glog.V(3).Info("Starting AppProtectDos Agent")
 
-	cmd := exec.Command(appProtectDosAgentStartCmd)
+    // Perform installtion by adminstall
+    cmdInstall := exec.Command(appProtectDosAgentInstallCmd)
+
+    if err := cmdInstall.Run(); err != nil {
+        glog.Fatalf("Failed to install AppProtectDos: %v", err)
+    }
+
+	cmd := exec.Command("sh", "-c", appProtectDosAgentStartCmd)
 	if err := cmd.Start(); err != nil {
 		glog.Fatalf("Failed to start AppProtectDos Agent: %v", err)
 	}
-	lm.appProtectAgentPid = cmd.Process.Pid
+	lm.appProtectDosAgentPid = cmd.Process.Pid
 	go func() {
-		apaDone <- cmd.Wait()
+		apdaDone <- cmd.Wait()
 	}()
 }

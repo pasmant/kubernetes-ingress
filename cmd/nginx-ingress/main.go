@@ -667,8 +667,8 @@ func main() {
 		}()
 	}
 
-	if *appProtect {
-		go handleTerminationWithAppProtect(lbc, nginxManager, syslogListener, nginxDone, aPAgentDone, aPPluginDone)
+	if *appProtect || *appProtectDos {
+		go handleTerminationWithAppProtect(lbc, nginxManager, syslogListener, nginxDone, aPAgentDone, aPPluginDone, aPPDosAgentDone, *appProtect, *appProtectDos)
 	} else {
 		go handleTermination(lbc, nginxManager, syslogListener, nginxDone)
 	}
@@ -826,7 +826,7 @@ func validateLocation(location string) error {
 	return nil
 }
 
-func handleTerminationWithAppProtect(lbc *k8s.LoadBalancerController, nginxManager nginx.Manager, listener metrics.SyslogListener, nginxDone, agentDone, pluginDone chan error) {
+func handleTerminationWithAppProtect(lbc *k8s.LoadBalancerController, nginxManager nginx.Manager, listener metrics.SyslogListener, nginxDone, agentDone, pluginDone, agentDosDone chan error, appProtectEnabled, appProtectDosEnabled bool) {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGTERM)
 
@@ -837,15 +837,23 @@ func handleTerminationWithAppProtect(lbc *k8s.LoadBalancerController, nginxManag
 		glog.Fatalf("AppProtectPlugin command exited unexpectedly with status: %v", err)
 	case err := <-agentDone:
 		glog.Fatalf("AppProtectAgent command exited unexpectedly with status: %v", err)
+    case err := <-agentDosDone:
+        glog.Fatalf("AppProtectDosAgent command exited unexpectedly with status: %v", err)
 	case <-signalChan:
 		glog.Infof("Received SIGTERM, shutting down")
 		lbc.Stop()
 		nginxManager.Quit()
 		<-nginxDone
-		nginxManager.AppProtectPluginQuit()
-		<-pluginDone
-		nginxManager.AppProtectAgentQuit()
-		<-agentDone
+		if (appProtectEnabled) {
+		    nginxManager.AppProtectPluginQuit()
+            <-pluginDone
+            nginxManager.AppProtectAgentQuit()
+            <-agentDone
+		}
+        if (appProtectDosEnabled) {
+            nginxManager.AppProtectDosAgentQuit()
+            <-agentDosDone
+        }
 		listener.Stop()
 	}
 	glog.Info("Exiting successfully")

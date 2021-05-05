@@ -134,15 +134,12 @@ RUN mkdir -p /shared/cores /var/log/adm /etc/app_protect_dos /var/run/adm/ && ch
 RUN --mount=type=secret,id=nginx-repo.crt,dst=/etc/ssl/nginx/nginx-repo.crt,mode=0644 \
       --mount=type=secret,id=nginx-repo.key,dst=/etc/ssl/nginx/nginx-repo.key,mode=0644 \
       set -x \
-      apt-get update && apt-get -y install ca-certificates && \
-      printf "deb [trusted=yes] ${REPO_PATH} buster app-protect-dos\n" | \
-      tee /etc/apt/sources.list.d/app-protect-dos.list && \
-      apt-get update && \
-      apt-get clean all && apt-get -o DPkg::Options::="--force-confold" \
-        -y install app-protect-dos=${APP_PROTECT_DOS_VER}* && chmod +x /root/entrypoint.sh && \
-      apt-get install sudo && \
-      apt-get -qq install --no-install-recommends  vim > /dev/null && \
-      apt-get -y install procps
+      && apt-get update \
+      && apt-get -y install ca-certificates \
+      && printf "deb [trusted=yes] ${REPO_PATH} buster app-protect-dos\n" | tee /etc/apt/sources.list.d/app-protect-dos.list \
+      && apt-get update \
+      && apt-get clean all \
+      && apt-get -o DPkg::Options::="--force-confold" -y install app-protect-dos=${APP_PROTECT_DOS_VER}* \
 
 ############################################# Base image for Openshift #############################################
 FROM registry.access.redhat.com/ubi8/ubi:8.3 AS openshift-base
