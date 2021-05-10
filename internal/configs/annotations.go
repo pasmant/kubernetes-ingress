@@ -25,6 +25,9 @@ const AppProtectDosLogConfAnnotation = "appprotect.f5.com/app-protect-dos-securi
 // AppProtectDosLogConfDstAnnotation is where the NGINX AppProtect Dos Log Configuration is specified
 const AppProtectDosLogConfDstAnnotation = "appprotect.f5.com/app-protect-dos-security-log-destination"
 
+// AppProtectDosMonitorAnnotation is where the NGINX App Protect Monitor is specified
+const AppProtectDosMonitorAnnotation = "appprotect.f5.com/app-protect-dos-monitor"
+
 // nginxMeshInternalRoute specifies if the ingress resource is an internal route.
 const nginxMeshInternalRouteAnnotation = "nsm.nginx.com/internal-route"
 
@@ -407,6 +410,11 @@ func parseAnnotations(ingEx *IngressEx, baseCfgParams *ConfigParams, isPlus bool
                 }
             }
         }
+
+		if appProtectDosMonitor, exists := ingEx.Ingress.Annotations["appprotect.f5.com/app-protect-dos-monitor"]; exists {
+			cfgParams.AppProtectDosMonitor = appProtectDosMonitor
+		}
+
     }
 	if enableInternalRoutes {
 		if spiffeServerCerts, exists, err := GetMapKeyAsBool(ingEx.Ingress.Annotations, nginxMeshInternalRouteAnnotation, ingEx.Ingress); exists {

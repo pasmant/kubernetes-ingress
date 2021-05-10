@@ -53,6 +53,7 @@ const (
 	appProtectSecurityLogEnableAnnotation    = "appprotect.f5.com/app-protect-security-log-enable"
     appProtectDosEnableAnnotation            = "appprotect.f5.com/app-protect-dos-enable"
     appProtectDosSecurityLogEnableAnnotation = "appprotect.f5.com/app-protect-dos-security-log-enable"
+    appProtectDosMonitorAnnotation           = "appprotect.f5.com/app-protect-dos-appProtectDosMonitorAnnotation"
 	internalRouteAnnotation                  = "nsm.nginx.com/internal-route"
 	websocketServicesAnnotation              = "nginx.org/websocket-services"
 	sslServicesAnnotation                    = "nginx.org/ssl-services"

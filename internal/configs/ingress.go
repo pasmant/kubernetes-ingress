@@ -37,6 +37,7 @@ type IngressEx struct {
 	AppProtectDosPolicy  *unstructured.Unstructured
     AppProtectDosLogConf *unstructured.Unstructured
     AppProtectDosLogDst  string
+    AppProtectDosMonitor string
 	SecretRefs           map[string]*secrets.SecretReference
 }
 
@@ -141,6 +142,7 @@ func generateNginxCfg(ingEx *IngressEx, apResources map[string]string, isMinion 
 			AppProtectLogEnable:    cfgParams.AppProtectLogEnable,
 			AppProtectDosEnable:    cfgParams.AppProtectDosEnable,
 			AppProtectDosLogEnable: cfgParams.AppProtectDosLogEnable,
+			AppProtectDosMonitor:   cfgParams.AppProtectDosMonitor,
 			SpiffeCerts:            cfgParams.SpiffeServerCerts,
 		}
 

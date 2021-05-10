@@ -447,6 +447,7 @@ type Bados struct {
 	Name           string           `json:"name"`
     ApDosPolicy    string           `json:"apDosPolicy"`
     DosSecurityLog *DosSecurityLog  `json:"dosSecurityLog"`
+    ApDosMonitor   string           `json:"apDosMonitor"`
 }
 
 // DosSecurityLog defines the security log of a Bados policy.

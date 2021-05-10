@@ -1039,8 +1039,6 @@ func (p *policiesCfg) addBadosConfig(
             logConfKey = fmt.Sprintf("%v/%v", polNamespace, logConfKey)
         }
 
-        glog.Warningf("Bados.DosSecurityLog.ApDosLogConf %v apResources[logConfKey] %v Bados.DosSecurityLog %v", Bados.DosSecurityLog.ApDosLogConf, apResources[logConfKey], Bados.DosSecurityLog)
-
         if logConfPath, ok := apResources[logConfKey]; ok {
             logDest := generateString(Bados.DosSecurityLog.DosLogDest, "stderr")
             p.Bados.ApDosLogConf = fmt.Sprintf("%s %s", logConfPath, logDest)
@@ -1048,6 +1046,10 @@ func (p *policiesCfg) addBadosConfig(
             res.addWarningf("Bados policy %s references an invalid or non-existing log config %s", polKey, logConfKey)
             res.isError = true
         }
+    }
+
+    if Bados.ApDosMonitor != "" {
+        p.Bados.ApDosMonitor = Bados.ApDosMonitor
     }
 
 	return res

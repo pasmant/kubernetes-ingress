@@ -205,6 +205,10 @@ server {
     app_protect_dos_security_log_enable on;
     app_protect_dos_security_log {{ .ApDosLogConf }};
         {{- end }}
+
+        {{- if .ApDosMonitor }}
+    app_protect_dos_monitor "{{ .ApDosMonitor }}";
+        {{- end }}
     {{- end }}
 
     {{ range $snippet := $s.Snippets }}
@@ -360,6 +364,10 @@ server {
         app_protect_dos_security_log_enable on;
         app_protect_dos_security_log {{ .ApDosLogConf }};
             {{ end }}
+
+            {{- if .ApDosMonitor }}
+        app_protect_dos_monitor "{{ .ApDosMonitor }}";
+            {{- end }}
         {{- end }}
 
         {{ range $e := $l.ErrorPages }}

@@ -80,6 +80,7 @@ server {
 	{{- if $server.AppProtectDosLogEnable}}
 	app_protect_dos_security_log_enable {{$server.AppProtectDosLogEnable}};
 	{{if $server.AppProtectDosLogConf}}app_protect_dos_security_log {{$server.AppProtectDosLogConf}};{{end}}
+	{{if $server.AppProtectDosMonitor}}app_protect_dos_monitor "{{$server.AppProtectDosMonitor}}";{{end}}
 	{{- end}}
 
 	{{if not $server.GRPCOnly}}

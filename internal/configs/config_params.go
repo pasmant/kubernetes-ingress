@@ -56,6 +56,7 @@ type ConfigParams struct {
     AppProtectDosPolicy                    string
     AppProtectDosLogConf                   string
     AppProtectDosLogEnable                 string
+    AppProtectDosMonitor                   string
 	ProxyBuffering                         bool
 	ProxyBuffers                           string
 	ProxyBufferSize                        string
