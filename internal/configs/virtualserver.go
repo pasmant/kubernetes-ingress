@@ -64,6 +64,7 @@ type VirtualServerEx struct {
 	ApPolRefs           map[string]*unstructured.Unstructured
 	LogConfRefs         map[string]*unstructured.Unstructured
     ApDosPolRefs        map[string]*unstructured.Unstructured
+    DosLogConfRefs      map[string]*unstructured.Unstructured
 }
 
 func (vsx *VirtualServerEx) String() string {
@@ -1020,16 +1021,32 @@ func (p *policiesCfg) addBadosConfig(
             apPolKey = fmt.Sprintf("%v/%v", polNamespace, apPolKey)
         }
 
-        for key, value := range apResources {
-            glog.Warningf("apResources key: %s value %s", key, value)
-        }
-
         if apPolPath, exists := apResources[apPolKey]; exists {
             p.Bados.ApDosPolicy = apPolPath
         } else {
             res.addWarningf("Bados policy %s references an invalid or non-existing App Protect Dos policy %s %v", polKey, apPolKey)
             res.isError = true
             return res
+        }
+    }
+
+    if Bados.DosSecurityLog != nil {
+        p.Bados.ApDosSecurityLogEnable = true
+
+        logConfKey := Bados.DosSecurityLog.ApDosLogConf
+        hasNamepace := strings.Contains(logConfKey, "/")
+        if !hasNamepace {
+            logConfKey = fmt.Sprintf("%v/%v", polNamespace, logConfKey)
+        }
+
+        glog.Warningf("Bados.DosSecurityLog.ApDosLogConf %v apResources[logConfKey] %v Bados.DosSecurityLog %v", Bados.DosSecurityLog.ApDosLogConf, apResources[logConfKey], Bados.DosSecurityLog)
+
+        if logConfPath, ok := apResources[logConfKey]; ok {
+            logDest := generateString(Bados.DosSecurityLog.DosLogDest, "stderr")
+            p.Bados.ApDosLogConf = fmt.Sprintf("%s %s", logConfPath, logDest)
+        } else {
+            res.addWarningf("Bados policy %s references an invalid or non-existing log config %s", polKey, logConfKey)
+            res.isError = true
         }
     }
 

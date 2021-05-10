@@ -10,6 +10,7 @@ rules:
   - aplogconfs
   - apusersigs
   - apdospolicies
+  - apdoslogconfs
   verbs: 
   - "get" 
   - "watch" 

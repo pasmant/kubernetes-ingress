@@ -198,7 +198,12 @@ server {
         {{- end }}
 
         {{- if .ApDosPolicy }}
-            app_protect_dos_policy_file {{ .ApDosPolicy }};
+    app_protect_dos_policy_file {{ .ApDosPolicy }};
+        {{- end }}
+
+        {{- if .ApDosSecurityLogEnable }}
+    app_protect_dos_security_log_enable on;
+    app_protect_dos_security_log {{ .ApDosLogConf }};
         {{- end }}
     {{- end }}
 
@@ -350,6 +355,11 @@ server {
             {{- if .ApDosPolicy }}
         app_protect_dos_policy_file {{ .ApDosPolicy }};
             {{- end }}
+
+            {{ if .ApDosSecurityLogEnable }}
+        app_protect_dos_security_log_enable on;
+        app_protect_dos_security_log {{ .ApDosLogConf }};
+            {{ end }}
         {{- end }}
 
         {{ range $e := $l.ErrorPages }}

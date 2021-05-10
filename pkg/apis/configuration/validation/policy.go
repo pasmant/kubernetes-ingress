@@ -304,12 +304,38 @@ func validateLogConf(logConf, logDest string, fieldPath *field.Path) field.Error
 func validateBados(bados *v1.Bados, fieldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 
-    if bados.Name != "" {
-            for _, msg := range validation.IsQualifiedName(bados.Name) {
-                allErrs = append(allErrs, field.Invalid(fieldPath.Child("name"), bados.Name, msg))
-            }
-        }
+	if bados.ApDosPolicy != "" {
+		for _, msg := range validation.IsQualifiedName(bados.ApDosPolicy) {
+			allErrs = append(allErrs, field.Invalid(fieldPath.Child("apDosPolicy"), bados.ApDosPolicy, msg))
+		}
+	}
 
+    if bados.Name != "" {
+        for _, msg := range validation.IsQualifiedName(bados.Name) {
+            allErrs = append(allErrs, field.Invalid(fieldPath.Child("name"), bados.Name, msg))
+        }
+    }
+
+    if bados.DosSecurityLog != nil {
+        allErrs = append(allErrs, validateDosLogConf(bados.DosSecurityLog.ApDosLogConf, bados.DosSecurityLog.DosLogDest, fieldPath.Child("dosSecurityLog"))...)
+    }
+
+	return allErrs
+}
+
+func validateDosLogConf(logConf, logDest string, fieldPath *field.Path) field.ErrorList {
+	allErrs := field.ErrorList{}
+
+	if logConf != "" {
+		for _, msg := range validation.IsQualifiedName(logConf) {
+			allErrs = append(allErrs, field.Invalid(fieldPath.Child("apDosLogConf"), logConf, msg))
+		}
+	}
+
+	err := appprotect.ValidateAppProtectLogDestination(logDest)
+	if err != nil {
+		allErrs = append(allErrs, field.Invalid(fieldPath.Child("dosLogDest"), logDest, err.Error()))
+	}
 	return allErrs
 }
 

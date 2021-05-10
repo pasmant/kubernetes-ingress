@@ -54,6 +54,8 @@ type ConfigParams struct {
 	MainAppProtectPhysicalMemoryThresholds string
     AppProtectDosEnable                    string
     AppProtectDosPolicy                    string
+    AppProtectDosLogConf                   string
+    AppProtectDosLogEnable                 string
 	ProxyBuffering                         bool
 	ProxyBuffers                           string
 	ProxyBufferSize                        string

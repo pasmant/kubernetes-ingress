@@ -164,6 +164,16 @@ spec:
                       type: string
                     apDosPolicy:
                       type: string
+                    dosSecurityLog:
+                      description: dosSecurityLog defines the security log of a Bados policy.
+                      type: object
+                      properties:
+                        apDosLogConf:
+                          type: string
+                        enable:
+                          type: boolean
+                        dosLogDest:
+                          type: string
             status:
               description: PolicyStatus is the status of the policy resource
               type: object

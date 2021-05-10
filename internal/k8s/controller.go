@@ -109,6 +109,7 @@ type LoadBalancerController struct {
 	appProtectPolicyLister        cache.Store
 	appProtectLogConfLister       cache.Store
 	appProtectDosPolicyLister     cache.Store
+    appProtectDosLogConfLister    cache.Store
 	globalConfigurationLister     cache.Store
 	appProtectUserSigLister       cache.Store
 	transportServerLister         cache.Store
@@ -260,6 +261,7 @@ func NewLoadBalancerController(input NewLoadBalancerControllerInput) *LoadBalanc
 
         if lbc.appProtectDosEnabled {
             lbc.addAppProtectDosPolicyHandler(createAppProtectDosPolicyHandlers(lbc))
+            lbc.addAppProtectDosLogConfHandler(createAppProtectDosLogConfHandlers(lbc))
         }
     }
 
@@ -375,6 +377,15 @@ func (lbc *LoadBalancerController) addAppProtectDosPolicyHandler(handlers cache.
 	informer := lbc.dynInformerFactory.ForResource(appprotect.DosPolicyGVR).Informer()
 	informer.AddEventHandler(handlers)
 	lbc.appProtectDosPolicyLister = informer.GetStore()
+
+	lbc.cacheSyncs = append(lbc.cacheSyncs, informer.HasSynced)
+}
+
+// addappProtectDosLogConfHandler creates dynamic informer for custom appprotectdos logging config resource
+func (lbc *LoadBalancerController) addAppProtectDosLogConfHandler(handlers cache.ResourceEventHandlerFuncs) {
+	informer := lbc.dynInformerFactory.ForResource(appprotect.DosLogConfGVR).Informer()
+	informer.AddEventHandler(handlers)
+	lbc.appProtectDosLogConfLister = informer.GetStore()
 
 	lbc.cacheSyncs = append(lbc.cacheSyncs, informer.HasSynced)
 }
@@ -716,6 +727,8 @@ func (lbc *LoadBalancerController) sync(task task) {
 		lbc.syncAppProtectUserSig(task)
     case appProtectDosPolicy:
         lbc.syncAppProtectDosPolicy(task)
+	case appProtectDosLogConf:
+		lbc.syncAppProtectDosLogConf(task)
 	case ingressLink:
 		lbc.syncIngressLink(task)
 	}
@@ -1236,6 +1249,21 @@ func (lbc *LoadBalancerController) processAppProtectDosChanges(changes []appprot
 				warnings, updateErr := lbc.configurator.AddOrUpdateAppProtectResource(impl.Obj, resourceExes.IngressExes, resourceExes.MergeableIngresses, resourceExes.VirtualServerExes)
 				lbc.updateResourcesStatusAndEvents(resources, warnings, updateErr)
 				lbc.recorder.Eventf(impl.Obj, api_v1.EventTypeNormal, "AddedOrUpdated", "AppProtectDosPolicy %v was added or updated", namespace+"/"+name)
+			case *appprotect.DosLogConfEx:
+                namespace := impl.Obj.GetNamespace()
+                name := impl.Obj.GetName()
+                resources := lbc.configuration.FindResourcesForAppProtectDosLogConfAnnotation(namespace, name)
+
+                for _, badosPol := range getBadosPoliciesForAppProtectLogConf(lbc.getAllPolicies(), namespace+"/"+name) {
+                    resources = append(resources, lbc.configuration.FindResourcesForPolicy(badosPol.Namespace, badosPol.Name)...)
+                }
+
+                resourceExes := lbc.createExtendedResources(resources)
+
+                warnings, updateErr := lbc.configurator.AddOrUpdateAppProtectResource(impl.Obj, resourceExes.IngressExes, resourceExes.MergeableIngresses, resourceExes.VirtualServerExes)
+                lbc.updateResourcesStatusAndEvents(resources, warnings, updateErr)
+                lbc.recorder.Eventf(impl.Obj, api_v1.EventTypeNormal, "AddedOrUpdated", "AppProtectDosLogConfig %v was added or updated", namespace+"/"+name)
+
 			}
 		} else if c.Op == appprotect.Delete {
 			switch impl := c.Resource.(type) {
@@ -1253,6 +1281,20 @@ func (lbc *LoadBalancerController) processAppProtectDosChanges(changes []appprot
 				warnings, deleteErr := lbc.configurator.DeleteAppProtectDosPolicy(namespace+"/"+name, resourceExes.IngressExes, resourceExes.MergeableIngresses, resourceExes.VirtualServerExes)
 
 				lbc.updateResourcesStatusAndEvents(resources, warnings, deleteErr)
+            case *appprotect.DosLogConfEx:
+                namespace := impl.Obj.GetNamespace()
+                name := impl.Obj.GetName()
+                resources := lbc.configuration.FindResourcesForAppProtectDosLogConfAnnotation(namespace, name)
+
+                for _, wafPol := range getBadosPoliciesForAppProtectLogConf(lbc.getAllPolicies(), namespace+"/"+name) {
+                    resources = append(resources, lbc.configuration.FindResourcesForPolicy(wafPol.Namespace, wafPol.Name)...)
+                }
+
+                resourceExes := lbc.createExtendedResources(resources)
+
+                warnings, deleteErr := lbc.configurator.DeleteAppProtectLogConf(namespace+"/"+name, resourceExes.IngressExes, resourceExes.MergeableIngresses, resourceExes.VirtualServerExes)
+
+                lbc.updateResourcesStatusAndEvents(resources, warnings, deleteErr)
 			}
 		}
 	}
@@ -2138,6 +2180,16 @@ func (lbc *LoadBalancerController) createIngressEx(ing *networking.Ingress, vali
                     ingEx.AppProtectDosPolicy = policy
                 }
             }
+
+            if apDosLogConfAntn, exists := ingEx.Ingress.Annotations[configs.AppProtectDosLogConfAnnotation]; exists {
+                logConf, logDst, err := lbc.getAppProtectDosLogConfAndDst(ing)
+                if err != nil {
+                    glog.Warningf("Error Getting App Protect policy %v for Ingress %v/%v: %v", apDosLogConfAntn, ing.Namespace, ing.Name, err)
+                } else {
+                    ingEx.AppProtectDosLogConf = logConf
+                    ingEx.AppProtectDosLogDst = logDst
+                }
+            }
         }
 	}
 
@@ -2268,6 +2320,29 @@ func (lbc *LoadBalancerController) getAppProtectLogConfAndDst(ing *networking.In
 	return logConf, logDst, nil
 }
 
+func (lbc *LoadBalancerController) getAppProtectDosLogConfAndDst(ing *networking.Ingress) (logConf *unstructured.Unstructured, logDst string, err error) {
+	logConfNsN := appprotect.ParseResourceReferenceAnnotation(ing.Namespace, ing.Annotations[configs.AppProtectDosLogConfAnnotation])
+
+	if _, exists := ing.Annotations[configs.AppProtectDosLogConfDstAnnotation]; !exists {
+		return nil, "", fmt.Errorf("Error: %v requires %v in %v", configs.AppProtectDosLogConfAnnotation, configs.AppProtectDosLogConfDstAnnotation, ing.Name)
+	}
+
+	logDst = ing.Annotations[configs.AppProtectDosLogConfDstAnnotation]
+
+	err = appprotect.ValidateAppProtectLogDestination(logDst)
+
+	if err != nil {
+		return nil, "", fmt.Errorf("Error Validating App Protect Destination Config for Ingress %v: %v", ing.Name, err)
+	}
+
+	logConf, err = lbc.appProtectConfiguration.GetAppResource(appprotect.DosLogConfGVK.Kind, logConfNsN)
+	if err != nil {
+		return nil, "", fmt.Errorf("Error retrieving App Protect Log Config for Ingress %v: %v", ing.Name, err)
+	}
+
+	return logConf, logDst, nil
+}
+
 func (lbc *LoadBalancerController) getAppProtectPolicy(ing *networking.Ingress) (apPolicy *unstructured.Unstructured, err error) {
 	polNsN := appprotect.ParseResourceReferenceAnnotation(ing.Namespace, ing.Annotations[configs.AppProtectPolicyAnnotation])
 
@@ -2293,10 +2368,11 @@ func (lbc *LoadBalancerController) getAppProtectDosPolicy(ing *networking.Ingres
 func (lbc *LoadBalancerController) createVirtualServerEx(virtualServer *conf_v1.VirtualServer, virtualServerRoutes []*conf_v1.VirtualServerRoute) *configs.VirtualServerEx {
 	virtualServerEx := configs.VirtualServerEx{
 		VirtualServer: virtualServer,
-		SecretRefs:    make(map[string]*secrets.SecretReference),
-		ApPolRefs:     make(map[string]*unstructured.Unstructured),
-		LogConfRefs:   make(map[string]*unstructured.Unstructured),
-		ApDosPolRefs:  make(map[string]*unstructured.Unstructured),
+		SecretRefs:     make(map[string]*secrets.SecretReference),
+		ApPolRefs:      make(map[string]*unstructured.Unstructured),
+		LogConfRefs:    make(map[string]*unstructured.Unstructured),
+		ApDosPolRefs:   make(map[string]*unstructured.Unstructured),
+		DosLogConfRefs: make(map[string]*unstructured.Unstructured),
 	}
 
 	if virtualServer.Spec.TLS != nil && virtualServer.Spec.TLS.Secret != "" {
@@ -2337,7 +2413,7 @@ func (lbc *LoadBalancerController) createVirtualServerEx(virtualServer *conf_v1.
 		glog.Warningf("Error getting App Protect resource for VirtualServer %v/%v: %v", virtualServer.Namespace, virtualServer.Name, err)
 	}
 
-    err = lbc.addBadosPolicyRefs(virtualServerEx.ApDosPolRefs, policies)
+    err = lbc.addBadosPolicyRefs(virtualServerEx.ApDosPolRefs, virtualServerEx.DosLogConfRefs, policies)
     if err != nil {
         glog.Warningf("Error getting App Protect Dos resource for VirtualServer %v/%v: %v", virtualServer.Namespace, virtualServer.Name, err)
     }
@@ -2414,7 +2490,7 @@ func (lbc *LoadBalancerController) createVirtualServerEx(virtualServer *conf_v1.
 			glog.Warningf("Error getting WAF policies for VirtualServer %v/%v: %v", virtualServer.Namespace, virtualServer.Name, err)
 		}
 
-        err = lbc.addBadosPolicyRefs(virtualServerEx.ApDosPolRefs, vsRoutePolicies)
+        err = lbc.addBadosPolicyRefs(virtualServerEx.ApDosPolRefs, virtualServerEx.DosLogConfRefs, vsRoutePolicies)
         if err != nil {
             glog.Warningf("Error getting Bados policies for VirtualServer %v/%v: %v", virtualServer.Namespace, virtualServer.Name, err)
         }
@@ -2453,7 +2529,7 @@ func (lbc *LoadBalancerController) createVirtualServerEx(virtualServer *conf_v1.
 				glog.Warningf("Error getting WAF policies for VirtualServerRoute %v/%v: %v", vsr.Namespace, vsr.Name, err)
 			}
 
-            err = lbc.addBadosPolicyRefs(virtualServerEx.ApDosPolRefs, vsrSubroutePolicies)
+            err = lbc.addBadosPolicyRefs(virtualServerEx.ApDosPolRefs, virtualServerEx.DosLogConfRefs, vsrSubroutePolicies)
             if err != nil {
                 glog.Warningf("Error getting Bados policies for VirtualServerRoute %v/%v: %v", vsr.Namespace, vsr.Name, err)
             }
@@ -2704,7 +2780,7 @@ func (lbc *LoadBalancerController) addWAFPolicyRefs(
 
 // addBadosPolicyRefs ensures the app protect dos resources that are referenced in policies exist.
 func (lbc *LoadBalancerController) addBadosPolicyRefs(
-	apDosPolRef map[string]*unstructured.Unstructured,
+	apDosPolRef, logConfRef map[string]*unstructured.Unstructured,
 	policies []*conf_v1.Policy,
 ) error {
 	for _, pol := range policies {
@@ -2724,6 +2800,20 @@ func (lbc *LoadBalancerController) addBadosPolicyRefs(
 			}
 			apDosPolRef[apDosPolKey] = apDosPolicy
 		}
+
+        if pol.Spec.Bados.DosSecurityLog != nil && pol.Spec.Bados.DosSecurityLog.ApDosLogConf != "" {
+            logConfKey := pol.Spec.Bados.DosSecurityLog.ApDosLogConf
+            if !strings.Contains(pol.Spec.Bados.DosSecurityLog.ApDosLogConf, "/") {
+                logConfKey = fmt.Sprintf("%v/%v", pol.Namespace, logConfKey)
+            }
+
+            logConf, err := lbc.appProtectConfiguration.GetAppResource(appprotect.DosLogConfGVK.Kind, logConfKey)
+            if err != nil {
+                return fmt.Errorf("Bados policy %q is invalid: %v", logConfKey, err)
+            }
+            logConfRef[logConfKey] = logConf
+        }
+
 	}
 	return nil
 }
@@ -2781,6 +2871,18 @@ func getBadosPoliciesForAppProtectDosPolicy(pols []*conf_v1.Policy, key string) 
 
 	for _, pol := range pols {
 		if pol.Spec.Bados != nil && isMatchingResourceRef(pol.Namespace, pol.Spec.Bados.ApDosPolicy, key) {
+			policies = append(policies, pol)
+		}
+	}
+
+	return policies
+}
+
+func getBadosPoliciesForAppProtectLogConf(pols []*conf_v1.Policy, key string) []*conf_v1.Policy {
+	var policies []*conf_v1.Policy
+
+	for _, pol := range pols {
+		if pol.Spec.Bados != nil && pol.Spec.Bados.DosSecurityLog != nil && isMatchingResourceRef(pol.Namespace, pol.Spec.Bados.DosSecurityLog.ApDosLogConf, key) {
 			policies = append(policies, pol)
 		}
 	}
@@ -3299,6 +3401,32 @@ func (lbc *LoadBalancerController) syncAppProtectDosPolicy(task task) {
 		glog.V(2).Infof("Adding or Updating AppProtectDosPolicy: %v\n", key)
 
 		changes, problems = lbc.appProtectConfiguration.AddOrUpdateDosPolicy(obj.(*unstructured.Unstructured))
+	}
+
+	lbc.processAppProtectDosChanges(changes)
+	lbc.processAppProtectDosProblems(problems)
+}
+
+func (lbc *LoadBalancerController) syncAppProtectDosLogConf(task task) {
+	key := task.Key
+	glog.V(3).Infof("Syncing AppProtectDosLogConf %v", key)
+	obj, confExists, err := lbc.appProtectDosLogConfLister.GetByKey(key)
+	if err != nil {
+		lbc.syncQueue.Requeue(task, err)
+		return
+	}
+
+	var changes []appprotect.Change
+	var problems []appprotect.Problem
+
+	if !confExists {
+		glog.V(2).Infof("Deleting AppProtectDosLogConf: %v\n", key)
+
+		changes, problems = lbc.appProtectConfiguration.DeleteDosLogConf(key)
+	} else {
+		glog.V(2).Infof("Adding or Updating AppProtectDosLogConf: %v\n", key)
+
+		changes, problems = lbc.appProtectConfiguration.AddOrUpdateDosLogConf(obj.(*unstructured.Unstructured))
 	}
 
 	lbc.processAppProtectDosChanges(changes)

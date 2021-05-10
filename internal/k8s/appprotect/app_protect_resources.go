@@ -30,6 +30,11 @@ var appProtectDosPolicyRequiredFields = [][]string {
 	{"spec", "bad_actors"},
 }
 
+var appProtectDosLogConfRequiredFields = [][]string{
+	{"spec", "content"},
+	{"spec", "filter"},
+}
+
 func validateRequiredFields(policy *unstructured.Unstructured, fieldsList [][]string) error {
 	for _, fields := range fieldsList {
 		field, found, err := unstructured.NestedMap(policy.Object, fields...)
