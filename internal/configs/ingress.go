@@ -37,7 +37,6 @@ type IngressEx struct {
 	AppProtectDosPolicy  *unstructured.Unstructured
     AppProtectDosLogConf *unstructured.Unstructured
     AppProtectDosLogDst  string
-    AppProtectDosMonitor string
 	SecretRefs           map[string]*secrets.SecretReference
 }
 
