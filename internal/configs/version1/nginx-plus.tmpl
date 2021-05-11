@@ -72,6 +72,16 @@ http {
     {{if .AppProtectPhysicalMemoryThresholds}}app_protect_physical_memory_util_thresholds {{.AppProtectPhysicalMemoryThresholds}};{{end}}
     include /etc/nginx/waf/nac-usersigs/index.conf;
     {{- end}}
+
+    {{- if .AppProtectDosLoadModule}}
+        {{- if .AppProtectDosLivenessEnable}}
+    app_protect_dos_liveness {{.AppProtectDosLivenessEnable}} uri:{{.AppProtectDosLivenessUri}} port:{{.AppProtectDosLivenessPort}};
+        {{- end}}
+        {{- if .AppProtectDosReadinessEnable}}
+    app_protect_dos_readiness {{.AppProtectDosReadinessEnable}} uri:{{.AppProtectDosReadinessUri}} port:{{.AppProtectDosReadinessPort}};
+        {{- end}}
+    {{- end}}
+
     sendfile        on;
     #tcp_nopush     on;
 

@@ -500,7 +500,7 @@ func main() {
 		if err != nil {
 			glog.Fatalf("Error when getting %v: %v", *nginxConfigMaps, err)
 		}
-		cfgParams = configs.ParseConfigMap(cfm, *nginxPlus, *appProtect)
+		cfgParams = configs.ParseConfigMap(cfm, *nginxPlus, *appProtect, *appProtectDos)
 		if cfgParams.MainServerSSLDHParamFileContent != nil {
 			fileName, err := nginxManager.CreateDHParam(*cfgParams.MainServerSSLDHParamFileContent)
 			if err != nil {

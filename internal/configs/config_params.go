@@ -57,6 +57,12 @@ type ConfigParams struct {
     AppProtectDosLogConf                   string
     AppProtectDosLogEnable                 string
     AppProtectDosMonitor                   string
+    MainAppProtectDosLivenessEnable        string
+    MainAppProtectDosLivenessUri           string
+    MainAppProtectDosLivenessPort          int
+    MainAppProtectDosReadinessEnable       string
+    MainAppProtectDosReadinessUri          string
+    MainAppProtectDosReadinessPort         int
 	ProxyBuffering                         bool
 	ProxyBuffers                           string
 	ProxyBufferSize                        string

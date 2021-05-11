@@ -654,7 +654,7 @@ func (lbc *LoadBalancerController) syncConfigMap(task task) {
 
 	if configExists {
 		cfgm := obj.(*api_v1.ConfigMap)
-		cfgParams = configs.ParseConfigMap(cfgm, lbc.isNginxPlus, lbc.appProtectEnabled)
+		cfgParams = configs.ParseConfigMap(cfgm, lbc.isNginxPlus, lbc.appProtectEnabled, lbc.appProtectDosEnabled)
 
 		lbc.statusUpdater.SaveStatusFromExternalStatus(cfgm.Data["external-status-address"])
 	}

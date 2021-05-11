@@ -10,7 +10,7 @@ import (
 )
 
 // ParseConfigMap parses ConfigMap into ConfigParams.
-func ParseConfigMap(cfgm *v1.ConfigMap, nginxPlus bool, hasAppProtect bool) *ConfigParams {
+func ParseConfigMap(cfgm *v1.ConfigMap, nginxPlus bool, hasAppProtect bool, hasAppProtectDos bool) *ConfigParams {
 	cfgParams := NewDefaultConfigParams()
 
 	if serverTokens, exists, err := GetMapKeyAsBool(cfgm.Data, "server-tokens", cfgm); exists {
@@ -493,6 +493,49 @@ func ParseConfigMap(cfgm *v1.ConfigMap, nginxPlus bool, hasAppProtect bool) *Con
 		}
 	}
 
+	if hasAppProtectDos {
+
+	    appProtectDosLivenessEnable, livenessExistsEnable, errEnable := GetMapKeyAsBool(cfgm.Data, "app-protect-dos-liveness-enable", cfgm)
+        appProtectDosLivenessUri, livenessExistsUri := cfgm.Data["app-protect-dos-liveness-uri"]
+	    appProtectDosLivenessPort, livenessExistsPort, errPort := GetMapKeyAsInt(cfgm.Data, "app-protect-dos-liveness-port", cfgm)
+
+        if livenessExistsEnable && livenessExistsUri && livenessExistsPort {
+            if errEnable != nil {
+                glog.Error(errEnable)
+            } else if errPort != nil {
+                glog.Error(errPort)
+            } else {
+                if appProtectDosLivenessEnable {
+                    cfgParams.MainAppProtectDosLivenessEnable = "on"
+                } else {
+                    cfgParams.MainAppProtectDosLivenessEnable = "off"
+                }
+                cfgParams.MainAppProtectDosLivenessUri = appProtectDosLivenessUri
+                cfgParams.MainAppProtectDosLivenessPort = appProtectDosLivenessPort
+            }
+	    }
+
+        appProtectDosReadinessEnable, readinessExistsEnable, errEnable := GetMapKeyAsBool(cfgm.Data, "app-protect-dos-readiness-enable", cfgm)
+        appProtectDosReadinessUri, readinessExistsUri := cfgm.Data["app-protect-dos-readiness-uri"]
+        appProtectDosReadinessPort, readinessExistsPort, errPort := GetMapKeyAsInt(cfgm.Data, "app-protect-dos-readiness-port", cfgm)
+
+        if readinessExistsEnable && readinessExistsUri && readinessExistsPort {
+            if errEnable != nil {
+                glog.Error(errEnable)
+            } else if errPort != nil {
+                glog.Error(errPort)
+            } else {
+                if appProtectDosReadinessEnable {
+                    cfgParams.MainAppProtectDosReadinessEnable = "on"
+                } else {
+                    cfgParams.MainAppProtectDosReadinessEnable = "off"
+                }
+                cfgParams.MainAppProtectDosReadinessUri = appProtectDosReadinessUri
+                cfgParams.MainAppProtectDosReadinessPort = appProtectDosReadinessPort
+            }
+        }
+	}
+
 	return cfgParams
 }
 
@@ -553,6 +596,12 @@ func GenerateNginxMainConfig(staticCfgParams *StaticConfigParams, config *Config
 		AppProtectCookieSeed:               config.MainAppProtectCookieSeed,
 		AppProtectCPUThresholds:            config.MainAppProtectCPUThresholds,
 		AppProtectPhysicalMemoryThresholds: config.MainAppProtectPhysicalMemoryThresholds,
+		AppProtectDosLivenessEnable:        config.MainAppProtectDosLivenessEnable,
+		AppProtectDosLivenessUri:           config.MainAppProtectDosLivenessUri,
+		AppProtectDosLivenessPort:          config.MainAppProtectDosLivenessPort,
+        AppProtectDosReadinessEnable:       config.MainAppProtectDosReadinessEnable,
+        AppProtectDosReadinessUri:          config.MainAppProtectDosReadinessUri,
+        AppProtectDosReadinessPort:         config.MainAppProtectDosReadinessPort,
 		InternalRouteServer:                staticCfgParams.EnableInternalRoutes,
 		InternalRouteServerName:            staticCfgParams.PodName,
 		LatencyMetrics:                     staticCfgParams.EnableLatencyMetrics,
