@@ -125,6 +125,23 @@ http {
     include oidc/oidc_common.conf;
     {{- end}}
 
+    {{- if .AppProtectDosLoadModule}}
+        {{- if .AppProtectDosLivenessEnable}}
+    server {
+        server_name probe;
+        listen {{.AppProtectDosLivenessPort}};
+        location /nginx-live {
+            app_protect_dos_enable on;
+            proxy_pass http://localhost:8083;
+        }
+    }
+
+    server {
+        listen 8083;
+        return 503;
+    }
+        {{- end}}
+    {{- end}}
     server {
         # required to support the Websocket protocol in VirtualServer/VirtualServerRoutes
         set $default_connection_header "";
