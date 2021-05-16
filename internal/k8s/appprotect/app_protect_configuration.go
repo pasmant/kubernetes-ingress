@@ -58,33 +58,6 @@ var (
 		Version: "v1beta1",
 		Kind:    "APUserSig",
 	}
-
-	// DosPolicyGVR is the group version resource of the appprotect policy
-	DosPolicyGVR = schema.GroupVersionResource{
-		Group:    "appprotect.f5.com",
-		Version:  "v1beta1",
-		Resource: "apdospolicies",
-	}
-
-    // DosPolicyGVK is the group version kind of the appprotect policy
-    DosPolicyGVK = schema.GroupVersionKind{
-        Group:   "appprotect.f5.com",
-        Version: "v1beta1",
-        Kind:    "APDosPolicy",
-    }
-
-    // DosLogConfGVR is the group version resource of the appprotect policy
-    DosLogConfGVR = schema.GroupVersionResource{
-        Group:    "appprotect.f5.com",
-        Version:  "v1beta1",
-        Resource: "apdoslogconfs",
-    }
-    // DosLogConfGVK is the group version kind of the appprotect policy
-    DosLogConfGVK = schema.GroupVersionKind{
-        Group:   "appprotect.f5.com",
-        Version: "v1beta1",
-        Kind:    "APDosLogConf",
-    }
 )
 
 // UserSigChange holds resources that are affected by changes in UserSigs
@@ -127,23 +100,17 @@ type Configuration interface {
 	AddOrUpdatePolicy(policyObj *unstructured.Unstructured) (changes []Change, problems []Problem)
 	AddOrUpdateLogConf(logConfObj *unstructured.Unstructured) (changes []Change, problems []Problem)
 	AddOrUpdateUserSig(userSigObj *unstructured.Unstructured) (change UserSigChange, problems []Problem)
-	AddOrUpdateDosPolicy(policyObj *unstructured.Unstructured) (changes []Change, problems []Problem)
-    AddOrUpdateDosLogConf(logConfObj *unstructured.Unstructured) (changes []Change, problems []Problem)
 	GetAppResource(kind, key string) (*unstructured.Unstructured, error)
 	DeletePolicy(key string) (changes []Change, problems []Problem)
 	DeleteLogConf(key string) (changes []Change, problems []Problem)
 	DeleteUserSig(key string) (change UserSigChange, problems []Problem)
-	DeleteDosPolicy(key string) (changes []Change, problems []Problem)
-    DeleteDosLogConf(key string) (changes []Change, problems []Problem)
 }
 
 // ConfigurationImpl holds representations of App Protect cluster resources
 type ConfigurationImpl struct {
-	Policies    map[string]*PolicyEx
-	LogConfs    map[string]*LogConfEx
-	UserSigs    map[string]*UserSigEx
-	DosPolicies map[string]*DosPolicyEx
-	DosLogConfs map[string]*DosLogConfEx
+	Policies map[string]*PolicyEx
+	LogConfs map[string]*LogConfEx
+	UserSigs map[string]*UserSigEx
 }
 
 // NewConfiguration creates a new App Protect Configuration
@@ -154,11 +121,9 @@ func NewConfiguration() Configuration {
 // NewConfiguration creates a new App Protect Configuration
 func newConfigurationImpl() *ConfigurationImpl {
 	return &ConfigurationImpl{
-		Policies:    make(map[string]*PolicyEx),
-		LogConfs:    make(map[string]*LogConfEx),
-		UserSigs:    make(map[string]*UserSigEx),
-		DosPolicies: make(map[string]*DosPolicyEx),
-		DosLogConfs: make(map[string]*DosLogConfEx),
+		Policies: make(map[string]*PolicyEx),
+		LogConfs: make(map[string]*LogConfEx),
+		UserSigs: make(map[string]*UserSigEx),
 	}
 }
 
@@ -176,24 +141,6 @@ func (pol *PolicyEx) setInvalid(reason string) {
 }
 
 func (pol *PolicyEx) setValid() {
-	pol.IsValid = true
-	pol.ErrorMsg = ""
-}
-
-// DosPolicyEx represents an App Protect policy cluster resource
-type DosPolicyEx struct {
-	Obj           *unstructured.Unstructured
-	SignatureReqs []SignatureReq
-	IsValid       bool
-	ErrorMsg      string
-}
-
-func (pol *DosPolicyEx) setInvalid(reason string) {
-	pol.IsValid = false
-	pol.ErrorMsg = reason
-}
-
-func (pol *DosPolicyEx) setValid() {
 	pol.IsValid = true
 	pol.ErrorMsg = ""
 }
@@ -286,46 +233,6 @@ func createAppProtectPolicyEx(policyObj *unstructured.Unstructured) (*PolicyEx, 
 	}, nil
 }
 
-func createAppProtectDosPolicyEx(policyObj *unstructured.Unstructured) (*DosPolicyEx, error) {
-	err := ValidateAppProtectDosPolicy(policyObj)
-	if err != nil {
-		errMsg := fmt.Sprintf("Error validating policy %s: %v", policyObj.GetName(), err)
-		return &DosPolicyEx{Obj: policyObj, IsValid: false, ErrorMsg: failedValidationErrorMsg}, fmt.Errorf(errMsg)
-	}
-	sigReqs := []SignatureReq{}
-	// Check if policy has signature requirement (revision timestamp) and map them to tags
-	list, found, err := unstructured.NestedSlice(policyObj.Object, "spec", "policy", "signature-requirements")
-	if err != nil {
-		errMsg := fmt.Sprintf("Error retrieving Signature requirements from %s: %v", policyObj.GetName(), err)
-		return &DosPolicyEx{Obj: policyObj, IsValid: false, ErrorMsg: failedValidationErrorMsg}, fmt.Errorf(errMsg)
-	}
-	if found {
-		for _, req := range list {
-			requirement := req.(map[string]interface{})
-			if reqTag, ok := requirement["tag"]; ok {
-				timeReq, err := buildRevTimes(requirement)
-				if err != nil {
-					errMsg := fmt.Sprintf("Error creating time requirements from %s: %v", policyObj.GetName(), err)
-					return &DosPolicyEx{Obj: policyObj, IsValid: false, ErrorMsg: invalidTimestampErrorMsg}, fmt.Errorf(errMsg)
-				}
-				sigReqs = append(sigReqs, SignatureReq{Tag: reqTag.(string), RevTimes: &timeReq})
-			}
-		}
-	}
-	return &DosPolicyEx{
-		Obj:           policyObj,
-		SignatureReqs: sigReqs,
-		IsValid:       true,
-	}, nil
-}
-
-// DosLogConfEx represents an App Protect Dos Log Configuration cluster resource
-type DosLogConfEx struct {
-	Obj      *unstructured.Unstructured
-	IsValid  bool
-	ErrorMsg string
-}
-
 func buildRevTimes(requirement map[string]interface{}) (RevTimes, error) {
 	timeReq := RevTimes{}
 	if minRev, ok := requirement["minRevisionDatetime"]; ok {
@@ -358,21 +265,6 @@ func createAppProtectLogConfEx(logConfObj *unstructured.Unstructured) (*LogConfE
 	}
 	return &LogConfEx{
 		Obj:     logConfObj,
-		IsValid: true,
-	}, nil
-}
-
-func createAppProtectDosLogConfEx(dosLogConfObj *unstructured.Unstructured) (*DosLogConfEx, error) {
-	err := ValidateAppProtectLogConf(dosLogConfObj)
-	if err != nil {
-		return &DosLogConfEx{
-			Obj:      dosLogConfObj,
-			IsValid:  false,
-			ErrorMsg: failedValidationErrorMsg,
-		}, err
-	}
-	return &DosLogConfEx{
-		Obj:     dosLogConfObj,
 		IsValid: true,
 	}, nil
 }
@@ -490,32 +382,6 @@ func (ci *ConfigurationImpl) AddOrUpdateUserSig(userSigObj *unstructured.Unstruc
 	return change, problems
 }
 
-
-// AddOrUpdateDosPolicy adds or updates an App Protect Dos Policy to App Protect Dos Configuration
-func (ci *ConfigurationImpl) AddOrUpdateDosPolicy(policyObj *unstructured.Unstructured) (changes []Change, problems []Problem) {
-	resNsName := GetNsName(policyObj)
-	policy, err := createAppProtectDosPolicyEx(policyObj)
-	if err != nil {
-		ci.DosPolicies[resNsName] = policy
-		return append(changes, Change{Op: Delete, Resource: policy}),
-			append(problems, Problem{Object: policyObj, Reason: "Rejected", Message: err.Error()})
-	}
-    ci.DosPolicies[resNsName] = policy
-    return append(changes, Change{Op: AddOrUpdate, Resource: policy}), problems
-}
-
-// AddOrUpdateDosLogConf adds or updates App Protect Dos Log Configuration to App Protect Dos Configuration
-func (ci *ConfigurationImpl) AddOrUpdateDosLogConf(logconfObj *unstructured.Unstructured) (changes []Change, problems []Problem) {
-	resNsName := GetNsName(logconfObj)
-	logConf, err := createAppProtectDosLogConfEx(logconfObj)
-	ci.DosLogConfs[resNsName] = logConf
-	if err != nil {
-		return append(changes, Change{Op: Delete, Resource: logConf}),
-			append(problems, Problem{Object: logconfObj, Reason: "Rejected", Message: err.Error()})
-	}
-	return append(changes, Change{Op: AddOrUpdate, Resource: logConf}), problems
-}
-
 // GetAppResource returns a pointer to an App Protect resource
 func (ci *ConfigurationImpl) GetAppResource(kind, key string) (*unstructured.Unstructured, error) {
 	switch kind {
@@ -543,22 +409,6 @@ func (ci *ConfigurationImpl) GetAppResource(kind, key string) (*unstructured.Uns
 			return nil, fmt.Errorf(obj.ErrorMsg)
 		}
 		return nil, fmt.Errorf("App Protect UserSig %s not found", key)
-    case DosPolicyGVK.Kind:
-        if obj, ok := ci.DosPolicies[key]; ok {
-            if obj.IsValid {
-                return obj.Obj, nil
-            }
-            return nil, fmt.Errorf(obj.ErrorMsg)
-        }
-        return nil, fmt.Errorf("App Protect Dos Policy %s not found", key)
-    case DosLogConfGVK.Kind:
-        if obj, ok := ci.DosLogConfs[key]; ok {
-            if obj.IsValid {
-                return obj.Obj, nil
-            }
-            return nil, fmt.Errorf(obj.ErrorMsg)
-        }
-        return nil, fmt.Errorf("App Protect DosLogConf %s not found", key)
 	}
 	return nil, fmt.Errorf("Unknown App Protect resource kind %s", kind)
 }
@@ -591,26 +441,6 @@ func (ci *ConfigurationImpl) DeleteUserSig(key string) (change UserSigChange, pr
 		ci.buildUserSigChangeAndProblems(&problems, &change)
 	}
 	return change, problems
-}
-
-// DeleteDosPolicy deletes an App Protect Policy from App Protect Configuration
-func (ci *ConfigurationImpl) DeleteDosPolicy(key string) (changes []Change, problems []Problem) {
-	if _, has := ci.DosPolicies[key]; has {
-		change := Change{Op: Delete, Resource: ci.DosPolicies[key]}
-		delete(ci.DosPolicies, key)
-		return append(changes, change), problems
-	}
-	return changes, problems
-}
-
-// DeleteDosLogConf deletes an App Protect Dos Log Configuration from App Protect Configuration
-func (ci *ConfigurationImpl) DeleteDosLogConf(key string) (changes []Change, problems []Problem) {
-	if _, has := ci.LogConfs[key]; has {
-		change := Change{Op: Delete, Resource: ci.LogConfs[key]}
-		delete(ci.LogConfs, key)
-		return append(changes, change), problems
-	}
-	return changes, problems
 }
 
 func (ci *ConfigurationImpl) detectDuplicateTags() (outcome [][]*UserSigEx) {
@@ -714,21 +544,17 @@ func (ci *ConfigurationImpl) buildUserSigChangeAndProblems(problems *[]Problem, 
 
 // FakeConfiguration holds representations of fake App Protect cluster resources
 type FakeConfiguration struct {
-	Policies    map[string]*PolicyEx
-	LogConfs    map[string]*LogConfEx
-	UserSigs    map[string]*UserSigEx
-	DosPolicies map[string]*DosPolicyEx
-	DosLogConfs map[string]*DosLogConfEx
+	Policies map[string]*PolicyEx
+	LogConfs map[string]*LogConfEx
+	UserSigs map[string]*UserSigEx
 }
 
 // NewFakeConfiguration creates a new App Protect Configuration
 func NewFakeConfiguration() Configuration {
 	return &FakeConfiguration{
-		Policies:       make(map[string]*PolicyEx),
-		LogConfs:       make(map[string]*LogConfEx),
-		UserSigs:       make(map[string]*UserSigEx),
-        DosPolicies:    make(map[string]*DosPolicyEx),
-        DosLogConfs:    make(map[string]*DosLogConfEx),
+		Policies: make(map[string]*PolicyEx),
+		LogConfs: make(map[string]*LogConfEx),
+		UserSigs: make(map[string]*UserSigEx),
 	}
 }
 
@@ -754,28 +580,6 @@ func (fc *FakeConfiguration) AddOrUpdateLogConf(logConfObj *unstructured.Unstruc
 	return changes, problems
 }
 
-// AddOrUpdateDosPolicy adds or updates an App Protect Policy to App Protect Configuration
-func (fc *FakeConfiguration) AddOrUpdateDosPolicy(policyObj *unstructured.Unstructured) (changes []Change, problems []Problem) {
-	resNsName := GetNsName(policyObj)
-	policy := &DosPolicyEx{
-		Obj:     policyObj,
-		IsValid: true,
-	}
-	fc.DosPolicies[resNsName] = policy
-	return changes, problems
-}
-
-// AddOrUpdateDosLogConf adds or updates App Protect Dos Log Configuration to App Protect Dos Configuration
-func (fc *FakeConfiguration) AddOrUpdateDosLogConf(logConfObj *unstructured.Unstructured) (changes []Change, problems []Problem) {
-	resNsName := GetNsName(logConfObj)
-	logConf := &DosLogConfEx{
-		Obj:     logConfObj,
-		IsValid: true,
-	}
-	fc.DosLogConfs[resNsName] = logConf
-	return changes, problems
-}
-
 // AddOrUpdateUserSig adds or updates App Protect User Defined Signature to App Protect Configuration
 func (fc *FakeConfiguration) AddOrUpdateUserSig(userSigObj *unstructured.Unstructured) (change UserSigChange, problems []Problem) {
 	return change, problems
@@ -794,11 +598,6 @@ func (fc *FakeConfiguration) GetAppResource(kind, key string) (*unstructured.Uns
 			return obj.Obj, nil
 		}
 		return nil, fmt.Errorf("App Protect LogConf %s not found", key)
-    case DosPolicyGVK.Kind:
-        if obj, ok := fc.DosPolicies[key]; ok {
-            return obj.Obj, nil
-        }
-        return nil, fmt.Errorf("App Protect Dos Policy %s not found", key)
 	}
 	return nil, fmt.Errorf("Unknown App Protect resource kind %s", kind)
 }
@@ -816,14 +615,4 @@ func (fc *FakeConfiguration) DeleteLogConf(key string) (changes []Change, proble
 // DeleteUserSig deletes an App Protect User Defined Signature from App Protect Configuration
 func (fc *FakeConfiguration) DeleteUserSig(key string) (change UserSigChange, problems []Problem) {
 	return change, problems
-}
-
-// DeleteDosPolicy deletes an App Protect Dos Policy from App Protect Configuration
-func (fc *FakeConfiguration) DeleteDosPolicy(key string) (changes []Change, problems []Problem) {
-	return changes, problems
-}
-
-// DeleteDosLogConf deletes an App Protect Dos Log Configuration from App Protect Configuration
-func (fc *FakeConfiguration) DeleteDosLogConf(key string) (changes []Change, problems []Problem) {
-	return changes, problems
 }

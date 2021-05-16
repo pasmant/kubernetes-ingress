@@ -2,9 +2,9 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   creationTimestamp: null
-  name: apdospolicies.appprotect.f5.com
+  name: apdospolicies.appprotectdos.f5.com
 spec:
-  group: appprotect.f5.com
+  group: appprotectdos.f5.com
   names:
     kind: APDosPolicy
     listKind: APDosPoliciesList

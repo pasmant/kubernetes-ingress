@@ -4,9 +4,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.0
   creationTimestamp: null
-  name: apdoslogconfs.appprotect.f5.com
+  name: apdoslogconfs.appprotectdos.f5.com
 spec:
-  group: appprotect.f5.com
+  group: appprotectdos.f5.com
   names:
     kind: APDosLogConf
     listKind: APDosLogConfList

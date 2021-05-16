@@ -1,4 +1,4 @@
-package appprotect
+package appprotectdos
 
 import (
 	"fmt"
@@ -10,17 +10,16 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
-var appProtectPolicyRequiredFields = [][]string{
-	{"spec", "policy"},
+var appProtectDosPolicyRequiredFields = [][]string {
+	{"spec", "mitigation_mode"},
+	{"spec", "use_automation_tools_detection"},
+    {"spec", "signatures"},
+	{"spec", "bad_actors"},
 }
 
-var appProtectLogConfRequiredFields = [][]string{
+var appProtectDosLogConfRequiredFields = [][]string{
 	{"spec", "content"},
 	{"spec", "filter"},
-}
-
-var appProtectUserSigRequiredSlices = [][]string{
-	{"spec", "signatures"},
 }
 
 func validateRequiredFields(policy *unstructured.Unstructured, fieldsList [][]string) error {
@@ -62,24 +61,25 @@ func validateRequiredStrings(policy *unstructured.Unstructured, fieldsList [][]s
 	return nil
 }
 
-// ValidateAppProtectPolicy validates Policy resource
-func ValidateAppProtectPolicy(policy *unstructured.Unstructured) error {
-	polName := policy.GetName()
-
-	err := validateRequiredFields(policy, appProtectPolicyRequiredFields)
-	if err != nil {
-		return fmt.Errorf("Error validating App Protect Policy %v: %v", polName, err)
+func validateRequiredFieldsNoCopy(policy *unstructured.Unstructured, fieldsList [][]string) error {
+	for _, fields := range fieldsList {
+		field, found, err := unstructured.NestedFieldNoCopy(policy.Object, fields...)
+		if err != nil {
+			return fmt.Errorf("Error checking for required field %v: %v", field, err)
+		}
+		if !found {
+			return fmt.Errorf("Required field %v not found", field)
+		}
 	}
-
 	return nil
 }
 
-// ValidateAppProtectLogConf validates LogConfiguration resource
-func ValidateAppProtectLogConf(logConf *unstructured.Unstructured) error {
+// ValidateAppDosProtectLogConf validates LogConfiguration resource
+func ValidateAppProtectDosLogConf(logConf *unstructured.Unstructured) error {
 	lcName := logConf.GetName()
-	err := validateRequiredFields(logConf, appProtectLogConfRequiredFields)
+	err := validateRequiredFields(logConf, appProtectDosLogConfRequiredFields)
 	if err != nil {
-		return fmt.Errorf("Error validating App Protect Log Configuration %v: %v", lcName, err)
+		return fmt.Errorf("Error validating App Protect Dos Log Configuration %v: %v", lcName, err)
 	}
 
 	return nil
@@ -88,9 +88,9 @@ func ValidateAppProtectLogConf(logConf *unstructured.Unstructured) error {
 var logDstEx = regexp.MustCompile(`(?:syslog:server=((?:\d{1,3}\.){3}\d{1,3}|localhost):\d{1,5})|stderr|(?:\/[\S]+)+`)
 var logDstFileEx = regexp.MustCompile(`(?:\/[\S]+)+`)
 
-// ValidateAppProtectLogDestination validates destination for log configuration
-func ValidateAppProtectLogDestination(dstAntn string) error {
-	errormsg := "Error parsing App Protect Log config: Destination must follow format: syslog:server=<ip-address | localhost>:<port> or stderr or absolute path to file"
+// ValidateAppProtectDosLogDestination validates destination for log configuration
+func ValidateAppProtectDosLogDestination(dstAntn string) error {
+	errormsg := "Error parsing App Protect Dos Log config: Destination must follow format: syslog:server=<ip-address | localhost>:<port> or stderr or absolute path to file"
 	if !logDstEx.MatchString(dstAntn) {
 		return fmt.Errorf("%s Log Destination did not follow format", errormsg)
 	}
@@ -123,6 +123,18 @@ func ValidateAppProtectLogDestination(dstAntn string) error {
 	return nil
 }
 
+// ValidateAppProtectDosPolicy validates Policy resource
+func ValidateAppProtectDosPolicy(policy *unstructured.Unstructured) error {
+	polName := policy.GetName()
+
+	err := validateRequiredFieldsNoCopy(policy, appProtectDosPolicyRequiredFields)
+	if err != nil {
+		return fmt.Errorf("Error validating App Protect Dos Policy %v: %v", polName, err)
+	}
+
+	return nil
+}
+
 // ParseResourceReferenceAnnotation returns a namespace/name string
 func ParseResourceReferenceAnnotation(ns, antn string) string {
 	if !strings.Contains(antn, "/") {
@@ -131,15 +143,6 @@ func ParseResourceReferenceAnnotation(ns, antn string) string {
 	return antn
 }
 
-func validateAppProtectUserSig(userSig *unstructured.Unstructured) error {
-	sigName := userSig.GetName()
-	err := validateRequiredSlices(userSig, appProtectUserSigRequiredSlices)
-	if err != nil {
-		return fmt.Errorf("Error validating App Protect User Signature %v: %v", sigName, err)
-	}
-
-	return nil
-}
 
 // GetNsName gets the key of a resource in the format: "resNamespace/resName"
 func GetNsName(obj *unstructured.Unstructured) string {

@@ -17,16 +17,16 @@ const AppProtectLogConfAnnotation = "appprotect.f5.com/app-protect-security-log"
 const AppProtectLogConfDstAnnotation = "appprotect.f5.com/app-protect-security-log-destination"
 
 // AppProtectDosPolicyAnnotation is where the NGINX App Protect Dos policy is specified
-const AppProtectDosPolicyAnnotation = "appprotect.f5.com/app-protect-dos-policy"
+const AppProtectDosPolicyAnnotation = "appprotectdos.f5.com/app-protect-dos-policy"
 
 // AppProtectDosLogConfAnnotation is where the NGINX AppProtect Dos Log Configuration is specified
-const AppProtectDosLogConfAnnotation = "appprotect.f5.com/app-protect-dos-security-log"
+const AppProtectDosLogConfAnnotation = "appprotectdos.f5.com/app-protect-dos-security-log"
 
 // AppProtectDosLogConfDstAnnotation is where the NGINX AppProtect Dos Log Configuration is specified
-const AppProtectDosLogConfDstAnnotation = "appprotect.f5.com/app-protect-dos-security-log-destination"
+const AppProtectDosLogConfDstAnnotation = "appprotectdos.f5.com/app-protect-dos-security-log-destination"
 
 // AppProtectDosMonitorAnnotation is where the NGINX App Protect Monitor is specified
-const AppProtectDosMonitorAnnotation = "appprotect.f5.com/app-protect-dos-monitor"
+const AppProtectDosMonitorAnnotation = "appprotectdos.f5.com/app-protect-dos-monitor"
 
 // nginxMeshInternalRoute specifies if the ingress resource is an internal route.
 const nginxMeshInternalRouteAnnotation = "nsm.nginx.com/internal-route"
@@ -43,23 +43,23 @@ var masterBlacklist = map[string]bool{
 }
 
 var minionBlacklist = map[string]bool{
-	"nginx.org/proxy-hide-headers":                      true,
-	"nginx.org/proxy-pass-headers":                      true,
-	"nginx.org/redirect-to-https":                       true,
-	"ingress.kubernetes.io/ssl-redirect":                true,
-	"nginx.org/hsts":                                    true,
-	"nginx.org/hsts-max-age":                            true,
-	"nginx.org/hsts-include-subdomains":                 true,
-	"nginx.org/server-tokens":                           true,
-	"nginx.org/listen-ports":                            true,
-	"nginx.org/listen-ports-ssl":                        true,
-	"nginx.org/server-snippets":                         true,
-	"appprotect.f5.com/app_protect_enable":              true,
-	"appprotect.f5.com/app_protect_policy":              true,
-	"appprotect.f5.com/app_protect_security_log_enable": true,
-	"appprotect.f5.com/app_protect_security_log":        true,
-    "appprotect.f5.com/app_protect_dos_enable":          true,
-    "appprotect.f5.com/app_protect_dos_policy_enable":   true,
+	"nginx.org/proxy-hide-headers":                       true,
+	"nginx.org/proxy-pass-headers":                       true,
+	"nginx.org/redirect-to-https":                        true,
+	"ingress.kubernetes.io/ssl-redirect":                 true,
+	"nginx.org/hsts":                                     true,
+	"nginx.org/hsts-max-age":                             true,
+	"nginx.org/hsts-include-subdomains":                  true,
+	"nginx.org/server-tokens":                            true,
+	"nginx.org/listen-ports":                             true,
+	"nginx.org/listen-ports-ssl":                         true,
+	"nginx.org/server-snippets":                          true,
+	"appprotect.f5.com/app_protect_enable":               true,
+	"appprotect.f5.com/app_protect_policy":               true,
+	"appprotect.f5.com/app_protect_security_log_enable":  true,
+	"appprotect.f5.com/app_protect_security_log":         true,
+    "appprotectdos.f5.com/app_protect_dos_enable":        true,
+    "appprotectdos.f5.com/app_protect_dos_policy_enable": true,
 }
 
 var minionInheritanceList = map[string]bool{
@@ -388,7 +388,7 @@ func parseAnnotations(ingEx *IngressEx, baseCfgParams *ConfigParams, isPlus bool
 
 	}
     if hasAppProtectDos {
-        if appProtectDosEnable, exists, err := GetMapKeyAsBool(ingEx.Ingress.Annotations, "appprotect.f5.com/app-protect-dos-enable", ingEx.Ingress); exists {
+        if appProtectDosEnable, exists, err := GetMapKeyAsBool(ingEx.Ingress.Annotations, "appprotectdos.f5.com/app-protect-dos-enable", ingEx.Ingress); exists {
             if err != nil {
                 glog.Error(err)
             } else {
@@ -399,7 +399,7 @@ func parseAnnotations(ingEx *IngressEx, baseCfgParams *ConfigParams, isPlus bool
                 }
             }
         }
-        if appProtectDosLogEnable, exists, err := GetMapKeyAsBool(ingEx.Ingress.Annotations, "appprotect.f5.com/app-protect-dos-security-log-enable", ingEx.Ingress); exists {
+        if appProtectDosLogEnable, exists, err := GetMapKeyAsBool(ingEx.Ingress.Annotations, "appprotectdos.f5.com/app-protect-dos-security-log-enable", ingEx.Ingress); exists {
             if err != nil {
                 glog.Error(err)
             } else {
@@ -411,7 +411,7 @@ func parseAnnotations(ingEx *IngressEx, baseCfgParams *ConfigParams, isPlus bool
             }
         }
 
-		if appProtectDosMonitor, exists := ingEx.Ingress.Annotations["appprotect.f5.com/app-protect-dos-monitor"]; exists {
+		if appProtectDosMonitor, exists := ingEx.Ingress.Annotations["appprotectdos.f5.com/app-protect-dos-monitor"]; exists {
 			cfgParams.AppProtectDosMonitor = appProtectDosMonitor
 		}
 
