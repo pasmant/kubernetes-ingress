@@ -104,6 +104,7 @@ type Server struct {
 	AppProtectDosLogConf   string
 	AppProtectDosLogEnable string
 	AppProtectDosMonitor   string
+	AppProtectDosName      string
 
 	SpiffeCerts bool
 }

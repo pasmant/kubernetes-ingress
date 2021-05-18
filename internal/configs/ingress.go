@@ -142,6 +142,7 @@ func generateNginxCfg(ingEx *IngressEx, apResources map[string]string, isMinion 
 			AppProtectDosEnable:    cfgParams.AppProtectDosEnable,
 			AppProtectDosLogEnable: cfgParams.AppProtectDosLogEnable,
 			AppProtectDosMonitor:   cfgParams.AppProtectDosMonitor,
+			AppProtectDosName:      cfgParams.AppProtectDosName,
 			SpiffeCerts:            cfgParams.SpiffeServerCerts,
 		}
 

@@ -86,6 +86,10 @@ server {
 	app_protect_dos_monitor "{{$server.AppProtectDosMonitor}}";
 	{{- end}}
 
+    {{- if $server.AppProtectDosName}}
+    app_protect_dos_name "{{$server.AppProtectDosName}}";
+    {{- end}}
+
 	{{if not $server.GRPCOnly}}
 	{{range $proxyHideHeader := $server.ProxyHideHeaders}}
 	proxy_hide_header {{$proxyHideHeader}};{{end}}
