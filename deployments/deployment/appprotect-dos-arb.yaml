@@ -15,21 +15,14 @@ spec:
     spec:
       containers:
         - name: arb-svc
-          image:  sea-artifactory.olympus.f5net.com/f5-beappprotect-docker/app_protect_dos/app_protect_dos_arb/app_protect_dos_arb:latest
+          image: sea-artifactory.olympus.f5net.com/f5-beappprotect-docker/app_protect_dos/app_protect_dos_arb/app_protect_dos_arb:latest
+          imagePullPolicy: Never
           resources:
             limits:
               memory: "128Mi"
               cpu: "500m"
           ports:
             - containerPort: 3000
-        - name: store-svc
-          image: redis
-          resources:
-            requests:
-              cpu: 100m
-              memory: 100Mi
-          ports:
-            - containerPort: 6379
 ---
 apiVersion: v1
 kind: Service
