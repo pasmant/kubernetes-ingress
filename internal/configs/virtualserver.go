@@ -1024,7 +1024,7 @@ func (p *policiesCfg) addBadosConfig(
         if apPolPath, exists := apResources[apPolKey]; exists {
             p.Bados.ApDosPolicy = apPolPath
         } else {
-            res.addWarningf("Bados policy %s references an invalid or non-existing App Protect Dos policy %s %v", polKey, apPolKey)
+            res.addWarningf("Bados policy %s references an invalid or non-existing App Protect Dos policy %s", polKey, apPolKey)
             res.isError = true
             return res
         }
