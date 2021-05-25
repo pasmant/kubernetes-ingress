@@ -13,7 +13,6 @@ const timeLayout = time.RFC3339
 // reasons for invalidity
 const (
 	failedValidationErrorMsg = "Validation Failed"
-	missingUserSigErrorMsg   = "Policy has unsatisfied signature requirements"
 	duplicatedTagsErrorMsg   = "Duplicate tag set"
 	invalidTimestampErrorMsg = "Invalid timestamp"
 )
@@ -41,7 +40,7 @@ var (
     }
     // DosLogConfGVK is the group version kind of the appprotectdos policy
     DosLogConfGVK = schema.GroupVersionKind{
-        Group:   "appprotect.f5.com",
+        Group:   "appprotectdos.f5.com",
         Version: "v1beta1",
         Kind:    "APDosLogConf",
     }
@@ -106,7 +105,6 @@ func newConfigurationImpl() *ConfigurationImpl {
 // DosPolicyEx represents an App Protect Dos policy cluster resource
 type DosPolicyEx struct {
 	Obj           *unstructured.Unstructured
-	SignatureReqs []SignatureReq
 	IsValid       bool
 	ErrorMsg      string
 }
@@ -121,47 +119,15 @@ func (pol *DosPolicyEx) setValid() {
 	pol.ErrorMsg = ""
 }
 
-// SignatureReq describes a signature that is required by the policy
-type SignatureReq struct {
-	Tag      string
-	RevTimes *RevTimes
-}
-
-// RevTimes are requirements for signature revision time
-type RevTimes struct {
-	MinRevTime *time.Time
-	MaxRevTime *time.Time
-}
-
 func createAppProtectDosPolicyEx(policyObj *unstructured.Unstructured) (*DosPolicyEx, error) {
 	err := ValidateAppProtectDosPolicy(policyObj)
 	if err != nil {
-		errMsg := fmt.Sprintf("Error validating policy %s: %v", policyObj.GetName(), err)
+		errMsg := fmt.Sprintf("Error validating dos policy %s: %v", policyObj.GetName(), err)
 		return &DosPolicyEx{Obj: policyObj, IsValid: false, ErrorMsg: failedValidationErrorMsg}, fmt.Errorf(errMsg)
 	}
-	sigReqs := []SignatureReq{}
-	// Check if policy has signature requirement (revision timestamp) and map them to tags
-	list, found, err := unstructured.NestedSlice(policyObj.Object, "spec", "policy", "signature-requirements")
-	if err != nil {
-		errMsg := fmt.Sprintf("Error retrieving Signature requirements from %s: %v", policyObj.GetName(), err)
-		return &DosPolicyEx{Obj: policyObj, IsValid: false, ErrorMsg: failedValidationErrorMsg}, fmt.Errorf(errMsg)
-	}
-	if found {
-		for _, req := range list {
-			requirement := req.(map[string]interface{})
-			if reqTag, ok := requirement["tag"]; ok {
-				timeReq, err := buildRevTimes(requirement)
-				if err != nil {
-					errMsg := fmt.Sprintf("Error creating time requirements from %s: %v", policyObj.GetName(), err)
-					return &DosPolicyEx{Obj: policyObj, IsValid: false, ErrorMsg: invalidTimestampErrorMsg}, fmt.Errorf(errMsg)
-				}
-				sigReqs = append(sigReqs, SignatureReq{Tag: reqTag.(string), RevTimes: &timeReq})
-			}
-		}
-	}
+
 	return &DosPolicyEx{
 		Obj:           policyObj,
-		SignatureReqs: sigReqs,
 		IsValid:       true,
 	}, nil
 }
@@ -171,27 +137,6 @@ type DosLogConfEx struct {
 	Obj      *unstructured.Unstructured
 	IsValid  bool
 	ErrorMsg string
-}
-
-func buildRevTimes(requirement map[string]interface{}) (RevTimes, error) {
-	timeReq := RevTimes{}
-	if minRev, ok := requirement["minRevisionDatetime"]; ok {
-		minRevTime, err := time.Parse(timeLayout, minRev.(string))
-		if err != nil {
-			errMsg := fmt.Sprintf("Error Parsing time from minRevisionDatetime %v", err)
-			return timeReq, fmt.Errorf(errMsg)
-		}
-		timeReq.MinRevTime = &minRevTime
-	}
-	if maxRev, ok := requirement["maxRevisionDatetime"]; ok {
-		maxRevTime, err := time.Parse(timeLayout, maxRev.(string))
-		if err != nil {
-			errMsg := fmt.Sprintf("Error Parsing time from maxRevisionDatetime  %v", err)
-			return timeReq, fmt.Errorf(errMsg)
-		}
-		timeReq.MaxRevTime = &maxRevTime
-	}
-	return timeReq, nil
 }
 
 func createAppProtectDosLogConfEx(dosLogConfObj *unstructured.Unstructured) (*DosLogConfEx, error) {

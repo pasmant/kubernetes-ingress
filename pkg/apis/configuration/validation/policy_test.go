@@ -13,6 +13,7 @@ func TestValidatePolicy(t *testing.T) {
 		isPlus                bool
 		enablePreviewPolicies bool
 		enableAppProtect      bool
+		enableAppProtectDos   bool
 		msg                   string
 	}{
 		{
@@ -26,6 +27,7 @@ func TestValidatePolicy(t *testing.T) {
 			isPlus:                false,
 			enablePreviewPolicies: false,
 			enableAppProtect:      false,
+			enableAppProtectDos:   false,
 		},
 		{
 			policy: &v1.Policy{
@@ -39,6 +41,7 @@ func TestValidatePolicy(t *testing.T) {
 			isPlus:                true,
 			enablePreviewPolicies: true,
 			enableAppProtect:      false,
+			enableAppProtectDos:   false,
 			msg:                   "use jwt(plus only) policy",
 		},
 		{
@@ -69,11 +72,12 @@ func TestValidatePolicy(t *testing.T) {
 			isPlus:                true,
 			enablePreviewPolicies: true,
 			enableAppProtect:      true,
+			enableAppProtectDos:   false,
 			msg:                   "use WAF(plus only) policy",
 		},
 	}
 	for _, test := range tests {
-		err := ValidatePolicy(test.policy, test.isPlus, test.enablePreviewPolicies, test.enableAppProtect)
+		err := ValidatePolicy(test.policy, test.isPlus, test.enablePreviewPolicies, test.enableAppProtect, test.enableAppProtectDos)
 		if err != nil {
 			t.Errorf("ValidatePolicy() returned error %v for valid input for the case of %v", err, test.msg)
 		}
@@ -86,6 +90,7 @@ func TestValidatePolicyFails(t *testing.T) {
 		isPlus                bool
 		enablePreviewPolicies bool
 		enableAppProtect      bool
+		enableAppProtectDos   bool
 		msg                   string
 	}{
 		{
@@ -95,6 +100,7 @@ func TestValidatePolicyFails(t *testing.T) {
 			isPlus:                false,
 			enablePreviewPolicies: false,
 			enableAppProtect:      false,
+			enableAppProtectDos:   false,
 			msg:                   "empty policy spec",
 		},
 		{
@@ -113,6 +119,7 @@ func TestValidatePolicyFails(t *testing.T) {
 			isPlus:                true,
 			enablePreviewPolicies: true,
 			enableAppProtect:      false,
+			enableAppProtectDos:   false,
 			msg:                   "multiple policies in spec",
 		},
 		{
@@ -127,6 +134,7 @@ func TestValidatePolicyFails(t *testing.T) {
 			isPlus:                false,
 			enablePreviewPolicies: true,
 			enableAppProtect:      false,
+			enableAppProtectDos:   false,
 			msg:                   "jwt(plus only) policy on OSS",
 		},
 		{
@@ -140,6 +148,7 @@ func TestValidatePolicyFails(t *testing.T) {
 			isPlus:                false,
 			enablePreviewPolicies: true,
 			enableAppProtect:      false,
+			enableAppProtectDos:   false,
 			msg:                   "WAF(plus only) policy on OSS",
 		},
 		{
@@ -155,6 +164,7 @@ func TestValidatePolicyFails(t *testing.T) {
 			isPlus:                false,
 			enablePreviewPolicies: false,
 			enableAppProtect:      false,
+			enableAppProtectDos:   false,
 			msg:                   "rateLimit policy with preview policies disabled",
 		},
 		{
@@ -169,6 +179,7 @@ func TestValidatePolicyFails(t *testing.T) {
 			isPlus:                true,
 			enablePreviewPolicies: false,
 			enableAppProtect:      false,
+			enableAppProtectDos:   false,
 			msg:                   "jwt policy with preview policies disabled",
 		},
 		{
@@ -182,6 +193,7 @@ func TestValidatePolicyFails(t *testing.T) {
 			isPlus:                false,
 			enablePreviewPolicies: false,
 			enableAppProtect:      false,
+			enableAppProtectDos:   false,
 			msg:                   "ingressMTLS policy with preview policies disabled",
 		},
 		{
@@ -195,6 +207,7 @@ func TestValidatePolicyFails(t *testing.T) {
 			isPlus:                false,
 			enablePreviewPolicies: false,
 			enableAppProtect:      false,
+			enableAppProtectDos:   false,
 			msg:                   "egressMTLS policy with preview policies disabled",
 		},
 		{
@@ -242,6 +255,7 @@ func TestValidatePolicyFails(t *testing.T) {
 			isPlus:                true,
 			enablePreviewPolicies: false,
 			enableAppProtect:      true,
+			enableAppProtectDos:   false,
 			msg:                   "WAF policy with preview policies disabled",
 		},
 		{
@@ -255,11 +269,12 @@ func TestValidatePolicyFails(t *testing.T) {
 			isPlus:                true,
 			enablePreviewPolicies: true,
 			enableAppProtect:      false,
+			enableAppProtectDos:   false,
 			msg:                   "WAF policy with AP disabled",
 		},
 	}
 	for _, test := range tests {
-		err := ValidatePolicy(test.policy, test.isPlus, test.enablePreviewPolicies, test.enableAppProtect)
+		err := ValidatePolicy(test.policy, test.isPlus, test.enablePreviewPolicies, test.enableAppProtect, test.enableAppProtectDos)
 		if err == nil {
 			t.Errorf("ValidatePolicy() returned no error for invalid input")
 		}
