@@ -2,6 +2,8 @@
 worker_processes  {{.WorkerProcesses}};
 {{- if .WorkerRlimitNofile}}
 worker_rlimit_nofile {{.WorkerRlimitNofile}};{{end}}
+{{- if .WorkerRlimitCore}}
+worker_rlimit_core {{.WorkerRlimitCore}};{{end}}
 {{- if .WorkerCPUAffinity}}
 worker_cpu_affinity {{.WorkerCPUAffinity}};{{end}}
 {{- if .WorkerShutdownTimeout}}
@@ -9,7 +11,7 @@ worker_shutdown_timeout {{.WorkerShutdownTimeout}};{{end}}
 
 daemon off;
 
-error_log  stderr {{.ErrorLogLevel}};
+error_log  {{.ErrorLogDst}} {{.ErrorLogLevel}};
 pid        /var/lib/nginx/nginx.pid;
 
 {{- if .OpenTracingLoadModule}}

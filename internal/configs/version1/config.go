@@ -154,6 +154,7 @@ type MainConfig struct {
 	DefaultServerAccessLogOff          bool
 	DefaultServerReturn                string
 	ErrorLogLevel                      string
+	ErrorLogDst                        string
 	HealthStatus                       bool
 	HealthStatusURI                    string
 	HTTP2                              bool
@@ -197,6 +198,7 @@ type MainConfig struct {
 	WorkerCPUAffinity                  string
 	WorkerProcesses                    string
 	WorkerRlimitNofile                 string
+	WorkerRlimitCore                   string
 	WorkerShutdownTimeout              string
 	AppProtectLoadModule               bool
 	AppProtectFailureModeAction        string
