@@ -40,23 +40,29 @@ var masterBlacklist = map[string]bool{
 }
 
 var minionBlacklist = map[string]bool{
-	"nginx.org/proxy-hide-headers":                       true,
-	"nginx.org/proxy-pass-headers":                       true,
-	"nginx.org/redirect-to-https":                        true,
-	"ingress.kubernetes.io/ssl-redirect":                 true,
-	"nginx.org/hsts":                                     true,
-	"nginx.org/hsts-max-age":                             true,
-	"nginx.org/hsts-include-subdomains":                  true,
-	"nginx.org/server-tokens":                            true,
-	"nginx.org/listen-ports":                             true,
-	"nginx.org/listen-ports-ssl":                         true,
-	"nginx.org/server-snippets":                          true,
-	"appprotect.f5.com/app_protect_enable":               true,
-	"appprotect.f5.com/app_protect_policy":               true,
-	"appprotect.f5.com/app_protect_security_log_enable":  true,
-	"appprotect.f5.com/app_protect_security_log":         true,
-    "appprotectdos.f5.com/app_protect_dos_enable":        true,
-    "appprotectdos.f5.com/app_protect_dos_policy_enable": true,
+	"nginx.org/proxy-hide-headers":                                  true,
+	"nginx.org/proxy-pass-headers":                                  true,
+	"nginx.org/redirect-to-https":                                   true,
+	"ingress.kubernetes.io/ssl-redirect":                            true,
+	"nginx.org/hsts":                                                true,
+	"nginx.org/hsts-max-age":                                        true,
+	"nginx.org/hsts-include-subdomains":                             true,
+	"nginx.org/server-tokens":                                       true,
+	"nginx.org/listen-ports":                                        true,
+	"nginx.org/listen-ports-ssl":                                    true,
+	"nginx.org/server-snippets":                                     true,
+	"appprotect.f5.com/app_protect_enable":                          true,
+	"appprotect.f5.com/app_protect_policy":                          true,
+	"appprotect.f5.com/app_protect_security_log_enable":             true,
+	"appprotect.f5.com/app_protect_security_log":                    true,
+    "appprotectdos.f5.com/app_protect_dos_enable":                   true,
+    "appprotectdos.f5.com/app_protect_dos_policy":                   true,
+    "appprotectdos.f5.com/app_protect_dos_security_log_enable":      true,
+    "appprotectdos.f5.com/app_protect_dos_security_log":             true,
+    "appprotectdos.f5.com/app_protect_dos_security_log_destination": true,
+    "appprotectdos.f5.com/app_protect_dos_monitor":                  true,
+    "appprotectdos.f5.com/app_protect_dos_name":                     true,
+    "appprotectdos.f5.com/app_protect_dos_access_log_destination":   true,
 }
 
 var minionInheritanceList = map[string]bool{
@@ -414,6 +420,10 @@ func parseAnnotations(ingEx *IngressEx, baseCfgParams *ConfigParams, isPlus bool
 
         if appProtectDosName, exists := ingEx.Ingress.Annotations["appprotectdos.f5.com/app-protect-dos-name"]; exists {
             cfgParams.AppProtectDosName = appProtectDosName
+        }
+
+        if appProtectDosAccessLogDst, exists := ingEx.Ingress.Annotations["appprotectdos.f5.com/app-protect-dos-access-log-destination"]; exists {
+            cfgParams.AppProtectDosAccessLogDst = appProtectDosAccessLogDst
         }
 
     }

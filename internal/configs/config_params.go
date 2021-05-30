@@ -58,6 +58,7 @@ type ConfigParams struct {
     AppProtectDosLogEnable                 string
     AppProtectDosMonitor                   string
     AppProtectDosName                      string
+    AppProtectDosAccessLogDst              string
     MainAppProtectDosLivenessEnable        string
     MainAppProtectDosLivenessUri           string
     MainAppProtectDosLivenessPort          int

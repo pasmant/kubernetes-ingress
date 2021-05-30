@@ -319,6 +319,9 @@ func validateBados(bados *v1.Bados, fieldPath *field.Path) field.ErrorList {
 
     if bados.DosSecurityLog != nil {
         allErrs = append(allErrs, validateDosLogConf(bados.DosSecurityLog.ApDosLogConf, bados.DosSecurityLog.DosLogDest, fieldPath.Child("dosSecurityLog"))...)
+        if bados.DosSecurityLog.DosAccessLogDest != "" {
+            allErrs = append(allErrs, validateDosLogAccessLogDest(bados.DosSecurityLog.DosAccessLogDest, fieldPath.Child("dosAccessLogDest"))...)
+        }
     }
 
     if bados.ApDosMonitor != "" {
@@ -342,6 +345,16 @@ func validateDosLogConf(logConf, logDest string, fieldPath *field.Path) field.Er
 	err := appprotectdos.ValidateAppProtectDosLogDestination(logDest)
 	if err != nil {
 		allErrs = append(allErrs, field.Invalid(fieldPath.Child("dosLogDest"), logDest, err.Error()))
+	}
+	return allErrs
+}
+
+func validateDosLogAccessLogDest(accessLogDest string, fieldPath *field.Path) field.ErrorList {
+	allErrs := field.ErrorList{}
+
+	err := appprotectdos.ValidateAppProtectDosAccessLogDest(accessLogDest)
+	if err != nil {
+		allErrs = append(allErrs, field.Invalid(fieldPath.Child("dosAccessLogDest"), accessLogDest, err.Error()))
 	}
 	return allErrs
 }

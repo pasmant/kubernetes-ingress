@@ -13,12 +13,21 @@ rules:
   - appolicies
   - aplogconfs
   - apusersigs
-  - apdospolicies
-  - apdoslogconfs
   verbs: 
   - get 
   - watch
   - list
+{{- end }}
+{{- if .Values.controller.appprotectdos.enable }}
+- apiGroups:
+    - appprotectdos.f5.com
+  resources:
+    - apdospolicies
+    - apdoslogconfs
+  verbs:
+    - get
+    - watch
+    - list
 {{- end }}
 - apiGroups:
   - ""

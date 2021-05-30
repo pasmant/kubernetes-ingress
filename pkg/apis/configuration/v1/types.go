@@ -452,7 +452,8 @@ type Bados struct {
 
 // DosSecurityLog defines the security log of a Bados policy.
 type DosSecurityLog struct {
-	Enable       bool   `json:"enable"`
-	ApDosLogConf string `json:"apDosLogConf"`
-	DosLogDest   string `json:"dosLogDest"`
+	Enable           bool   `json:"enable"`
+	ApDosLogConf     string `json:"apDosLogConf"`
+	DosLogDest       string `json:"dosLogDest"`
+    DosAccessLogDest string `json:"dosAccessLogDest"`
 }

@@ -54,6 +54,10 @@ http {
                       '"$http_user_agent" "$http_x_forwarded_for"';
     {{- end}}
 
+    {{- if .AppProtectDosLoadModule}}
+    log_format log_dos ', vs_name_al=$app_protect_dos_vs_name, ip=$remote_addr, outcome=$app_protect_dos_outcome, reason=$app_protect_dos_outcome_reason, ';
+    {{- end}}
+
     {{if .AccessLogOff}}
     access_log off;
     {{else}}
