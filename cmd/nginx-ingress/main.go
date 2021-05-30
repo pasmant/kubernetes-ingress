@@ -71,6 +71,8 @@ var (
 
 	appProtectDos = flag.Bool("enable-app-protect-dos", false, "Enable support for NGINX App Protect dos. Requires -nginx-plus.")
 
+	appProtectDosDebug = flag.Bool("app-protect-dos-debug", false, "Enable debugging for App Protect Dos. Uses the log debug flag")
+
 	ingressClass = flag.String("ingress-class", "nginx",
 		`A class of the Ingress controller.
 
@@ -441,7 +443,7 @@ func main() {
 	if *appProtectDos {
 		aPPDosAgentDone = make(chan error, 1)
 
-		nginxManager.AppProtectDosAgentStart(aPPDosAgentDone, *nginxDebug)
+		nginxManager.AppProtectDosAgentStart(aPPDosAgentDone, *nginxDebug || *appProtectDosDebug) //Add Debug bool option via config file
 	}
 
     var sslRejectHandshake bool
