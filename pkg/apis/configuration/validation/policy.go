@@ -311,22 +311,10 @@ func validateBados(bados *v1.Bados, fieldPath *field.Path) field.ErrorList {
 		}
 	}
 
-    if bados.Name != "" {
-        for _, msg := range validation.IsQualifiedName(bados.Name) {
-            allErrs = append(allErrs, field.Invalid(fieldPath.Child("name"), bados.Name, msg))
-        }
-    }
-
     if bados.DosSecurityLog != nil {
         allErrs = append(allErrs, validateDosLogConf(bados.DosSecurityLog.ApDosLogConf, bados.DosSecurityLog.DosLogDest, fieldPath.Child("dosSecurityLog"))...)
         if bados.DosSecurityLog.DosAccessLogDest != "" {
             allErrs = append(allErrs, validateDosLogAccessLogDest(bados.DosSecurityLog.DosAccessLogDest, fieldPath.Child("dosAccessLogDest"))...)
-        }
-    }
-
-    if bados.ApDosMonitor != "" {
-        for _, msg := range validation.IsQualifiedName(bados.ApDosMonitor) {
-            allErrs = append(allErrs, field.Invalid(fieldPath.Child("ApDosMonitor"), bados.ApDosMonitor, msg))
         }
     }
 
