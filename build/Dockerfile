@@ -116,10 +116,10 @@ COPY --chown=nginx:0 build/log-default.json /etc/nginx
 # RUN update-ca-certificates
 
 ############################################# Base image for Debian with NGINX Plus and App Protect Dos #############################################
-FROM debian-plus as debian-plus-ap-dos
+FROM debian-plus as debian-plus-apdos
 ARG IC_VERSION
 
-LABEL version=debian-nginx-plus-ap-dos-$NGINX_PLUS_VERSION-$IC_VERSION
+LABEL version=debian-nginx-plus-apdos-$NGINX_PLUS_VERSION-$IC_VERSION
 
 ARG REPO_PATH=https://sea-artifactory.olympus.f5net.com/artifactory/f5-beappprotect-debian
 ARG APP_PROTECT_DOS_VER=24
@@ -132,9 +132,34 @@ RUN --mount=type=secret,id=nginx-repo.crt,dst=/etc/ssl/nginx/nginx-repo.crt,mode
     && apt-get update \
     && apt-get -y install ca-certificates \
     && printf "deb [trusted=yes] ${REPO_PATH} buster app-protect-dos\n" | tee /etc/apt/sources.list.d/app-protect-dos.list \
+    && printf "deb [trusted=yes] ${REPO_PATH} buster nginx-plus-module-appprotectdos\n" | tee /etc/apt/sources.list.d/nginx-plus-module-appprotectdos.list \
     && apt-get update \
     && apt-get clean all \
-    && apt-get -o DPkg::Options::="--force-confold" -y install app-protect-dos=${APP_PROTECT_DOS_VER}*
+    && apt-get -o DPkg::Options::="--force-confold" -y install nginx-plus-module-appprotectdos=${APP_PROTECT_DOS_VER}* \
+    && apt-get -o DPkg::Options::="--force-confold" -y install app-protect-dos=${APP_PROTECT_DOS_VER}* \
+
+############################################# Base image for Debian with NGINX, App Protect and App Protect Dos #############################################
+FROM debian-plus-ap as debian-plus-ap-apdos
+ARG IC_VERSION
+
+LABEL version=debian-nginx-plus-ap-apdos-$NGINX_PLUS_VERSION-$IC_VERSION
+
+ARG REPO_PATH=https://sea-artifactory.olympus.f5net.com/artifactory/f5-beappprotect-debian
+ARG APP_PROTECT_DOS_VER=24
+
+RUN mkdir -p /shared/cores /var/log/adm /etc/app_protect_dos /var/run/adm/ && chmod 777 /shared/cores /var/log/adm /etc/app_protect_dos /var/run/adm/
+
+RUN --mount=type=secret,id=nginx-repo.crt,dst=/etc/ssl/nginx/nginx-repo.crt,mode=0644 \
+    --mount=type=secret,id=nginx-repo.key,dst=/etc/ssl/nginx/nginx-repo.key,mode=0644 \
+    set -x \
+    && apt-get update \
+    && apt-get -y install ca-certificates \
+    && printf "deb [trusted=yes] ${REPO_PATH} buster app-protect-dos\n" | tee /etc/apt/sources.list.d/app-protect-dos.list \
+    && printf "deb [trusted=yes] ${REPO_PATH} buster nginx-plus-module-appprotectdos\n" | tee /etc/apt/sources.list.d/nginx-plus-module-appprotectdos.list \
+    && apt-get update \
+    && apt-get clean all \
+    && apt-get -o DPkg::Options::="--force-confold" -y install nginx-plus-module-appprotectdos=${APP_PROTECT_DOS_VER}* \
+    && apt-get -o DPkg::Options::="--force-confold" -y install app-protect-dos=${APP_PROTECT_DOS_VER}* \
 
 ############################################# Base image for Openshift #############################################
 FROM registry.access.redhat.com/ubi8/ubi:8.3 AS openshift-base
