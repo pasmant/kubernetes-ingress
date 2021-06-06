@@ -16,7 +16,7 @@ spec:
       containers:
         - name: arb-svc
           image: sea-artifactory.olympus.f5net.com/f5-beappprotect-docker/app_protect_dos/app_protect_dos_arb/app_protect_dos_arb:latest
-          imagePullPolicy: Never
+          imagePullPolicy: IfNotPresent
           resources:
             limits:
               memory: "128Mi"
