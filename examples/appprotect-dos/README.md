@@ -29,6 +29,10 @@ $ kubectl create -f webapp.yaml
     ```
     $ kubectl create -f syslog.yaml
     ```
+2. Create a secret with an SSL certificate and a key:
+    ```
+    $ kubectl create -f webapp-secret.yaml
+    ```
 3. Create the App Protect Dos policy and log configuration:
     ```
     $ kubectl create -f apdos-policy.yaml
@@ -54,7 +58,7 @@ certificate and the --resolve option to set the Host header of a request with `w
 
     Send a request to the application::
     ```
-    $ curl --resolve webapp.example.com:$IC_HTTPS_PORT:$IC_IP https://webapp.example.com:$IC_HTTPS_PORT/
+    $ curl --resolve webapp.example.com:$IC_HTTPS_PORT:$IC_IP https://webapp.example.com:$IC_HTTPS_PORT/ --insecure
     Server address: 10.12.0.18:80
     Server name: coffee-7586895968-r26zn
     ...

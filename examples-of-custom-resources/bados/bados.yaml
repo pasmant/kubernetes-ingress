@@ -12,5 +12,5 @@ spec:
       enable: true
       apDosLogConf: "doslogconf"
       dosLogDest: "syslog:server=127.0.0.1:514"
-#      dosAccessLogDest: "10.240.104.166:5561"
+#      dosAccessLogDest: "127.0.0.1.166:5561"
 
