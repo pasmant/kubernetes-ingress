@@ -3,7 +3,7 @@ kind: APDosPolicy
 metadata:
   name: dospolicy
 spec:
-  mitigation_mode: standard
+  mitigation_mode: "standard"
   signatures: "on"
   bad_actors: "on"
   use_automation_tools_detection: "on"
