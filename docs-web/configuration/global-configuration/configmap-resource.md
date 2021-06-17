@@ -130,6 +130,10 @@ See the doc about [VirtualServer and VirtualServerRoute resources](/nginx-ingres
      - Sets the value of the `worker_rlimit_nofile <https://nginx.org/en/docs/ngx_core_module.html#worker_rlimit_nofile>`_ directive.
      - N/A
      -
+   * - ``worker_rlimit_core``
+     - Sets the value of the `worker_rlimit_core <https://nginx.org/en/docs/ngx_core_module.html#worker_rlimit_core>`_ directive.
+     - N/A
+     -
    * - ``worker-connections``
      - Sets the value of the `worker_connections <https://nginx.org/en/docs/ngx_core_module.html#worker_connections>`_ directive.
      - ``1024``
@@ -194,6 +198,10 @@ See the doc about [VirtualServer and VirtualServerRoute resources](/nginx-ingres
      - Description
      - Default
      - Example
+   * - ``error-log-destination``
+     - Sets the global `error log destionation <https://nginx.org/en/docs/ngx_core_module.html#error_log>`_ for NGINX.
+     - ``stderr``
+     -
    * - ``error-log-level``
      - Sets the global `error log level <https://nginx.org/en/docs/ngx_core_module.html#error_log>`_ for NGINX.
      - ``notice``
@@ -429,5 +437,17 @@ See the doc about [VirtualServer and VirtualServerRoute resources](/nginx-ingres
    * - ``app-protect-physical-memory-util-thresholds``
      - Sets the ``app_protect_physical_memory_util_thresholds`` `global directive </nginx-app-protect/configuration/#global-directives>`_.
      - ``high=100 low=100``
+     -
+   * - ``app-protect-dos-liveness-enable``
+     - Enables liveness with app protect dos, set ``app_protect_dos_liveness`` with argument on, Example: off uri:/app_protect_dos_liveness port:8090.
+     - ``N/A``
+     -
+   * - ``app-protect-dos-liveness-uri``
+     - set ``app_protect_dos_liveness`` uri argument.
+     - ``app_protect_dos_liveness``
+     -
+   * - ``app-protect-dos-liveness-port``
+     - set ``app_protect_dos_liveness`` port argument.
+     - ``8090``
      -
 ```

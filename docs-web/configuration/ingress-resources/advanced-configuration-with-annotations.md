@@ -424,3 +424,52 @@ The table below summarizes the available annotations.
      - ``syslog:server=localhost:514``
      - `Example for App Protect <https://github.com/nginxinc/kubernetes-ingress/tree/v1.11.0/examples/appprotect>`_.
 ```
+### App Protect Dos
+
+**Note**: The App Protect Dos annotations only work if App Protect Dos module is [installed](/nginx-ingress-controller/app-protect-dos/installation/).
+
+```eval_rst
+.. list-table::
+   :header-rows: 1
+
+   * - Annotation
+     - ConfigMap Key
+     - Description
+     - Default
+     - Example
+   * - ``appprotectdos.f5.com/app-protect-dos-policy``
+     - N/A
+     - The name of the App Protect Dos Policy for the Ingress Resource. Format is ``namespace/name``. If no namespace is specified, the same namespace of the Ingress Resource is used. If not specified but ``appprotectdos.f5.com/app-protect-dos-enable`` is true, a default policy id applied. If the referenced policy resource does not exist, or policy is invalid, this annotation will be ignored, and the default policy will be applied.
+     - N/A
+     - `Example for App Protect Dos <https://github.com/nginxinc/kubernetes-ingress/tree/v1.11.0/examples/appprotect-dos>`_.
+   * - ``appprotectdos.f5.com/app-protect-dos-enable``
+     - N/A
+     - Enable App Protect Dos for the Ingress Resource.
+     - ``False``
+     - `Example for App Protect Dos <https://github.com/nginxinc/kubernetes-ingress/tree/v1.11.0/examples/appprotect-dos>`_.
+   * - ``appprotectdos.f5.com/app-protect-dos-security-log-enable``
+     - N/A
+     - Enable the `security log for App Protect Dos.
+     - ``False``
+     - `Example for App Protect Dos <https://github.com/nginxinc/kubernetes-ingress/tree/v1.11.0/examples/appprotect-dos>`_.
+   * - ``appprotectdos.f5.com/app-protect-dos-security-log``
+     - N/A
+     - The App Protect Dos log configuration for the Ingress Resource. Format is ``namespace/name``. If no namespace is specified, the same namespace as the Ingress Resource is used. If not specified the  default is used
+     - N/A
+     - `Example for App Protect <https://github.com/nginxinc/kubernetes-ingress/tree/v1.11.0/examples/appprotect>`_.
+   * - ``appprotectdos.f5.com/app-protect-dos-security-log-destination``
+     - N/A
+     - The destination of the security log.
+     - ``syslog:server=localhost:514``
+     - `Example for App Protect Dos<https://github.com/nginxinc/kubernetes-ingress/tree/v1.11.0/examples/appprotect-dos>`_.
+   * - ``appprotectdos.f5.com/app-protect-dos-name``
+     - N/A
+     - Name of protected object.
+     - ``line_num-server_name:seq-location_name`` (i.e "30-backend:1-/abc")
+     - `Example for App Protect Dos<https://github.com/nginxinc/kubernetes-ingress/tree/v1.11.0/examples/appprotect-dos>`_.
+   * - ``appprotectdos.f5.com/app-protect-dos-monitor``
+     - N/A
+     - URL to monitor server's stress.
+     - None, URL will be extracted from the first request which arrives and taken from "Host" header or from destination ip+port
+     - `Example for App Protect Dos<https://github.com/nginxinc/kubernetes-ingress/tree/v1.11.0/examples/appprotect-dos>`_.
+```

@@ -228,6 +228,18 @@ Below we describe the available command-line arguments:
 
 	 - If the argument is set, but `nginx-plus` is set to false, the Ingress Controller will fail to start.
 
+.. option:: -enable-app-protect-dos
+
+	 Enables support for App Protect Dos.
+
+   Requires :option:`-nginx-plus`
+
+	 - If the argument is set, but `nginx-plus` is set to false, the Ingress Controller will fail to start.
+
+.. option:: -app-protect-dos-debug
+
+	Enable debugging for App Protect Dos. Run the module with debug log mode.
+
 .. option:: -ready-status
 
  	Enables the readiness endpoint "/nginx-ready". The endpoint returns a success code when NGINX has loaded all the config after the startup. (default true)
