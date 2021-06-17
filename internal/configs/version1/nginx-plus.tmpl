@@ -83,9 +83,6 @@ http {
         {{- if .AppProtectDosLivenessEnable}}
     app_protect_dos_liveness {{.AppProtectDosLivenessEnable}} uri:{{.AppProtectDosLivenessUri}} port:{{.AppProtectDosLivenessPort}};
         {{- end}}
-        {{- if .AppProtectDosReadinessEnable}}
-    app_protect_dos_readiness {{.AppProtectDosReadinessEnable}} uri:{{.AppProtectDosReadinessUri}} port:{{.AppProtectDosReadinessPort}};
-        {{- end}}
     {{- end}}
 
     sendfile        on;
@@ -136,9 +133,9 @@ http {
     server {
         server_name probe;
         listen {{.AppProtectDosLivenessPort}};
-        location /nginx-live {
+        location /{{.AppProtectDosLivenessUri}} {
             app_protect_dos_enable on;
-            proxy_pass http://localhost:8083;
+            proxy_pass http://localhost:{{.AppProtectDosLivenessPort}};
         }
     }
 

@@ -512,6 +512,8 @@ func ParseConfigMap(cfgm *v1.ConfigMap, nginxPlus bool, hasAppProtect bool, hasA
                 glog.Error(errEnable)
             } else if errPort != nil {
                 glog.Error(errPort)
+            } else if readyStatusPortValidationError := validatePort(*readyStatusPort; readyStatusPortValidationError != nil) {
+               glog.Fatalf("app-protect-dos-liveness-port: %v", readyStatusPortValidationError)
             } else {
                 if appProtectDosLivenessEnable {
                     cfgParams.MainAppProtectDosLivenessEnable = "on"
@@ -522,26 +524,6 @@ func ParseConfigMap(cfgm *v1.ConfigMap, nginxPlus bool, hasAppProtect bool, hasA
                 cfgParams.MainAppProtectDosLivenessPort = appProtectDosLivenessPort
             }
 	    }
-
-        appProtectDosReadinessEnable, readinessExistsEnable, errEnable := GetMapKeyAsBool(cfgm.Data, "app-protect-dos-readiness-enable", cfgm)
-        appProtectDosReadinessUri, readinessExistsUri := cfgm.Data["app-protect-dos-readiness-uri"]
-        appProtectDosReadinessPort, readinessExistsPort, errPort := GetMapKeyAsInt(cfgm.Data, "app-protect-dos-readiness-port", cfgm)
-
-        if readinessExistsEnable && readinessExistsUri && readinessExistsPort {
-            if errEnable != nil {
-                glog.Error(errEnable)
-            } else if errPort != nil {
-                glog.Error(errPort)
-            } else {
-                if appProtectDosReadinessEnable {
-                    cfgParams.MainAppProtectDosReadinessEnable = "on"
-                } else {
-                    cfgParams.MainAppProtectDosReadinessEnable = "off"
-                }
-                cfgParams.MainAppProtectDosReadinessUri = appProtectDosReadinessUri
-                cfgParams.MainAppProtectDosReadinessPort = appProtectDosReadinessPort
-            }
-        }
 	}
 
 	return cfgParams
@@ -609,9 +591,6 @@ func GenerateNginxMainConfig(staticCfgParams *StaticConfigParams, config *Config
 		AppProtectDosLivenessEnable:        config.MainAppProtectDosLivenessEnable,
 		AppProtectDosLivenessUri:           config.MainAppProtectDosLivenessUri,
 		AppProtectDosLivenessPort:          config.MainAppProtectDosLivenessPort,
-        AppProtectDosReadinessEnable:       config.MainAppProtectDosReadinessEnable,
-        AppProtectDosReadinessUri:          config.MainAppProtectDosReadinessUri,
-        AppProtectDosReadinessPort:         config.MainAppProtectDosReadinessPort,
 		InternalRouteServer:                staticCfgParams.EnableInternalRoutes,
 		InternalRouteServerName:            staticCfgParams.PodName,
 		LatencyMetrics:                     staticCfgParams.EnableLatencyMetrics,

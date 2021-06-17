@@ -64,9 +64,6 @@ type ConfigParams struct {
     MainAppProtectDosLivenessEnable        string
     MainAppProtectDosLivenessUri           string
     MainAppProtectDosLivenessPort          int
-    MainAppProtectDosReadinessEnable       string
-    MainAppProtectDosReadinessUri          string
-    MainAppProtectDosReadinessPort         int
 	ProxyBuffering                         bool
 	ProxyBuffers                           string
 	ProxyBufferSize                        string
@@ -177,6 +174,8 @@ func NewDefaultConfigParams() *ConfigParams {
 		MainKeepaliveRequests:         100,
 		VariablesHashBucketSize:       256,
 		VariablesHashMaxSize:          1024,
+        MainAppProtectDosLivenessUri:  "app_protect_dos_liveness",
+        MainAppProtectDosLivenessPort: 8090,
 	}
 }
 

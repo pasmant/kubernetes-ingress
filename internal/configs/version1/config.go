@@ -209,9 +209,6 @@ type MainConfig struct {
 	AppProtectDosLivenessEnable        string
 	AppProtectDosLivenessUri           string
 	AppProtectDosLivenessPort          int
-    AppProtectDosReadinessEnable       string
-    AppProtectDosReadinessUri          string
-    AppProtectDosReadinessPort         int
 	InternalRouteServer                bool
 	InternalRouteServerName            string
 	LatencyMetrics                     bool
