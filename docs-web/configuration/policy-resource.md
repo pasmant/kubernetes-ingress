@@ -4,7 +4,7 @@ The Policy resource allows you to configure features like access control and rat
 
 The resource is implemented as a [Custom Resource](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/).
 
-This document is the reference documentation for the Policy resource. An example of a Policy for access control is available in our [GitHub repo](https://github.com/nginxinc/kubernetes-ingress/blob/master/examples-of-custom-resources/access-control).
+This document is the reference documentation for the Policy resource. An example of a Policy for access control is available in our [GitHub repo](https://github.com/nginxinc/kubernetes-ingress/blob/v1.11.3/examples-of-custom-resources/access-control).
 
 ## Contents
 
@@ -456,7 +456,7 @@ NGINX Plus will pass the ID of an authenticated user to the backend in the HTTP 
 
 #### Prerequisites
 
-For the OIDC feature to work, it is necessary to enable [zone synchronization](https://docs.nginx.com/nginx/admin-guide/high-availability/zone_sync/), otherwise NGINX Plus will fail to reload. Additionally, it is necessary to configure a resolver, so that NGINX Plus can resolve the IDP authorization endpoint. For an example of the necessary configuration see the documentation [here](https://github.com/nginxinc/kubernetes-ingress/blob/master/examples-of-custom-resources/oidc#step-7---configure-nginx-plus-zone-synchronization-and-resolver).
+For the OIDC feature to work, it is necessary to enable [zone synchronization](https://docs.nginx.com/nginx/admin-guide/high-availability/zone_sync/), otherwise NGINX Plus will fail to reload. Additionally, it is necessary to configure a resolver, so that NGINX Plus can resolve the IDP authorization endpoint. For an example of the necessary configuration see the documentation [here](https://github.com/nginxinc/kubernetes-ingress/blob/v1.11.3/examples-of-custom-resources/oidc#step-7---configure-nginx-plus-zone-synchronization-and-resolver).
 
 > **Note**: The configuration in the example doesn't enable TLS and the synchronization between the replica happens in clear text. This could lead to the exposure of tokens.
 
@@ -687,11 +687,13 @@ You can apply policies to both VirtualServer and VirtualServerRoute resources. F
       routes:
       - path: /tea
         policies: # route policies
-        - policy2
+        - name: policy2
+          namesapce: cafe
         route: tea/tea
       - path: /coffee
         policies: # route policies
-        - policy3
+        - name: policy3
+          namespace: cafe
         action:
           pass: coffee
       ```
@@ -719,7 +721,8 @@ You can apply policies to both VirtualServer and VirtualServerRoute resources. F
       subroutes: # subroute policies
       - path: /tea
         policies:
-        - policy4
+        - name: policy4
+          namespace: tea
         action:
           pass: tea
     ```

@@ -550,6 +550,8 @@ func (lbc *LoadBalancerController) Run() {
 		return
 	}
 
+	lbc.preSyncSecrets()
+
 	glog.V(3).Infof("Starting the queue with %d initial elements", lbc.syncQueue.Len())
 
 	go lbc.syncQueue.Run(time.Second, lbc.ctx.Done())
@@ -637,7 +639,6 @@ func (lbc *LoadBalancerController) createExtendedResources(resources []Resource)
 		case *TransportServerConfiguration:
 			tsEx := lbc.createTransportServerEx(impl.TransportServer, impl.ListenerPort)
 			result.TransportServerExes = append(result.TransportServerExes, tsEx)
-
 		}
 	}
 
@@ -690,6 +691,29 @@ func (lbc *LoadBalancerController) syncConfigMap(task task) {
 	}
 
 	lbc.updateResourcesStatusAndEvents(resources, warnings, updateErr)
+}
+
+// preSyncSecrets adds Secret resources to the SecretStore.
+// It must be called after the caches are synced but before the queue starts processing elements.
+// If we don't add Secrets, there is a chance that during the IC start
+// syncing an Ingress or other resource that references a Secret will happen before that Secret was synced.
+// As a result, the IC will generate configuration for that resource assuming that the Secret is missing and
+// it will report warnings. (See https://github.com/nginxinc/kubernetes-ingress/issues/1448 )
+func (lbc *LoadBalancerController) preSyncSecrets() {
+	objects := lbc.secretLister.List()
+	glog.V(3).Infof("PreSync %d Secrets", len(objects))
+
+	for _, obj := range objects {
+		secret := obj.(*api_v1.Secret)
+
+		if !secrets.IsSupportedSecretType(secret.Type) {
+			glog.V(3).Infof("Ignoring Secret %s/%s of unsupported type %s", secret.Namespace, secret.Name, secret.Type)
+			continue
+		}
+
+		glog.V(3).Infof("Adding Secret: %s/%s", secret.Namespace, secret.Name)
+		lbc.secretStore.AddOrUpdateSecret(secret)
+	}
 }
 
 func (lbc *LoadBalancerController) sync(task task) {
@@ -2164,12 +2188,11 @@ func (lbc *LoadBalancerController) createIngressEx(ing *networking.Ingress, vali
 			}
 
 			if apLogConfAntn, exists := ingEx.Ingress.Annotations[configs.AppProtectLogConfAnnotation]; exists {
-				logConf, logDst, err := lbc.getAppProtectLogConfAndDst(ing)
+				logConf, err := lbc.getAppProtectLogConfAndDst(ing)
 				if err != nil {
-					glog.Warningf("Error Getting App Protect policy %v for Ingress %v/%v: %v", apLogConfAntn, ing.Namespace, ing.Name, err)
+					glog.Warningf("Error Getting App Protect Log Config %v for Ingress %v/%v: %v", apLogConfAntn, ing.Namespace, ing.Name, err)
 				} else {
-					ingEx.AppProtectLogConf = logConf
-					ingEx.AppProtectLogDst = logDst
+					ingEx.AppProtectLogs = logConf
 				}
 			}
 		}
@@ -2300,27 +2323,39 @@ func (lbc *LoadBalancerController) createIngressEx(ing *networking.Ingress, vali
 	return ingEx
 }
 
-func (lbc *LoadBalancerController) getAppProtectLogConfAndDst(ing *networking.Ingress) (logConf *unstructured.Unstructured, logDst string, err error) {
-	logConfNsN := appprotect.ParseResourceReferenceAnnotation(ing.Namespace, ing.Annotations[configs.AppProtectLogConfAnnotation])
+func (lbc *LoadBalancerController) getAppProtectLogConfAndDst(ing *networking.Ingress) ([]configs.AppProtectLog, error) {
 
+	var apLogs []configs.AppProtectLog
 	if _, exists := ing.Annotations[configs.AppProtectLogConfDstAnnotation]; !exists {
-		return nil, "", fmt.Errorf("Error: %v requires %v in %v", configs.AppProtectLogConfAnnotation, configs.AppProtectLogConfDstAnnotation, ing.Name)
+		return apLogs, fmt.Errorf("Error: %v requires %v in %v", configs.AppProtectLogConfAnnotation, configs.AppProtectLogConfDstAnnotation, ing.Name)
 	}
 
-	logDst = ing.Annotations[configs.AppProtectLogConfDstAnnotation]
-
-	err = appprotect.ValidateAppProtectLogDestination(logDst)
-
-	if err != nil {
-		return nil, "", fmt.Errorf("Error Validating App Protect Destination Config for Ingress %v: %v", ing.Name, err)
+	logDsts := strings.Split(ing.Annotations[configs.AppProtectLogConfDstAnnotation], ",")
+	logConfNsNs := appprotect.ParseResourceReferenceAnnotationList(ing.Namespace, ing.Annotations[configs.AppProtectLogConfAnnotation])
+	if len(logDsts) != len(logConfNsNs) {
+		return apLogs, fmt.Errorf("Error Validating App Protect Destination and Config for Ingress %v: LogConf and LogDestination must have equal number of items", ing.Name)
 	}
 
-	logConf, err = lbc.appProtectConfiguration.GetAppResource(appprotect.LogConfGVK.Kind, logConfNsN)
-	if err != nil {
-		return nil, "", fmt.Errorf("Error retrieving App Protect Log Config for Ingress %v: %v", ing.Name, err)
+	for _, logDst := range logDsts {
+		err := appprotect.ValidateAppProtectLogDestination(logDst)
+
+		if err != nil {
+			return apLogs, fmt.Errorf("Error Validating App Protect Destination Config for Ingress %v: %v", ing.Name, err)
+		}
 	}
 
-	return logConf, logDst, nil
+	for i, logConfNsN := range logConfNsNs {
+		logConf, err := lbc.appProtectConfiguration.GetAppResource(appprotect.LogConfGVK.Kind, logConfNsN)
+		if err != nil {
+			return apLogs, fmt.Errorf("Error retrieving App Protect Log Config for Ingress %v: %v", ing.Name, err)
+		}
+		apLogs = append(apLogs, configs.AppProtectLog{
+			LogConf: logConf,
+			Dest:    logDsts[i],
+		})
+	}
+
+	return apLogs, nil
 }
 
 func (lbc *LoadBalancerController) getAppProtectDosLogConfAndDst(ing *networking.Ingress) (logConf *unstructured.Unstructured, logDst string, err error) {

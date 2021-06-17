@@ -43,8 +43,9 @@ import (
 var (
 
 	// Set during build
-	version   string
-	gitCommit string
+	version string
+	commit  string
+	date    string
 
 	healthStatus = flag.Bool("health-status", false,
 		`Add a location based on the value of health-status-uri to the default server. The location responds with the 200 status code for any request.
@@ -100,7 +101,7 @@ var (
 	If a secret is set, but the Ingress controller is not able to fetch it from Kubernetes API or it is not set and the Ingress Controller
 	fails to read the file "/etc/nginx/secrets/default", the Ingress controller will fail to start.`)
 
-	versionFlag = flag.Bool("version", false, "Print the version and git-commit hash and exit")
+	versionFlag = flag.Bool("version", false, "Print the version, git-commit hash and build date and exit")
 
 	mainTemplatePath = flag.String("main-template-path", "",
 		`Path to the main NGINX configuration template. (default for NGINX "nginx.tmpl"; default for NGINX Plus "nginx-plus.tmpl")`)
@@ -188,6 +189,8 @@ var (
 
 	enableLatencyMetrics = flag.Bool("enable-latency-metrics", false,
 		"Enable collection of latency metrics for upstreams. Requires -enable-prometheus-metrics")
+
+	startupCheckFn func() error
 )
 
 func main() {
@@ -198,9 +201,17 @@ func main() {
 		glog.Fatalf("Error setting logtostderr to true: %v", err)
 	}
 
+	versionInfo := fmt.Sprintf("Version=%v GitCommit=%v Date=%v", version, commit, date)
 	if *versionFlag {
-		fmt.Printf("Version=%v GitCommit=%v\n", version, gitCommit)
+		fmt.Println(versionInfo)
 		os.Exit(0)
+	}
+
+	if startupCheckFn != nil {
+		err := startupCheckFn()
+		if err != nil {
+			glog.Fatalf("Failed startup check: %v", err)
+		}
 	}
 
 	healthStatusURIValidationError := validateLocation(*healthStatusURI)
@@ -262,7 +273,7 @@ func main() {
 		glog.Fatal("ingresslink and external-service cannot both be set")
 	}
 
-	glog.Infof("Starting NGINX Ingress controller Version=%v GitCommit=%v PlusFlag=%v\n", version, gitCommit, *nginxPlus)
+	glog.Infof("Starting NGINX Ingress controller %v PlusFlag=%v", versionInfo, *nginxPlus)
 
 	var config *rest.Config
 	if *proxyURL != "" {
@@ -620,7 +631,7 @@ func main() {
 		templateExecutorV2, *nginxPlus, isWildcardEnabled, plusCollector, *enablePrometheusMetrics, latencyCollector, *enableLatencyMetrics)
 	controllerNamespace := os.Getenv("POD_NAMESPACE")
 
-	transportServerValidator := cr_validation.NewTransportServerValidator(*enableTLSPassthrough, *enableSnippets)
+	transportServerValidator := cr_validation.NewTransportServerValidator(*enableTLSPassthrough, *enableSnippets, *nginxPlus)
 	virtualServerValidator := cr_validation.NewVirtualServerValidator(*nginxPlus)
 
 	lbcInput := k8s.NewLoadBalancerControllerInput{

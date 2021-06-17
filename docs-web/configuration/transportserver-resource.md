@@ -2,7 +2,7 @@
 
 The TransportServer resource allows you to configure TCP, UDP, and TLS Passthrough load balancing. The resource is implemented as a [Custom Resource](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/).
 
-This document is the reference documentation for the TransportServer resource. To see additional examples of using the resource for specific use cases, go to the [examples-of-custom-resources](https://github.com/nginxinc/kubernetes-ingress/blob/master/examples-of-custom-resources) folder in our GitHub repo.
+This document is the reference documentation for the TransportServer resource. To see additional examples of using the resource for specific use cases, go to the [examples-of-custom-resources](https://github.com/nginxinc/kubernetes-ingress/blob/v1.11.3/examples-of-custom-resources) folder in our GitHub repo.
 
 > **Feature Status**: The TransportServer resource is available as a preview feature: it is suitable for experimenting and testing; however, it must be used with caution in production environments. Additionally, while the feature is in preview, we might introduce some backward-incompatible changes to the resource specification in the next releases.
 
@@ -15,6 +15,7 @@ This document is the reference documentation for the TransportServer resource. T
     - [Listener](#listener)
     - [Upstream](#upstream)
       - [Upstream.Healthcheck](#upstream-healthcheck)
+      - [Upstream.Healthcheck.Match](#upstream-healthcheck-match)
     - [UpstreamParameters](#upstreamparameters)
     - [SessionParameters](#sessionparameters)
     - [Action](#action)
@@ -123,6 +124,10 @@ The TransportServer resource defines load balancing configuration for TCP, UDP, 
      - Specifies which Ingress Controller must handle the TransportServer resource.
      - ``string``
      - No
+   * - ``streamSnippets``
+     - Sets a custom snippet in the ``stream`` context.
+     - ``string``
+     - No
    * - ``serverSnippets``
      - Sets a custom snippet in the ``server`` context.
      - ``string``
@@ -168,7 +173,9 @@ name: secure-app
 service: secure-app
 port: 8443
 maxFails: 3
+maxConns: 100
 failTimeout: 30s
+loadBalancingMethod: least_conn
 ```
 
 ```eval_rst
@@ -195,6 +202,10 @@ failTimeout: 30s
      - Sets the `number <https://nginx.org/en/docs/stream/ngx_stream_upstream_module.html#max_fails>`_ of unsuccessful attempts to communicate with the server that should happen in the duration set by the failTimeout parameter to consider the server unavailable. The default ``1``.
      - ``int``
      - No
+   * - ``maxConns``
+     - Sets the `number <https://nginx.org/en/docs/stream/ngx_stream_upstream_module.html#max_conns>`_ of maximum connections to the proxied server. Default value is zero, meaning there is no limit. The default is ``0``.
+     - ``int``
+     - No
    * - ``failTimeout``
      - Sets the `time <https://nginx.org/en/docs/stream/ngx_stream_upstream_module.html#fail_timeout>`_ during which the specified number of unsuccessful attempts to communicate with the server should happen to consider the server unavailable and the period of time the server will be considered unavailable. The default is ``10s``.
      - ``string``
@@ -202,6 +213,10 @@ failTimeout: 30s
    * - ``healthCheck``
      - The health check configuration for the Upstream. See the `health_check <https://nginx.org/en/docs/stream/ngx_stream_upstream_hc_module.html#health_check>`_ directive. Note: this feature is supported only in NGINX Plus.
      - `healthcheck <#upstream-healthcheck>`_
+     - No
+   * - ``loadBalancingMethod``
+     - The method used to load balance the upstream servers. By default, connections are distributed between the servers using a weighted round-robin balancing method. See the `upstream <http://nginx.org/en/docs/stream/ngx_stream_upstream_module.html#upstream>`_ section for available methods and their details.
+     - ``string``
      - No
 
 ```
@@ -261,6 +276,41 @@ Note: This feature is supported only in NGINX Plus.
    * - ``port``
      - The port used for health check requests. By default, the port of the upstream is used. Note: in contrast with the port of the upstream, this port is not a service port, but a port of a pod.
      - ``integer``
+     - No
+   * - ``match``
+     - Controls the data to send and the response to expect for the healthcheck.
+     - `match <#upstream-healthcheck-match>`_
+     - No
+```
+
+### Upstream.Healthcheck.Match
+ 
+The match controls the data to send and the response to expect for the healthcheck:
+```yaml
+match:
+  send: 'GET / HTTP/1.0\r\nHost: localhost\r\n\r\n'
+  expect: "~200 OK"
+```
+
+Both `send` and `expect` fields can contain hexadecimal literals with the prefix `\x` followed by two hex digits, for example, `\x80`.
+
+See the [match](https://nginx.org/en/docs/stream/ngx_stream_upstream_hc_module.html#match) directive for details.
+
+```eval_rst
+.. list-table::
+   :header-rows: 1
+
+   * - Field
+     - Description
+     - Type
+     - Required
+   * - ``send``
+     - A string to send to an upstream server.
+     - ``string``
+     - No
+   * - ``expect``
+     - A literal string or a regular expression that the data obtained from the server should match. The regular expression is specified with the preceding ``~*`` modifier (for case-insensitive matching), or the ``~`` modifier (for case-sensitive matching). The Ingress Controller validates a regular expression using the RE2 syntax.
+     - ``string``
      - No
 ```
 
@@ -396,6 +446,23 @@ spec:
     port: 80
 ```
 
+Snippets can also be specified for a stream. In the example below, we use snippets to [limit the number of connections](https://nginx.org/en/docs/stream/ngx_stream_limit_conn_module.html):
+
+```yaml
+apiVersion: k8s.nginx.org/v1alpha1
+kind: TransportServer
+metadata:
+  name: cafe
+spec:
+  host: cafe.example.com
+  streamSnippets: limit_conn_zone $binary_remote_addr zone=addr:10m;
+  serverSnippets: limit_conn addr 1;
+  upstreams:
+  - name: tea
+    service: tea-svc
+    port: 80
+```
+
 Snippets are intended to be used by advanced NGINX users who need more control over the generated NGINX configuration.
 
 However, because of the disadvantages described below, snippets are disabled by default. To use snippets, set the [`enable-snippets`](/nginx-ingress-controller/configuration/global-configuration/command-line-arguments#cmdoption-enable-snippets) command-line argument.
@@ -473,4 +540,4 @@ The [ConfigMap](/nginx-ingress-controller/configuration/global-configuration/con
 ## Limitations
 
 The TransportServer resource is a preview feature. Currently, it comes with the following limitation:
-* When using TLS Passthrough, it is not possible to configure [Proxy Protocol](https://github.com/nginxinc/kubernetes-ingress/tree/v1.11.0/examples/proxy-protocol) for port 443 both for regular HTTPS and TLS Passthrough traffic.
+* When using TLS Passthrough, it is not possible to configure [Proxy Protocol](https://github.com/nginxinc/kubernetes-ingress/tree/v1.11.3/examples/proxy-protocol) for port 443 both for regular HTTPS and TLS Passthrough traffic.

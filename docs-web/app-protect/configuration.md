@@ -1,12 +1,12 @@
 # Configuration
 This document describes how to configure the NGINX App Protect module
-> Check out the complete [NGINX Ingress Controller with App Protect example resources on GitHub](https://github.com/nginxinc/kubernetes-ingress/tree/v1.11.0/examples/appprotect).
+> Check out the complete [NGINX Ingress Controller with App Protect example resources on GitHub](https://github.com/nginxinc/kubernetes-ingress/tree/v1.11.3/examples/appprotect).
 
 ## Global Configuration
 
 The NGINX Ingress Controller has a set of global configuration parameters that align with those available in the NGINX App Protect module. See [ConfigMap keys](/nginx-ingress-controller/configuration/global-configuration/configmap-resource/#modules) for the complete list. The App Protect parameters use the `app-protect*` prefix.
 
-> Check out the complete [NGINX Ingress Controller with App Protect example resources on GitHub](https://github.com/nginxinc/kubernetes-ingress/tree/v1.11.0/examples/appprotect).
+> Check out the complete [NGINX Ingress Controller with App Protect example resources on GitHub](https://github.com/nginxinc/kubernetes-ingress/tree/v1.11.3/examples/appprotect).
 
 ## Enable App Protect for an Ingress Resource
 
@@ -18,7 +18,8 @@ You can define App Protect policies for your Ingress resources by creating an `A
 
  > **Note**: The fields `policy.signature-requirements[].minRevisionDatetime` and `policy.signature-requirements[].maxRevisionDatetime` are not currently supported.
 
- > **Note**: [The Advanced gRPC Protection for Unary Traffic](/nginx-app-protect/configuration/#advanced-grpc-protection-for-unary-traffic) is not currently supported.
+ > **Note**: [The Advanced gRPC Protection for Unary Traffic](/nginx-app-protect/configuration/#advanced-grpc-protection-for-unary-traffic) only supports providing an `idl-file` inline. The fields `policy.idl-files[].link`, `policy.idl-files[].$ref`, and 
+ `policy.idl-files[].file` are not supported. The IDL file should be provided in field `policy.idl-files[].contents`. The value of this field can be base64 encoded. In this case the field `policy.idl-files[].isBase64` should be set to `true`.
 
 To add any [App Protect policy](/nginx-app-protect/policy/#policy) to an Ingress resource:
 
@@ -89,16 +90,16 @@ To add any [App Protect policy](/nginx-app-protect/policy/#policy) to an Ingress
 
 ## App Protect Logs
 
-You can set the [App Protect Log configurations](/nginx-app-protect/nginx-app-protect/troubleshooting/#app-protect-logging-overview) by creating an `APLogConf` [Custom Resource](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/).
+You can set the [App Protect log configurations](/nginx-app-protect/troubleshooting/#app-protect-logging-overview) by creating an `APLogConf` [Custom Resource](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/).
 
-To add the [App Protect log configurations](/nginx-app-protect/policy/#policy) to an Ingress resource:
+To add the [App Protect log configurations](/nginx-app-protect/configuration/#security-logs) to an Ingress resource:
 
-1. Create an `APLogConf` Custom resource manifest.
+1. Create an `APLogConf` Custom Resource manifest.
 2. Add the desired log configuration to the `spec` field in the `APLogConf` resource.
 
    > **Note**: The fields from the JSON must be presented in the YAML *exactly* the same, in name and level. The Ingress Controller will transform the YAML into a valid JSON App Protect log config.
 
-For example, say you want to [log state changing requests](nginx-app-protect/troubleshooting/#log-state-changing-requests) for your Ingress resources using App Protect. The App Protect log configuration looks like this:
+For example, say you want to [log state changing requests](/nginx-app-protect/troubleshooting/#log-state-changing-requests) for your Ingress resources using App Protect. The App Protect log configuration looks like this:
 
 ```json
 {
@@ -113,7 +114,7 @@ For example, say you want to [log state changing requests](nginx-app-protect/tro
 }
 ```
 
-You would add define that config in the `spec` of your `APLogConf` resource as follows:
+You would define that config in the `spec` of your `APLogConf` resource as follows:
 
 ```yaml
 apiVersion: appprotect.f5.com/v1beta1

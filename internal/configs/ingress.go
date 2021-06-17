@@ -22,6 +22,18 @@ const appProtectLogConfKey    = "logconf"
 const appProtectDosPolicyKey  = "policyDos"
 const appProtectDosLogConfKey = "logconfDos"
 
+// AppProtectResources holds namespace names of App Protect resources relavant to an Ingress
+type AppProtectResources struct {
+	AppProtectPolicy   string
+	AppProtectLogconfs []string
+}
+
+// AppProtectLog holds a single pair of log config and log destination
+type AppProtectLog struct {
+	LogConf *unstructured.Unstructured
+	Dest    string
+}
+
 // IngressEx holds an Ingress along with the resources that are referenced in this Ingress.
 type IngressEx struct {
 	Ingress              *networking.Ingress
@@ -32,8 +44,7 @@ type IngressEx struct {
 	ValidHosts           map[string]bool
 	ValidMinionPaths     map[string]bool
 	AppProtectPolicy     *unstructured.Unstructured
-	AppProtectLogConf    *unstructured.Unstructured
-	AppProtectLogDst     string
+	AppProtectLogs       []AppProtectLog
 	AppProtectDosPolicy  *unstructured.Unstructured
     AppProtectDosLogConf *unstructured.Unstructured
     AppProtectDosLogDst  string
@@ -60,7 +71,7 @@ type MergeableIngresses struct {
 	Minions []*IngressEx
 }
 
-func generateNginxCfg(ingEx *IngressEx, apResources map[string]string, isMinion bool, baseCfgParams *ConfigParams, isPlus bool,
+func generateNginxCfg(ingEx *IngressEx, apResources AppProtectResources, isMinion bool, baseCfgParams *ConfigParams, isPlus bool,
 	isResolverConfigured bool, staticParams *StaticConfigParams, isWildcardEnabled bool) (version1.IngressNginxConfig, Warnings) {
 	hasAppProtect := staticParams.MainAppProtectLoadModule
 	hasAppProtectDos := staticParams.MainAppProtectDosLoadModule
@@ -151,8 +162,8 @@ func generateNginxCfg(ingEx *IngressEx, apResources map[string]string, isMinion 
 		allWarnings.Add(warnings)
 
 		if hasAppProtect {
-			server.AppProtectPolicy = apResources[appProtectPolicyKey]
-			server.AppProtectLogConf = apResources[appProtectLogConfKey]
+			server.AppProtectPolicy = apResources.AppProtectPolicy
+			server.AppProtectLogConfs = apResources.AppProtectLogconfs
 		}
 
         if hasAppProtectDos {
@@ -517,7 +528,7 @@ func upstreamMapToSlice(upstreams map[string]version1.Upstream) []version1.Upstr
 	return result
 }
 
-func generateNginxCfgForMergeableIngresses(mergeableIngs *MergeableIngresses, masterApResources map[string]string,
+func generateNginxCfgForMergeableIngresses(mergeableIngs *MergeableIngresses, masterApResources AppProtectResources,
 	baseCfgParams *ConfigParams, isPlus bool, isResolverConfigured bool, staticParams *StaticConfigParams,
 	isWildcardEnabled bool) (version1.IngressNginxConfig, Warnings) {
 
@@ -575,8 +586,8 @@ func generateNginxCfgForMergeableIngresses(mergeableIngs *MergeableIngresses, ma
 		}
 
 		isMinion := true
-		// App Protect Resources not allowed in minions - pass empty map
-		dummyApResources := make(map[string]string)
+		// App Protect Resources not allowed in minions - pass empty struct
+		dummyApResources := AppProtectResources{}
 		nginxCfg, minionWarnings := generateNginxCfg(minion, dummyApResources, isMinion, baseCfgParams, isPlus, isResolverConfigured, staticParams, isWildcardEnabled)
 		warnings.Add(minionWarnings)
 

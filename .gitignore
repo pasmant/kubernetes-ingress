@@ -30,7 +30,6 @@ nginx-plus-ingress
 cmd/nginx-ingress/nginx-ingress
 
 # NGINX Plus license files
-tempdir/
 *.crt
 *.key
 
@@ -53,3 +52,5 @@ hack/controller-gen-*
 docs-web/.netlify/state.json
 site/
 venv/
+
+dist/

@@ -9,13 +9,12 @@ Request your `free 30-day trial <https://www.nginx.com/free-trial-request-nginx-
 .. toctree::
    :maxdepth: 2
 
-   overview
+   intro/index
    installation/index
    configuration/index
    logging-and-monitoring/index
    troubleshooting
    app-protect/index
-   integration-with-cis
    third-party-modules/index
    releases
    Technical Specifications <technical-specifications>
