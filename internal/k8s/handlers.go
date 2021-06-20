@@ -610,12 +610,12 @@ func createAppProtectDosPolicyHandlers(lbc *LoadBalancerController) cache.Resour
 		UpdateFunc: func(oldObj, obj interface{}) {
 			oldPol := oldObj.(*unstructured.Unstructured)
 			newPol := obj.(*unstructured.Unstructured)
-			updated, err := compareSpecs(oldPol, newPol)
+			different, err := areResourcesDifferent(oldPol, newPol)
 			if err != nil {
 				glog.V(3).Infof("Error when comparing policy %v", err)
 				lbc.AddSyncQueue(newPol)
 			}
-			if updated {
+			if different {
 				glog.V(3).Infof("ApDosPolicy %v changed, syncing", oldPol.GetName())
 				lbc.AddSyncQueue(newPol)
 			}
@@ -637,12 +637,12 @@ func createAppProtectDosLogConfHandlers(lbc *LoadBalancerController) cache.Resou
 		UpdateFunc: func(oldObj, obj interface{}) {
 			oldConf := oldObj.(*unstructured.Unstructured)
 			newConf := obj.(*unstructured.Unstructured)
-			updated, err := compareSpecs(oldConf, newConf)
+			different, err := areResourcesDifferent(oldConf, newConf)
 			if err != nil {
 				glog.V(3).Infof("Error when comparing DosLogConfs %v", err)
 				lbc.AddSyncQueue(newConf)
 			}
-			if updated {
+			if different {
 				glog.V(3).Infof("ApDosLogConf %v changed, syncing", oldConf.GetName())
 				lbc.AddSyncQueue(newConf)
 			}

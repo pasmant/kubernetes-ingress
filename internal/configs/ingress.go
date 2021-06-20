@@ -24,8 +24,10 @@ const appProtectDosLogConfKey = "logconfDos"
 
 // AppProtectResources holds namespace names of App Protect resources relavant to an Ingress
 type AppProtectResources struct {
-	AppProtectPolicy   string
-	AppProtectLogconfs []string
+	AppProtectPolicy      string
+	AppProtectLogconfs    []string
+    AppProtectDosPolicy   string
+	AppProtectDosLogconfs string
 }
 
 // AppProtectLog holds a single pair of log config and log destination
@@ -167,8 +169,8 @@ func generateNginxCfg(ingEx *IngressEx, apResources AppProtectResources, isMinio
 		}
 
         if hasAppProtectDos {
-            server.AppProtectDosPolicy = apResources[appProtectDosPolicyKey]
-            server.AppProtectDosLogConf = apResources[appProtectDosLogConfKey]
+            server.AppProtectDosPolicy = apResources.AppProtectDosPolicy
+            server.AppProtectDosLogConf = apResources.AppProtectDosLogconfs
         }
 
 		if !isMinion && cfgParams.JWTKey != "" {

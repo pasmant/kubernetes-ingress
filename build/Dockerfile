@@ -78,10 +78,10 @@ RUN --mount=type=secret,id=nginx-repo.crt,dst=/etc/ssl/nginx/nginx-repo.crt,mode
 # RUN update-ca-certificates
 
 ############################################# Base image for Debian with NGINX Plus and App Protect Dos #############################################
-FROM debian-plus as debian-plus-apdos
+FROM debian-plus as debian-plus-napdos
 ARG IC_VERSION
 
-LABEL version=debian-nginx-plus-apdos-$NGINX_PLUS_VERSION-$IC_VERSION
+LABEL version=debian-nginx-plus-napdos-$NGINX_PLUS_VERSION-$IC_VERSION
 
 ARG REPO_PATH=https://sea-artifactory.olympus.f5net.com/artifactory/f5-beappprotect-debian
 ARG APP_PROTECT_DOS_VER=24
@@ -98,13 +98,13 @@ RUN --mount=type=secret,id=nginx-repo.crt,dst=/etc/ssl/nginx/nginx-repo.crt,mode
     && apt-get update \
     && apt-get clean all \
     && apt-get -o DPkg::Options::="--force-confold" -y install nginx-plus-module-appprotectdos=${APP_PROTECT_DOS_VER}* \
-    && apt-get -o DPkg::Options::="--force-confold" -y install app-protect-dos=${APP_PROTECT_DOS_VER}* \
+    && apt-get -o DPkg::Options::="--force-confold" -y install app-protect-dos=${APP_PROTECT_DOS_VER}*
 
 ############################################# Base image for Debian with NGINX, App Protect and App Protect Dos #############################################
-FROM debian-plus-ap as debian-plus-ap-apdos
+FROM debian-plus-nap as debian-plus-nap-napdos
 ARG IC_VERSION
 
-LABEL version=debian-nginx-plus-ap-apdos-$NGINX_PLUS_VERSION-$IC_VERSION
+LABEL version=debian-nginx-plus-nap-napdos-$NGINX_PLUS_VERSION-$IC_VERSION
 
 ARG REPO_PATH=https://sea-artifactory.olympus.f5net.com/artifactory/f5-beappprotect-debian
 ARG APP_PROTECT_DOS_VER=24
@@ -121,7 +121,7 @@ RUN --mount=type=secret,id=nginx-repo.crt,dst=/etc/ssl/nginx/nginx-repo.crt,mode
     && apt-get update \
     && apt-get clean all \
     && apt-get -o DPkg::Options::="--force-confold" -y install nginx-plus-module-appprotectdos=${APP_PROTECT_DOS_VER}* \
-    && apt-get -o DPkg::Options::="--force-confold" -y install app-protect-dos=${APP_PROTECT_DOS_VER}* \
+    && apt-get -o DPkg::Options::="--force-confold" -y install app-protect-dos=${APP_PROTECT_DOS_VER}*
 
 ############################################# Base image for UBI 8 #############################################
 FROM redhat/ubi8-minimal AS ubi-base-8

@@ -81,7 +81,7 @@ http {
 
     {{- if .AppProtectDosLoadModule}}
         {{- if .AppProtectDosLivenessEnable}}
-    app_protect_dos_liveness {{.AppProtectDosLivenessEnable}} uri:{{.AppProtectDosLivenessUri}} port:{{.AppProtectDosLivenessPort}};
+    app_protect_dos_liveness {{.AppProtectDosLivenessEnable}} uri:/{{.AppProtectDosLivenessUri}} port:{{.AppProtectDosLivenessPort}};
         {{- end}}
     {{- end}}
 
@@ -135,12 +135,12 @@ http {
         listen {{.AppProtectDosLivenessPort}};
         location /{{.AppProtectDosLivenessUri}} {
             app_protect_dos_enable on;
-            proxy_pass http://localhost:{{.AppProtectDosLivenessPort}};
+            proxy_pass http://localhost:8091;
         }
     }
 
     server {
-        listen 8083;
+        listen 8091;
         return 503;
     }
         {{- end}}

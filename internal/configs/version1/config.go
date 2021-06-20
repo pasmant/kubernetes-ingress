@@ -97,7 +97,7 @@ type Server struct {
 	SSLPorts                  []int
 	AppProtectEnable          string
 	AppProtectPolicy          string
-	AppProtectLogConf         []string
+	AppProtectLogConfs        []string
 	AppProtectLogEnable       string
 	AppProtectDosEnable       string
 	AppProtectDosPolicy       string
