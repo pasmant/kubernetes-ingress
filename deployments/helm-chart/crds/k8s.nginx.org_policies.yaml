@@ -154,6 +154,31 @@ spec:
                           type: boolean
                         logDest:
                           type: string
+                bados:
+                  description: 'Bados defines a Bados policy. policy status: preview'
+                  type: object
+                  properties:
+                    enable:
+                      type: boolean
+                    name:
+                      type: string
+                    apDosPolicy:
+                      type: string
+                    dosSecurityLog:
+                      description: dosSecurityLog defines the security log of a Bados policy.
+                      type: object
+                      properties:
+                        apDosLogConf:
+                          type: string
+                        enable:
+                          type: boolean
+                        dosLogDest:
+                          type: string
+                        dosAccessLogDest:
+                          type: string
+                    apDosMonitor:
+                      description: apDosMonitor URL to monitor server's stress.
+                      type: string
             status:
               description: PolicyStatus is the status of the policy resource
               type: object
