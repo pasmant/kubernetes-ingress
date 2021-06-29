@@ -479,6 +479,14 @@ func ParseConfigMap(cfgm *v1.ConfigMap, nginxPlus bool, hasAppProtect bool, hasA
 			}
 		}
 
+		if appProtectCompressedRequestsAction, exists := cfgm.Data["app-protect-compressed-requests-action"]; exists {
+			if appProtectCompressedRequestsAction == "pass" || appProtectCompressedRequestsAction == "drop" {
+				cfgParams.MainAppProtectCompressedRequestsAction = appProtectCompressedRequestsAction
+			} else {
+				glog.Error("ConfigMap Key 'app-protect-compressed-requests-action' must have value 'pass' or 'drop'. Ignoring.")
+			}
+		}
+
 		if appProtectCookieSeed, exists := cfgm.Data["app-protect-cookie-seed"]; exists {
 			cfgParams.MainAppProtectCookieSeed = appProtectCookieSeed
 		}
@@ -587,6 +595,7 @@ func GenerateNginxMainConfig(staticCfgParams *StaticConfigParams, config *Config
 		AppProtectLoadModule:               staticCfgParams.MainAppProtectLoadModule,
 		AppProtectDosLoadModule:            staticCfgParams.MainAppProtectDosLoadModule,
 		AppProtectFailureModeAction:        config.MainAppProtectFailureModeAction,
+		AppProtectCompressedRequestsAction: config.MainAppProtectCompressedRequestsAction,
 		AppProtectCookieSeed:               config.MainAppProtectCookieSeed,
 		AppProtectCPUThresholds:            config.MainAppProtectCPUThresholds,
 		AppProtectPhysicalMemoryThresholds: config.MainAppProtectPhysicalMemoryThresholds,

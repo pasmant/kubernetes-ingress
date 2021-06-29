@@ -158,6 +158,9 @@ var (
 	enablePrometheusMetrics = flag.Bool("enable-prometheus-metrics", false,
 		"Enable exposing NGINX or NGINX Plus metrics in the Prometheus format")
 
+	prometheusTLSSecretName = flag.String("prometheus-tls-secret", "",
+		`A Secret with a TLS certificate and key for TLS termination of the prometheus endpoint.`)
+
 	prometheusMetricsListenPort = flag.Int("prometheus-metrics-listen-port", 9113,
 		"Set the port where the Prometheus metrics are exposed. [1024 - 65535]")
 
@@ -369,11 +372,6 @@ func main() {
 		nginxTransportServerTemplatePath = *transportServerTemplatePath
 	}
 
-	nginxBinaryPath := "/usr/sbin/nginx"
-	if *nginxDebug {
-		nginxBinaryPath = "/usr/sbin/nginx-debug"
-	}
-
 	var registry *prometheus.Registry
 	var managerCollector collectors.ManagerCollector
 	var controllerCollector collectors.ControllerCollector
@@ -416,7 +414,7 @@ func main() {
 	if useFakeNginxManager {
 		nginxManager = nginx.NewFakeManager("/etc/nginx")
 	} else {
-		nginxManager = nginx.NewLocalManager("/etc/nginx/", nginxBinaryPath, managerCollector, parseReloadTimeout(*appProtect, *nginxReloadTimeout))
+		nginxManager = nginx.NewLocalManager("/etc/nginx/", *nginxDebug, managerCollector, parseReloadTimeout(*appProtect, *nginxReloadTimeout))
 	}
 	nginxVersion := nginxManager.Version()
 	isPlus := strings.Contains(nginxVersion, "plus")
@@ -487,6 +485,14 @@ func main() {
 
 		bytes := configs.GenerateCertAndKeyFileContent(secret)
 		nginxManager.CreateSecret(configs.WildcardSecretName, bytes, nginx.TLSSecretFileMode)
+	}
+
+	var prometheusSecret *api_v1.Secret
+	if *prometheusTLSSecretName != "" {
+		prometheusSecret, err = getAndValidateSecret(kubeClient, *prometheusTLSSecretName)
+		if err != nil {
+			glog.Fatalf("Error trying to get the prometheus TLS secret %v: %v", *prometheusTLSSecretName, err)
+		}
 	}
 
 	globalConfigurationValidator := createGlobalConfigurationValidator()
@@ -607,14 +613,14 @@ func main() {
 			variableLabelNames := nginxCollector.NewVariableLabelNames(upstreamServerVariableLabels, serverZoneVariableLabels, upstreamServerPeerVariableLabelNames,
 				streamUpstreamServerVariableLabels, streamServerZoneVariableLabels, streamUpstreamServerPeerVariableLabelNames)
 			plusCollector = nginxCollector.NewNginxPlusCollector(plusClient, "nginx_ingress_nginxplus", variableLabelNames, constLabels)
-			go metrics.RunPrometheusListenerForNginxPlus(*prometheusMetricsListenPort, plusCollector, registry)
+			go metrics.RunPrometheusListenerForNginxPlus(*prometheusMetricsListenPort, plusCollector, registry, prometheusSecret)
 		} else {
 			httpClient := getSocketClient("/var/lib/nginx/nginx-status.sock")
 			client, err := metrics.NewNginxMetricsClient(httpClient)
 			if err != nil {
-				glog.Fatalf("Error creating the Nginx client for Prometheus metrics: %v", err)
+				glog.Errorf("Error creating the Nginx client for Prometheus metrics: %v", err)
 			}
-			go metrics.RunPrometheusListenerForNginx(*prometheusMetricsListenPort, client, registry, constLabels)
+			go metrics.RunPrometheusListenerForNginx(*prometheusMetricsListenPort, client, registry, constLabels, prometheusSecret)
 		}
 		if *enableLatencyMetrics {
 			latencyCollector = collectors.NewLatencyMetricsCollector(constLabels, upstreamServerVariableLabels, upstreamServerPeerVariableLabelNames)
@@ -808,15 +814,15 @@ func validateCIDRorIP(cidr string) error {
 func getAndValidateSecret(kubeClient *kubernetes.Clientset, secretNsName string) (secret *api_v1.Secret, err error) {
 	ns, name, err := k8s.ParseNamespaceName(secretNsName)
 	if err != nil {
-		return nil, fmt.Errorf("could not parse the %v argument: %v", secretNsName, err)
+		return nil, fmt.Errorf("could not parse the %v argument: %w", secretNsName, err)
 	}
 	secret, err = kubeClient.CoreV1().Secrets(ns).Get(context.TODO(), name, meta_v1.GetOptions{})
 	if err != nil {
-		return nil, fmt.Errorf("could not get %v: %v", secretNsName, err)
+		return nil, fmt.Errorf("could not get %v: %w", secretNsName, err)
 	}
 	err = secrets.ValidateTLSSecret(secret)
 	if err != nil {
-		return nil, fmt.Errorf("%v is invalid: %v", secretNsName, err)
+		return nil, fmt.Errorf("%v is invalid: %w", secretNsName, err)
 	}
 	return secret, nil
 }

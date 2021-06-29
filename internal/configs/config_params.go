@@ -51,6 +51,7 @@ type ConfigParams struct {
 	AppProtectLogConf                      string
 	AppProtectLogEnable                    string
 	MainAppProtectFailureModeAction        string
+	MainAppProtectCompressedRequestsAction string
 	MainAppProtectCookieSeed               string
 	MainAppProtectCPUThresholds            string
 	MainAppProtectPhysicalMemoryThresholds string
