@@ -6,4 +6,5 @@ spec:
   mitigation_mode: "standard"
   signatures: "on"
   bad_actors: "on"
-  use_automation_tools_detection: "on"
+  automation_tools_detection: "on"
+  tls_fingerprint: "on"

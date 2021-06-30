@@ -12,7 +12,8 @@ import (
 
 var appProtectDosPolicyRequiredFields = [][]string {
 	{"spec", "mitigation_mode"},
-	{"spec", "use_automation_tools_detection"},
+	{"spec", "automation_tools_detection"},
+	{"spec", "tls_fingerprint"},
     {"spec", "signatures"},
 	{"spec", "bad_actors"},
 }

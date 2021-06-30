@@ -137,7 +137,8 @@ func TestAddOrUpdateDosPolicy(t *testing.T) {
 			},
 			"spec": map[string]interface{}{
                 "mitigation_mode": "standard",
-                "use_automation_tools_detection": "on",
+                "automation_tools_detection": "on",
+                "tls_fingerprint": "on",
                 "signatures": "on",
                 "bad_actors": "on",
 			},

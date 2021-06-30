@@ -24,8 +24,9 @@ You can define App Protect Dos policies for your Ingress resources by creating a
    mitigation_mode: "standard",
    signatures: "on",
    bad_actors: "on",
-   use_automation_tools_detection: "on",
-  }
+   automation_tools_detection: "on",
+   tls_fingerprint: "on",
+}
   ```
 
   You would create an `APDosPolicy` resource with the policy defined in the `spec`, as shown below:
@@ -39,7 +40,8 @@ You can define App Protect Dos policies for your Ingress resources by creating a
       mitigation_mode: "standard"
       signatures: "on"
       bad_actors: "on"
-      use_automation_tools_detection: "on"
+      automation_tools_detection: "on"
+      tls_fingerprint: "on"
   ```
 
   > Notice how the fields match exactly in name and level. The Ingress Controller will transform the YAML into a valid JSON App Protect Dos policy config.

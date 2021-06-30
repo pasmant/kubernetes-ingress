@@ -50,7 +50,13 @@ spec:
                     - "off"
                   default: "on"
                   type: string
-                use_automation_tools_detection:
+                automation_tools_detection:
+                  enum:
+                    - "on"
+                    - "off"
+                  default: "on"
+                  type: string
+                tls_fingerprint:
                   enum:
                     - "on"
                     - "off"
