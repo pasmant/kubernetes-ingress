@@ -61,7 +61,7 @@ $ helm install my-release nginx-stable/nginx-ingress --set controller.image.repo
 ```
 For App Protect Dos: (assuming you have pushed the Ingress controller image `nginx-plus-ingress` to your private registry `myregistry.example.com`)
 ```console
-$ helm install -n nginx-ingress my-release nginx-stable/nginx-ingress --set controller.image.repository=myregistry.example.com/nginx-plus-ingress --set controller.nginxplus=true --set controller.appprotectdos.enable=true
+$ helm install --create-namespace -n nginx-ingress my-release nginx-stable/nginx-ingress --set controller.image.repository=myregistry.example.com/nginx-plus-ingress --set controller.nginxplus=true --set controller.appprotectdos.enable=true
 ```
 
 **Note**: If you wish to use the experimental repository, replace `stable` with `edge` and add the `--devel` flag.
@@ -85,7 +85,7 @@ For App Protect Dos:
 replace the value in the `appprotectdos.enable` field inside the values.yaml file with `true`
 
 ```console
-$ helm install -n nginx-ingress my-release -f values-plus.yaml .
+$ helm install --create-namespace -n nginx-ingress my-release -f values-plus.yaml .
 ```
 
 **Note**: If you wish to use the experimental repository, replace the value in the `tag` field inside the yaml files with `edge`.
@@ -146,6 +146,7 @@ $ helm uninstall my-release
 For App Protect Dos:
 ```console
 $ helm uninstall -n nginx-ingress my-release
+$ kubectl delete ns nginx-ingress
 ```
 
 The command removes all the Kubernetes components associated with the release and deletes the release.
