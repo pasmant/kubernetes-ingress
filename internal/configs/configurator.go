@@ -37,16 +37,8 @@ const (
 	appProtectLogConfFolder         = "/etc/nginx/waf/nac-logconfs/"
 	appProtectUserSigFolder         = "/etc/nginx/waf/nac-usersigs/"
 	appProtectUserSigIndex          = "/etc/nginx/waf/nac-usersigs/index.conf"
-)
-
-const (
-    appProtectDosPolicyFolder  = "/etc/app_protect_dos/"
-    appProtectDosLogConfFolder = "/etc/app_protect_dos/"
-)
-
-const (
-    appProtectDosPolicyFolder  = "/etc/app_protect_dos/"
-    appProtectDosLogConfFolder = "/etc/app_protect_dos/"
+    appProtectDosPolicyFolder       = "/etc/app_protect_dos/"
+    appProtectDosLogConfFolder      = "/etc/app_protect_dos/"
 )
 
 // DefaultServerSecretPath is the full path to the Secret with a TLS cert and a key for the default server. #nosec G101
