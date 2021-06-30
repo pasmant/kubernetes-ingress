@@ -74,8 +74,8 @@ Expand app name.
 Expand app protect dos arb name.
 */}}
 {{- define "nginx-ingress.appProtectDosArbName" -}}
-{{- if .Values.controller.appprotectdos.name -}}
-{{- .Values.controller.appprotectdos.name -}}
+{{- if .Values.controller.appprotectdos.arbName -}}
+{{- .Values.controller.appprotectdos.arbName -}}
 {{- else -}}
 {{- printf "%s-%s" (include "nginx-ingress.name" .) "appprotect-dos-arb" -}}
 {{- end -}}
