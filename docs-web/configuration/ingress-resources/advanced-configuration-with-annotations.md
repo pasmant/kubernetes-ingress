@@ -449,7 +449,7 @@ The table below summarizes the available annotations.
      - `Example for App Protect Dos <https://github.com/nginxinc/kubernetes-ingress/tree/v1.11.0/examples/appprotect-dos>`_.
    * - ``appprotectdos.f5.com/app-protect-dos-security-log-enable``
      - N/A
-     - Enable the `security log for App Protect Dos.
+     - Enable the security log for App Protect Dos.
      - ``False``
      - `Example for App Protect Dos <https://github.com/nginxinc/kubernetes-ingress/tree/v1.11.0/examples/appprotect-dos>`_.
    * - ``appprotectdos.f5.com/app-protect-dos-security-log``
