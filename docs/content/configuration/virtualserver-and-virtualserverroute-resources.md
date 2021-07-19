@@ -50,7 +50,11 @@ This document is the reference documentation for the resources. To see additiona
 
 ## VirtualServer Specification
 
-The VirtualServer resource defines load balancing configuration for a domain name, such as `example.com`. Below is an example of such configuration:
+The VirtualServer resource defines load ba
+
+
+
+lancing configuration for a domain name, such as `example.com`. Below is an example of such configuration:
 ```yaml
 apiVersion: k8s.nginx.org/v1
 kind: VirtualServer

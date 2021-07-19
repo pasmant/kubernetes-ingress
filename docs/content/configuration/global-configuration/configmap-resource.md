@@ -80,6 +80,7 @@ See the doc about [VirtualServer and VirtualServerRoute resources](/nginx-ingres
 |``server-tokens`` | Enables or disables the `server_tokens <https://nginx.org/en/docs/http/ngx_http_core_module.html#server_tokens>`_ directive. Additionally, with the NGINX Plus, you can specify a custom string value, including the empty string value, which disables the emission of the “Server” field. | ``True`` |  | 
 |``worker-processes`` | Sets the value of the `worker_processes <https://nginx.org/en/docs/ngx_core_module.html#worker_processes>`_ directive. | ``auto`` |  | 
 |``worker-rlimit-nofile`` | Sets the value of the `worker_rlimit_nofile <https://nginx.org/en/docs/ngx_core_module.html#worker_rlimit_nofile>`_ directive. | N/A |  | 
+|``worker_rlimit_core`` | Sets the value of the `worker_rlimit_core <https://nginx.org/en/docs/ngx_core_module.html#worker_rlimit_core>`_ directive. | N/A |  | 
 |``worker-connections`` | Sets the value of the `worker_connections <https://nginx.org/en/docs/ngx_core_module.html#worker_connections>`_ directive. | ``1024`` |  | 
 |``worker-cpu-affinity`` | Sets the value of the `worker_cpu_affinity <https://nginx.org/en/docs/ngx_core_module.html#worker_cpu_affinity>`_ directive. | N/A |  | 
 |``worker-shutdown-timeout`` | Sets the value of the `worker_shutdown_timeout <https://nginx.org/en/docs/ngx_core_module.html#worker_shutdown_timeout>`_ directive. | N/A |  | 

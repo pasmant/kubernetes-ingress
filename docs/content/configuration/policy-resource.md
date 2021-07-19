@@ -10,7 +10,7 @@ toc: true
 
 The Policy resource allows you to configure features like access control and rate-limiting, which you can add to your [VirtualServer and VirtualServerRoute resources](/nginx-ingress-controller/configuration/virtualserver-and-virtualserverroute-resources/).
 
-The resource is implemented as a [Custom Resource](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/).
+The resource is implemented as a [Custom protectResource](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/).
 
 This document is the reference documentation for the Policy resource. An example of a Policy for access control is available in our [GitHub repo](https://github.com/nginxinc/kubernetes-ingress/blob/v1.12.0/examples-of-custom-resources/access-control).
 
@@ -446,45 +446,19 @@ bados:
     logDest: "syslog:server=127.0.0.1:514"
 ```
 
-> Note: The feature is implemented using the NGINX Plus [NGINX App Protect Module](https://docs.nginx.com/nginx-app-protect/configuration/).
+> Note: The feature is implemented using the NGINX Plus [NGINX App Protect Dos Module](https://docs.nginx.com/nginx-app-protect-dos/configuration/).
 
-```eval_rst
-.. list-table::
-   :header-rows: 1
-
-   * - Field
-     - Description
-     - Type
-     - Required
-   * - ``enable``
-     - Enables NGINX App Protect.
-     - ``bool``
-     - Yes
-   * - ``name``
-     - Name of protected object.
-     - ``string``
-     - No
-   * - ``apDosMonitor``
-     - URL to monitor server's stress. Default value: None, URL will be extracted from the first request which arrives and taken from "Host" header or from destination ip+port
-     - ``string``
-     - No
-   * - ``apDosPolicy``
-     - The `App Protect Dos policy </nginx-ingress-controller/app-protect-dos/configuration/#app-protect-dos-policies/>`_ of the BADOS. Accepts an optional namespace.
-     - ``string``
-     - No
-   * - ``dosSecurityLog.enable``
-     -  Enables security log.
-     - ``bool``
-     - No
-   * - ``dosSecurityLog.apDosLogConf``
-     -  The `App Protect Dos log conf </nginx-ingress-controller/app-protect-dos/configuration/#app-protect-dos-logs>`_ resource. Accepts an optional namespace.
-     - ``string``
-     - No
-   * - ``dosSecurityLog.dosLogDest``
-     -  The log destination for the security log. Accepted variables are ``syslog:server=<ip-address | localhost>:<port>``, ``stderr``, ``<absolute path to file>``. Default is ``"syslog:server=127.0.0.1:514"``.
-     - ``string``
-     - No
-```
+{{% table %}}
+|Field | Description | Type | Required |
+| ---| ---| ---| --- |
+|``enable`` | Enables NGINX App Protect Dos. | ``bool`` | Yes |
+|``name`` | Name of protected object. | ``string`` | No |
+|``apDosMonitor`` | URL to monitor server's stress. Default value: None, URL will be extracted from the first request which arrives and taken from "Host" header or from destination ip+port. | ``string`` | No |
+|``apDosPolicy`` | The `App Protect Dos policy </nginx-ingress-controller/app-protect-dos/configuration/#app-protect-policies/>`_ of the bados. Accepts an optional namespace. | ``string`` | No |
+|``dosSecurityLog.enable`` | Enables security log. | ``bool`` | No |
+|``dosSecurityLog.apDosLogConf`` | The `App Protect Dos log conf </nginx-ingress-controller/app-protect/configuration/#app-protect-logs>`_ resource. Accepts an optional namespace. | ``string`` | No |
+|``dosSecurityLog.dosLogDest`` | The log destination for the security log. Accepted variables are ``syslog:server=<ip-address | localhost>:<port>``, ``stderr``, ``<absolute path to file>``. Default is ``"syslog:server=127.0.0.1:514"``. | ``string`` | No |
+{{% /table %}}
 
 #### BADOS Merging Behavior
 

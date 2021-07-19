@@ -190,3 +190,6 @@ The table below summarizes the available annotations.
 
 **Note**: The App Protect annotations only work if App Protect module is [installed](/nginx-ingress-controller/app-protect/installation/).
 
+### App Protect Dos
+
+**Note**: The App Protect Dos annotations only work if App Protect Dos module is [installed](/nginx-ingress-controller/app-protect-dos/installation/).
