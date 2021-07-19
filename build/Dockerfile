@@ -82,11 +82,7 @@ RUN --mount=type=secret,id=nginx-repo.crt,dst=/etc/ssl/nginx/nginx-repo.crt,mode
 ############################################# Base image for Debian with NGINX Plus and App Protect Dos #############################################
 FROM debian-plus as debian-plus-napdos
 ARG IC_VERSION
-
-LABEL version=debian-nginx-plus-napdos-$NGINX_PLUS_VERSION-$IC_VERSION
-
-ARG REPO_PATH=https://sea-artifactory.olympus.f5net.com/artifactory/f5-beappprotect-debian
-ARG APP_PROTECT_DOS_VER=24
+ARG NGINX_PLUS_VERSION
 
 RUN mkdir -p /shared/cores /var/log/adm /etc/app_protect_dos /var/run/adm/ && chmod 777 /shared/cores /var/log/adm /etc/app_protect_dos /var/run/adm/
 
@@ -95,21 +91,17 @@ RUN --mount=type=secret,id=nginx-repo.crt,dst=/etc/ssl/nginx/nginx-repo.crt,mode
     set -x \
     && apt-get update \
     && apt-get -y install ca-certificates \
-    && printf "deb [trusted=yes] ${REPO_PATH} buster app-protect-dos\n" | tee /etc/apt/sources.list.d/app-protect-dos.list \
-    && printf "deb [trusted=yes] ${REPO_PATH} buster nginx-plus-module-appprotectdos\n" | tee /etc/apt/sources.list.d/nginx-plus-module-appprotectdos.list \
+    && printf "deb https://pkgs.nginx.com/app-protect-dos/debian buster nginx-plus\n" | tee /etc/apt/sources.list.d/nginx-app-protect-dos.list \
     && apt-get update \
     && apt-get clean all \
-    && apt-get -o DPkg::Options::="--force-confold" -y install nginx-plus-module-appprotectdos=${APP_PROTECT_DOS_VER}* \
-    && apt-get -o DPkg::Options::="--force-confold" -y install app-protect-dos=${APP_PROTECT_DOS_VER}*
+    && apt-get -o DPkg::Options::="--force-confold" -y install nginx-plus-module-appprotectdos \
+    && apt-get -o DPkg::Options::="--force-confold" -y install app-protect-dos
 
 ############################################# Base image for Debian with NGINX, App Protect and App Protect Dos #############################################
 FROM debian-plus-nap as debian-plus-nap-napdos
 ARG IC_VERSION
+ARG NGINX_PLUS_VERSION
 
-LABEL version=debian-nginx-plus-nap-napdos-$NGINX_PLUS_VERSION-$IC_VERSION
-
-ARG REPO_PATH=https://sea-artifactory.olympus.f5net.com/artifactory/f5-beappprotect-debian
-ARG APP_PROTECT_DOS_VER=24
 
 RUN mkdir -p /shared/cores /var/log/adm /etc/app_protect_dos /var/run/adm/ && chmod 777 /shared/cores /var/log/adm /etc/app_protect_dos /var/run/adm/
 
@@ -118,12 +110,11 @@ RUN --mount=type=secret,id=nginx-repo.crt,dst=/etc/ssl/nginx/nginx-repo.crt,mode
     set -x \
     && apt-get update \
     && apt-get -y install ca-certificates \
-    && printf "deb [trusted=yes] ${REPO_PATH} buster app-protect-dos\n" | tee /etc/apt/sources.list.d/app-protect-dos.list \
-    && printf "deb [trusted=yes] ${REPO_PATH} buster nginx-plus-module-appprotectdos\n" | tee /etc/apt/sources.list.d/nginx-plus-module-appprotectdos.list \
+    && printf "deb https://pkgs.nginx.com/app-protect-dos/debian buster nginx-plus\n" | tee /etc/apt/sources.list.d/nginx-app-protect-dos.list \
     && apt-get update \
     && apt-get clean all \
-    && apt-get -o DPkg::Options::="--force-confold" -y install nginx-plus-module-appprotectdos=${APP_PROTECT_DOS_VER}* \
-    && apt-get -o DPkg::Options::="--force-confold" -y install app-protect-dos=${APP_PROTECT_DOS_VER}*
+    && apt-get -o DPkg::Options::="--force-confold" -y install nginx-plus-module-appprotectdos \
+    && apt-get -o DPkg::Options::="--force-confold" -y install app-protect-dos
 
 ############################################# Base image for UBI 8 #############################################
 FROM redhat/ubi8-minimal AS ubi-base-8
