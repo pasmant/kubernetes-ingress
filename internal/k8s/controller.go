@@ -312,6 +312,7 @@ func NewLoadBalancerController(input NewLoadBalancerControllerInput) *LoadBalanc
 		policyLister:             lbc.policyLister,
 		keyFunc:                  keyFunc,
 		confClient:               input.ConfClient,
+		hasCorrectIngressClass:   lbc.HasCorrectIngressClass,
 	}
 
 	lbc.configuration = NewConfiguration(
@@ -832,7 +833,7 @@ func (lbc *LoadBalancerController) syncPolicy(task task) {
 
 	glog.V(2).Infof("Adding, Updating or Deleting Policy: %v\n", key)
 
-	if polExists {
+	if polExists && lbc.HasCorrectIngressClass(obj) {
 		pol := obj.(*conf_v1.Policy)
 		err := validation.ValidatePolicy(pol, lbc.isNginxPlus, lbc.enablePreviewPolicies, lbc.appProtectEnabled, lbc.appProtectDosEnabled)
 		if err != nil {
@@ -2678,6 +2679,11 @@ func (lbc *LoadBalancerController) getPolicies(policies []conf_v1.PolicyReferenc
 
 		policy := policyObj.(*conf_v1.Policy)
 
+		if !lbc.HasCorrectIngressClass(policy) {
+			errors = append(errors, fmt.Errorf("referenced policy %s has incorrect ingress class: %s (controller ingress class: %s)", policyKey, policy.Spec.IngressClass, lbc.ingressClass))
+			continue
+		}
+
 		err = validation.ValidatePolicy(policy, lbc.isNginxPlus, lbc.enablePreviewPolicies, lbc.appProtectEnabled, lbc.appProtectDosEnabled)
 		if err != nil {
 			errors = append(errors, fmt.Errorf("Policy %s is invalid: %w", policyKey, err))
@@ -3292,6 +3298,8 @@ func (lbc *LoadBalancerController) HasCorrectIngressClass(obj interface{}) bool 
 	case *conf_v1.VirtualServerRoute:
 		class = obj.Spec.IngressClass
 	case *conf_v1alpha1.TransportServer:
+		class = obj.Spec.IngressClass
+	case *conf_v1.Policy:
 		class = obj.Spec.IngressClass
 	case *networking.Ingress:
 		isIngress = true
