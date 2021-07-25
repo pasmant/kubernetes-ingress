@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: appprotect-dos-arb
-          image: sea-artifactory.olympus.f5net.com/f5-beappprotect-docker/app_protect_dos/app_protect_dos_arb/app_protect_dos_arb:latest
+          image: example/app_protect_dos_arb:latest
           imagePullPolicy: IfNotPresent
           resources:
             limits:
