@@ -10,6 +10,28 @@ toc: true
 
 This document provides an overview of the steps required to use NGINX App Protect Dos with your NGINX Ingress Controller deployment. You can visit the linked documents to find additional information and instructions.
 
+## Build the app-protect-dos-arb Docker Image
+
+- Arbitrator (arb) is an internal service that is essential for the scaling scenarios. The arbitrator service should be deployed in the same namespace as NGINX App Protect DoS.
+   
+  - Build the NGINX Ingress Controller image:
+
+    ```bash
+    make debian-image-napdos-plus PREFIX=<your Docker registry domain>
+    ```
+  - Push the image to your local Docker registry. 
+
+    ```bash
+    make push PREFIX=<your Docker registry domain>/app-protect-dos-arb  TAG=latest
+    ```
+## Install the app-protect-dos-arb
+
+- Deploy the app protect dos arbitrator
+    ```bash
+    kubectl apply -f deployment/appprotect-dos-arb.yaml
+    ```
+Note: Update the appprotect-dos-arb.yaml with the container image that you have built.
+
 ## Build the Docker Image
 
 Take the steps below to create the Docker image that you'll use to deploy NGINX Ingress Controller with App Protect Dos in Kubernetes.

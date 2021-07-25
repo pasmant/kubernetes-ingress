@@ -8,7 +8,11 @@ toc: true
 ---
 
 This document describes how to configure the NGINX App Protect Dos module
-> Check out the complete [NGINX Ingress Controller with App Protect Dos example resources on GitHub](https://github.com/nginxinc/kubernetes-ingress/tree/v1.11.0/examples/appprotect-dos).
+> Check out the complete [NGINX Ingress Controller with App Protect Dos example resources on GitHub](https://github.com/nginxinc/kubernetes-ingress/tree/v1.12.0/examples/appprotect-dos).
+
+## Global Configuration
+
+The NGINX Ingress Controller has a set of global configuration parameters that align with those available in the NGINX App Protect Dos module. See [ConfigMap keys](/nginx-ingress-controller/configuration/global-configuration/configmap-resource/#modules) for the complete list. The App Protect parameters use the `app-protect-dos*` prefix.
 
 ## Enable App Protect Dos for an Ingress Resource
 
@@ -56,9 +60,7 @@ You would create an `APDosPolicy` resource with the policy defined in the `spec`
 
 ## App Protect Dos Logs
 
-You can set the App Protect Dos Log configurations by creating an `APDosLogConf` [Custom Resource](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/).
-
-> **Note**: The fields `max_message_size` is not currently supported.
+You can set the [App Protect Dos Log configurations](/nginx-app-protect-dos/logs-overview/types-of-logs/) by creating an `APDosLogConf` [Custom Resource](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/).
 
 To add the App Protect Dos log configurations to an Ingress resource:
 
