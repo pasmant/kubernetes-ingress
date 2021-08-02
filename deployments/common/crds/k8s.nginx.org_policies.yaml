@@ -54,6 +54,30 @@ spec:
                       type: array
                       items:
                         type: string
+                bados:
+                  description: 'Bados defines an Bados policy. policy status: preview'
+                  type: object
+                  properties:
+                    apDosMonitor:
+                      type: string
+                    apDosPolicy:
+                      type: string
+                    dosSecurityLog:
+                      description: DosSecurityLog defines the security log of a Bados policy.
+                      type: object
+                      properties:
+                        apDosLogConf:
+                          type: string
+                        dosAccessLogDest:
+                          type: string
+                        dosLogDest:
+                          type: string
+                        enable:
+                          type: boolean
+                    enable:
+                      type: boolean
+                    name:
+                      type: string
                 egressMTLS:
                   description: 'EgressMTLS defines an Egress MTLS policy. policy status: preview'
                   type: object
@@ -156,31 +180,6 @@ spec:
                           type: boolean
                         logDest:
                           type: string
-                bados:
-                  description: 'Bados defines a Bados policy. policy status: preview'
-                  type: object
-                  properties:
-                    enable:
-                      type: boolean
-                    name:
-                      type: string
-                    apDosPolicy:
-                      type: string
-                    dosSecurityLog:
-                      description: dosSecurityLog defines the security log of a Bados policy.
-                      type: object
-                      properties:
-                        apDosLogConf:
-                          type: string
-                        enable:
-                          type: boolean
-                        dosLogDest:
-                          type: string
-                        dosAccessLogDest:
-                          type: string
-                    apDosMonitor:
-                      description: apDosMonitor URL to monitor server's stress.
-                      type: string
             status:
               description: PolicyStatus is the status of the policy resource
               type: object
