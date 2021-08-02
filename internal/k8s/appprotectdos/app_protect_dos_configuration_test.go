@@ -2,27 +2,10 @@ package appprotectdos
 
 import (
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
-
-func parseTime(value string) *time.Time {
-	t, err := time.Parse(timeLayout, value)
-	if err != nil {
-		panic(err)
-	}
-
-	return &t
-}
-
-func sliceCmpFunc(x, y *unstructured.Unstructured) bool {
-	return x.GetUID() > y.GetUID()
-}
-
-var unstructuredSliceCmpOpts = cmpopts.SortSlices(sliceCmpFunc)
 
 func TestCreateAppProtectDosPolicyEx(t *testing.T) {
 	tests := []struct {
@@ -38,8 +21,8 @@ func TestCreateAppProtectDosPolicyEx(t *testing.T) {
 				},
 			},
 			expectedPolicyEx: &DosPolicyEx{
-				IsValid:       false,
-				ErrorMsg:      "Validation Failed",
+				IsValid:  false,
+				ErrorMsg: "Validation Failed",
 			},
 			wantErr: true,
 			msg:     "dos policy empty spec",
@@ -55,8 +38,8 @@ func TestCreateAppProtectDosPolicyEx(t *testing.T) {
 				},
 			},
 			expectedPolicyEx: &DosPolicyEx{
-				IsValid:       false,
-				ErrorMsg:      failedValidationErrorMsg,
+				IsValid:  false,
+				ErrorMsg: failedValidationErrorMsg,
 			},
 			wantErr: true,
 			msg:     "dos policy with incorrect structure",
@@ -136,11 +119,11 @@ func TestAddOrUpdateDosPolicy(t *testing.T) {
 				"namespace": "testing",
 			},
 			"spec": map[string]interface{}{
-                "mitigation_mode": "standard",
-                "automation_tools_detection": "on",
-                "tls_fingerprint": "on",
-                "signatures": "on",
-                "bad_actors": "on",
+				"mitigation_mode":            "standard",
+				"automation_tools_detection": "on",
+				"tls_fingerprint":            "on",
+				"signatures":                 "on",
+				"bad_actors":                 "on",
 			},
 		},
 	}
@@ -162,10 +145,11 @@ func TestAddOrUpdateDosPolicy(t *testing.T) {
 		{
 			policy: basicTestPolicy,
 			expectedChanges: []Change{
-				{Resource: &DosPolicyEx{
-					Obj:     basicTestPolicy,
-					IsValid: true,
-				},
+				{
+					Resource: &DosPolicyEx{
+						Obj:     basicTestPolicy,
+						IsValid: true,
+					},
 					Op: AddOrUpdate,
 				},
 			},
@@ -175,11 +159,12 @@ func TestAddOrUpdateDosPolicy(t *testing.T) {
 		{
 			policy: invalidTestPolicy,
 			expectedChanges: []Change{
-				{Resource: &DosPolicyEx{
-					Obj:      invalidTestPolicy,
-					IsValid:  false,
-					ErrorMsg: "Validation Failed",
-				},
+				{
+					Resource: &DosPolicyEx{
+						Obj:      invalidTestPolicy,
+						IsValid:  false,
+						ErrorMsg: "Validation Failed",
+					},
 					Op: Delete,
 				},
 			},
@@ -196,13 +181,13 @@ func TestAddOrUpdateDosPolicy(t *testing.T) {
 	for _, test := range tests {
 		aPChans, aPProbs := apc.AddOrUpdateDosPolicy(test.policy)
 		if diff := cmp.Diff(test.expectedChanges, aPChans); diff != "" {
-            t.Errorf("test.expectedChanges: %q", test.expectedChanges)
-            t.Errorf("aPChans              : %q", aPChans)
+			t.Errorf("test.expectedChanges: %q", test.expectedChanges)
+			t.Errorf("aPChans              : %q", aPChans)
 			t.Errorf("AddOrUpdatePolicy() %q changes returned unexpected result (-want +got):\n%s", test.msg, diff)
 		}
 		if diff := cmp.Diff(test.expectedProblems, aPProbs); diff != "" {
-		    t.Errorf("test.expectedProblems: %v", test.expectedProblems)
-		    t.Errorf("aPProbs              : %v", aPProbs)
+			t.Errorf("test.expectedProblems: %v", test.expectedProblems)
+			t.Errorf("aPProbs              : %v", aPProbs)
 			t.Errorf("AddOrUpdatePolicy() %q problems returned unexpected result (-want +got):\n%s", test.msg, diff)
 		}
 	}
@@ -242,10 +227,11 @@ func TestAddOrUpdateDosLogConf(t *testing.T) {
 		{
 			logconf: validLogConf,
 			expectedChanges: []Change{
-				{Resource: &DosLogConfEx{
-					Obj:     validLogConf,
-					IsValid: true,
-				},
+				{
+					Resource: &DosLogConfEx{
+						Obj:     validLogConf,
+						IsValid: true,
+					},
 					Op: AddOrUpdate,
 				},
 			},
@@ -255,11 +241,12 @@ func TestAddOrUpdateDosLogConf(t *testing.T) {
 		{
 			logconf: invalidLogConf,
 			expectedChanges: []Change{
-				{Resource: &DosLogConfEx{
-					Obj:      invalidLogConf,
-					IsValid:  false,
-					ErrorMsg: "Validation Failed",
-				},
+				{
+					Resource: &DosLogConfEx{
+						Obj:      invalidLogConf,
+						IsValid:  false,
+						ErrorMsg: "Validation Failed",
+					},
 					Op: Delete,
 				},
 			},

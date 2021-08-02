@@ -337,14 +337,14 @@ type Configuration struct {
 	globalConfigurationValidator *validation.GlobalConfigurationValidator
 	transportServerValidator     *validation.TransportServerValidator
 
-	secretReferenceChecker          *secretReferenceChecker
-	serviceReferenceChecker         *serviceReferenceChecker
-	endpointReferenceChecker        *serviceReferenceChecker
-	policyReferenceChecker          *policyReferenceChecker
-	appPolicyReferenceChecker       *appProtectResourceReferenceChecker
-	appLogConfReferenceChecker      *appProtectResourceReferenceChecker
-    appDosPolicyReferenceChecker    *appProtectResourceReferenceChecker
-    appDosLogConfReferenceChecker   *appProtectResourceReferenceChecker
+	secretReferenceChecker        *secretReferenceChecker
+	serviceReferenceChecker       *serviceReferenceChecker
+	endpointReferenceChecker      *serviceReferenceChecker
+	policyReferenceChecker        *policyReferenceChecker
+	appPolicyReferenceChecker     *appProtectResourceReferenceChecker
+	appLogConfReferenceChecker    *appProtectResourceReferenceChecker
+	appDosPolicyReferenceChecker  *appProtectResourceReferenceChecker
+	appDosLogConfReferenceChecker *appProtectResourceReferenceChecker
 
 	isPlus                  bool
 	appProtectEnabled       bool

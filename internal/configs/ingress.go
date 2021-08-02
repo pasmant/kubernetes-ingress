@@ -16,17 +16,13 @@ import (
 	"github.com/nginxinc/kubernetes-ingress/internal/configs/version1"
 )
 
-const emptyHost               = ""
-const appProtectPolicyKey     = "policy"
-const appProtectLogConfKey    = "logconf"
-const appProtectDosPolicyKey  = "policyDos"
-const appProtectDosLogConfKey = "logconfDos"
+const emptyHost = ""
 
 // AppProtectResources holds namespace names of App Protect resources relavant to an Ingress
 type AppProtectResources struct {
 	AppProtectPolicy      string
 	AppProtectLogconfs    []string
-    AppProtectDosPolicy   string
+	AppProtectDosPolicy   string
 	AppProtectDosLogconfs string
 }
 
@@ -48,8 +44,8 @@ type IngressEx struct {
 	AppProtectPolicy     *unstructured.Unstructured
 	AppProtectLogs       []AppProtectLog
 	AppProtectDosPolicy  *unstructured.Unstructured
-    AppProtectDosLogConf *unstructured.Unstructured
-    AppProtectDosLogDst  string
+	AppProtectDosLogConf *unstructured.Unstructured
+	AppProtectDosLogDst  string
 	SecretRefs           map[string]*secrets.SecretReference
 }
 
@@ -168,10 +164,10 @@ func generateNginxCfg(ingEx *IngressEx, apResources AppProtectResources, isMinio
 			server.AppProtectLogConfs = apResources.AppProtectLogconfs
 		}
 
-        if hasAppProtectDos {
-            server.AppProtectDosPolicy = apResources.AppProtectDosPolicy
-            server.AppProtectDosLogConf = apResources.AppProtectDosLogconfs
-        }
+		if hasAppProtectDos {
+			server.AppProtectDosPolicy = apResources.AppProtectDosPolicy
+			server.AppProtectDosLogConf = apResources.AppProtectDosLogconfs
+		}
 
 		if !isMinion && cfgParams.JWTKey != "" {
 			jwtAuth, redirectLoc, warnings := generateJWTConfig(ingEx.Ingress, ingEx.SecretRefs, &cfgParams, getNameForRedirectLocation(ingEx.Ingress))

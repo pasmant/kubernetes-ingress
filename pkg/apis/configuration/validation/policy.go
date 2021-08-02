@@ -101,22 +101,22 @@ func validatePolicySpec(spec *v1.PolicySpec, fieldPath *field.Path, isPlus, enab
 		fieldCount++
 	}
 
-    if spec.Bados != nil {
-        if !enablePreviewPolicies {
-            allErrs = append(allErrs, field.Forbidden(fieldPath.Child("bados"),
-                "bados is a preview policy. Preview policies must be enabled to use via cli argument -enable-preview-policies"))
-        }
-        if !isPlus {
-            allErrs = append(allErrs, field.Forbidden(fieldPath.Child("bados"), "bados is only supported in NGINX Plus"))
-        }
-        if !enableAppProtectDos {
-            allErrs = append(allErrs, field.Forbidden(fieldPath.Child("bados"),
-                "App Protect dos must be enabled via cli argument -enable-appprotect-dos to use bados policy"))
-        }
+	if spec.Bados != nil {
+		if !enablePreviewPolicies {
+			allErrs = append(allErrs, field.Forbidden(fieldPath.Child("bados"),
+				"bados is a preview policy. Preview policies must be enabled to use via cli argument -enable-preview-policies"))
+		}
+		if !isPlus {
+			allErrs = append(allErrs, field.Forbidden(fieldPath.Child("bados"), "bados is only supported in NGINX Plus"))
+		}
+		if !enableAppProtectDos {
+			allErrs = append(allErrs, field.Forbidden(fieldPath.Child("bados"),
+				"App Protect dos must be enabled via cli argument -enable-appprotect-dos to use bados policy"))
+		}
 
-        allErrs = append(allErrs, validateBados(spec.Bados, fieldPath.Child("bados"))...)
-        fieldCount++
-    }
+		allErrs = append(allErrs, validateBados(spec.Bados, fieldPath.Child("bados"))...)
+		fieldCount++
+	}
 
 	if fieldCount != 1 {
 		msg := "must specify exactly one of: `accessControl`, `rateLimit`, `ingressMTLS`, `egressMTLS`"
@@ -311,12 +311,12 @@ func validateBados(bados *v1.Bados, fieldPath *field.Path) field.ErrorList {
 		}
 	}
 
-    if bados.DosSecurityLog != nil {
-        allErrs = append(allErrs, validateDosLogConf(bados.DosSecurityLog.ApDosLogConf, bados.DosSecurityLog.DosLogDest, fieldPath.Child("dosSecurityLog"))...)
-        if bados.DosSecurityLog.DosAccessLogDest != "" {
-            allErrs = append(allErrs, validateDosLogAccessLogDest(bados.DosSecurityLog.DosAccessLogDest, fieldPath.Child("dosAccessLogDest"))...)
-        }
-    }
+	if bados.DosSecurityLog != nil {
+		allErrs = append(allErrs, validateDosLogConf(bados.DosSecurityLog.ApDosLogConf, bados.DosSecurityLog.DosLogDest, fieldPath.Child("dosSecurityLog"))...)
+		if bados.DosSecurityLog.DosAccessLogDest != "" {
+			allErrs = append(allErrs, validateDosLogAccessLogDest(bados.DosSecurityLog.DosAccessLogDest, fieldPath.Child("dosAccessLogDest"))...)
+		}
+	}
 
 	return allErrs
 }

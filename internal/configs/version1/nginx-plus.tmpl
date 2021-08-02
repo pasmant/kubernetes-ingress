@@ -82,7 +82,7 @@ http {
 
     {{- if .AppProtectDosLoadModule}}
         {{- if .AppProtectDosLivenessEnable}}
-    app_protect_dos_liveness {{.AppProtectDosLivenessEnable}} uri:/{{.AppProtectDosLivenessUri}} port:{{.AppProtectDosLivenessPort}};
+    app_protect_dos_liveness {{.AppProtectDosLivenessEnable}} uri:/{{.AppProtectDosLivenessURI}} port:{{.AppProtectDosLivenessPort}};
         {{- end}}
     {{- end}}
 
@@ -134,7 +134,7 @@ http {
     server {
         server_name probe;
         listen {{.AppProtectDosLivenessPort}};
-        location /{{.AppProtectDosLivenessUri}} {
+        location /{{.AppProtectDosLivenessURI}} {
             app_protect_dos_enable on;
             proxy_pass http://localhost:8091;
         }

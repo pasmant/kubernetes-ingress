@@ -2,19 +2,14 @@ package appprotectdos
 
 import (
 	"fmt"
-	"time"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-const timeLayout = time.RFC3339
-
 // reasons for invalidity
 const (
 	failedValidationErrorMsg = "Validation Failed"
-	duplicatedTagsErrorMsg   = "Duplicate tag set"
-	invalidTimestampErrorMsg = "Invalid timestamp"
 )
 
 var (
@@ -25,25 +20,25 @@ var (
 		Resource: "apdospolicies",
 	}
 
-    // DosPolicyGVK is the group version kind of the appprotectdos policy
-    DosPolicyGVK = schema.GroupVersionKind{
-        Group:   "appprotectdos.f5.com",
-        Version: "v1beta1",
-        Kind:    "APDosPolicy",
-    }
+	// DosPolicyGVK is the group version kind of the appprotectdos policy
+	DosPolicyGVK = schema.GroupVersionKind{
+		Group:   "appprotectdos.f5.com",
+		Version: "v1beta1",
+		Kind:    "APDosPolicy",
+	}
 
-    // DosLogConfGVR is the group version resource of the appprotectdos policy
-    DosLogConfGVR = schema.GroupVersionResource{
-        Group:    "appprotectdos.f5.com",
-        Version:  "v1beta1",
-        Resource: "apdoslogconfs",
-    }
-    // DosLogConfGVK is the group version kind of the appprotectdos policy
-    DosLogConfGVK = schema.GroupVersionKind{
-        Group:   "appprotectdos.f5.com",
-        Version: "v1beta1",
-        Kind:    "APDosLogConf",
-    }
+	// DosLogConfGVR is the group version resource of the appprotectdos policy
+	DosLogConfGVR = schema.GroupVersionResource{
+		Group:    "appprotectdos.f5.com",
+		Version:  "v1beta1",
+		Resource: "apdoslogconfs",
+	}
+	// DosLogConfGVK is the group version kind of the appprotectdos policy
+	DosLogConfGVK = schema.GroupVersionKind{
+		Group:   "appprotectdos.f5.com",
+		Version: "v1beta1",
+		Kind:    "APDosLogConf",
+	}
 )
 
 // Operation defines an operation to perform for an App Protect Dos resource.
@@ -77,10 +72,10 @@ type Problem struct {
 // Configuration configures App Protect Dos resources that the Ingress Controller uses.
 type Configuration interface {
 	AddOrUpdateDosPolicy(policyObj *unstructured.Unstructured) (changes []Change, problems []Problem)
-    AddOrUpdateDosLogConf(logConfObj *unstructured.Unstructured) (changes []Change, problems []Problem)
+	AddOrUpdateDosLogConf(logConfObj *unstructured.Unstructured) (changes []Change, problems []Problem)
 	GetAppDosResource(kind, key string) (*unstructured.Unstructured, error)
 	DeleteDosPolicy(key string) (changes []Change, problems []Problem)
-    DeleteDosLogConf(key string) (changes []Change, problems []Problem)
+	DeleteDosLogConf(key string) (changes []Change, problems []Problem)
 }
 
 // ConfigurationImpl holds representations of App Protect Dos cluster resources
@@ -104,19 +99,9 @@ func newConfigurationImpl() *ConfigurationImpl {
 
 // DosPolicyEx represents an App Protect Dos policy cluster resource
 type DosPolicyEx struct {
-	Obj           *unstructured.Unstructured
-	IsValid       bool
-	ErrorMsg      string
-}
-
-func (pol *DosPolicyEx) setInvalid(reason string) {
-	pol.IsValid = false
-	pol.ErrorMsg = reason
-}
-
-func (pol *DosPolicyEx) setValid() {
-	pol.IsValid = true
-	pol.ErrorMsg = ""
+	Obj      *unstructured.Unstructured
+	IsValid  bool
+	ErrorMsg string
 }
 
 func createAppProtectDosPolicyEx(policyObj *unstructured.Unstructured) (*DosPolicyEx, error) {
@@ -127,8 +112,8 @@ func createAppProtectDosPolicyEx(policyObj *unstructured.Unstructured) (*DosPoli
 	}
 
 	return &DosPolicyEx{
-		Obj:           policyObj,
-		IsValid:       true,
+		Obj:     policyObj,
+		IsValid: true,
 	}, nil
 }
 
@@ -163,8 +148,8 @@ func (ci *ConfigurationImpl) AddOrUpdateDosPolicy(policyObj *unstructured.Unstru
 		return append(changes, Change{Op: Delete, Resource: policy}),
 			append(problems, Problem{Object: policyObj, Reason: "Rejected", Message: err.Error()})
 	}
-    ci.DosPolicies[resNsName] = policy
-    return append(changes, Change{Op: AddOrUpdate, Resource: policy}), problems
+	ci.DosPolicies[resNsName] = policy
+	return append(changes, Change{Op: AddOrUpdate, Resource: policy}), problems
 }
 
 // AddOrUpdateDosLogConf adds or updates App Protect Dos Log Configuration to App Protect Dos Configuration
@@ -182,22 +167,22 @@ func (ci *ConfigurationImpl) AddOrUpdateDosLogConf(logconfObj *unstructured.Unst
 // GetAppDosResource returns a pointer to an App Protect Dos resource
 func (ci *ConfigurationImpl) GetAppDosResource(kind, key string) (*unstructured.Unstructured, error) {
 	switch kind {
-    case DosPolicyGVK.Kind:
-        if obj, ok := ci.DosPolicies[key]; ok {
-            if obj.IsValid {
-                return obj.Obj, nil
-            }
-            return nil, fmt.Errorf(obj.ErrorMsg)
-        }
-        return nil, fmt.Errorf("App Protect Dos Policy %s not found", key)
-    case DosLogConfGVK.Kind:
-        if obj, ok := ci.DosLogConfs[key]; ok {
-            if obj.IsValid {
-                return obj.Obj, nil
-            }
-            return nil, fmt.Errorf(obj.ErrorMsg)
-        }
-        return nil, fmt.Errorf("App Protect DosLogConf %s not found", key)
+	case DosPolicyGVK.Kind:
+		if obj, ok := ci.DosPolicies[key]; ok {
+			if obj.IsValid {
+				return obj.Obj, nil
+			}
+			return nil, fmt.Errorf(obj.ErrorMsg)
+		}
+		return nil, fmt.Errorf("App Protect Dos Policy %s not found", key)
+	case DosLogConfGVK.Kind:
+		if obj, ok := ci.DosLogConfs[key]; ok {
+			if obj.IsValid {
+				return obj.Obj, nil
+			}
+			return nil, fmt.Errorf(obj.ErrorMsg)
+		}
+		return nil, fmt.Errorf("App Protect DosLogConf %s not found", key)
 	}
 	return nil, fmt.Errorf("Unknown App Protect Dos resource kind %s", kind)
 }
@@ -231,8 +216,8 @@ type FakeConfiguration struct {
 // NewFakeConfiguration creates a new App Protect Dos Configuration
 func NewFakeConfiguration() Configuration {
 	return &FakeConfiguration{
-        DosPolicies:    make(map[string]*DosPolicyEx),
-        DosLogConfs:    make(map[string]*DosLogConfEx),
+		DosPolicies: make(map[string]*DosPolicyEx),
+		DosLogConfs: make(map[string]*DosLogConfEx),
 	}
 }
 
@@ -261,16 +246,16 @@ func (fc *FakeConfiguration) AddOrUpdateDosLogConf(logConfObj *unstructured.Unst
 // GetAppDosResource returns a pointer to an App Protect Dos resource
 func (fc *FakeConfiguration) GetAppDosResource(kind, key string) (*unstructured.Unstructured, error) {
 	switch kind {
-    case DosPolicyGVK.Kind:
-        if obj, ok := fc.DosPolicies[key]; ok {
-            return obj.Obj, nil
-        }
-        return nil, fmt.Errorf("App Protect Dos Policy %s not found", key)
-    case DosLogConfGVK.Kind:
-        if obj, ok := fc.DosLogConfs[key]; ok {
-            return obj.Obj, nil
-        }
-        return nil, fmt.Errorf("App Protect Dos LogConf %s not found", key)
+	case DosPolicyGVK.Kind:
+		if obj, ok := fc.DosPolicies[key]; ok {
+			return obj.Obj, nil
+		}
+		return nil, fmt.Errorf("App Protect Dos Policy %s not found", key)
+	case DosLogConfGVK.Kind:
+		if obj, ok := fc.DosLogConfs[key]; ok {
+			return obj.Obj, nil
+		}
+		return nil, fmt.Errorf("App Protect Dos LogConf %s not found", key)
 	}
 	return nil, fmt.Errorf("Unknown App Protect Dos resource kind %s", kind)
 }

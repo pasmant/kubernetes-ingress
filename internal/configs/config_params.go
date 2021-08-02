@@ -55,16 +55,16 @@ type ConfigParams struct {
 	MainAppProtectCookieSeed               string
 	MainAppProtectCPUThresholds            string
 	MainAppProtectPhysicalMemoryThresholds string
-    AppProtectDosEnable                    string
-    AppProtectDosPolicy                    string
-    AppProtectDosLogConf                   string
-    AppProtectDosLogEnable                 string
-    AppProtectDosMonitor                   string
-    AppProtectDosName                      string
-    AppProtectDosAccessLogDst              string
-    MainAppProtectDosLivenessEnable        string
-    MainAppProtectDosLivenessUri           string
-    MainAppProtectDosLivenessPort          int
+	AppProtectDosEnable                    string
+	AppProtectDosPolicy                    string
+	AppProtectDosLogConf                   string
+	AppProtectDosLogEnable                 string
+	AppProtectDosMonitor                   string
+	AppProtectDosName                      string
+	AppProtectDosAccessLogDst              string
+	MainAppProtectDosLivenessEnable        string
+	MainAppProtectDosLivenessURI           string
+	MainAppProtectDosLivenessPort          int
 	ProxyBuffering                         bool
 	ProxyBuffers                           string
 	ProxyBufferSize                        string
@@ -175,8 +175,8 @@ func NewDefaultConfigParams() *ConfigParams {
 		MainKeepaliveRequests:         100,
 		VariablesHashBucketSize:       256,
 		VariablesHashMaxSize:          1024,
-        MainAppProtectDosLivenessUri:  "app_protect_dos_liveness",
-        MainAppProtectDosLivenessPort: 8090,
+		MainAppProtectDosLivenessURI:  "app_protect_dos_liveness",
+		MainAppProtectDosLivenessPort: 8090,
 	}
 }
 

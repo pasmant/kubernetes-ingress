@@ -38,9 +38,9 @@ const (
 	// appProtectLogConfigFileName is the location of the NGINX App Protect logging configuration file
 	appProtectLogConfigFileName = "/etc/app_protect/bd/logger.cfg"
 
-    appProtectDosAgentInstallCmd    = "/usr/bin/adminstall"
-    appProtectDosAgentStartCmd      = "/usr/bin/admd -d --standalone > /var/log/adm/admd.log 2>&1"
-    appProtectDosAgentStartDebugCmd = "/usr/bin/admd -d --standalone --log debug > /var/log/adm/admd.log 2>&1"
+	appProtectDosAgentInstallCmd    = "/usr/bin/adminstall"
+	appProtectDosAgentStartCmd      = "/usr/bin/admd -d --standalone > /var/log/adm/admd.log 2>&1"
+	appProtectDosAgentStartDebugCmd = "/usr/bin/admd -d --standalone --log debug > /var/log/adm/admd.log 2>&1"
 )
 
 // ServerConfig holds the config data for an upstream server in NGINX Plus.
@@ -530,21 +530,20 @@ func (lm *LocalManager) AppProtectDosAgentQuit() {
 
 // AppProtectDosAgentStart starts the AppProtectDos agent
 func (lm *LocalManager) AppProtectDosAgentStart(apdaDone chan error, debug bool) {
-
 	glog.V(3).Info("Starting AppProtectDos Agent")
 
-    // Perform installtion by adminstall
-    cmdInstall := exec.Command(appProtectDosAgentInstallCmd)
+	// Perform installtion by adminstall
+	cmdInstall := exec.Command(appProtectDosAgentInstallCmd)
 
-    if err := cmdInstall.Run(); err != nil {
-        glog.Fatalf("Failed to install AppProtectDos: %v", err)
-    }
+	if err := cmdInstall.Run(); err != nil {
+		glog.Fatalf("Failed to install AppProtectDos: %v", err)
+	}
 
-    // case debug add debug flag to admd
-    appProtectDosAgentCmd := appProtectDosAgentStartCmd
+	// case debug add debug flag to admd
+	appProtectDosAgentCmd := appProtectDosAgentStartCmd
 	if debug {
-	    appProtectDosAgentCmd = appProtectDosAgentStartDebugCmd
-    }
+		appProtectDosAgentCmd = appProtectDosAgentStartDebugCmd
+	}
 
 	cmd := exec.Command("sh", "-c", appProtectDosAgentCmd)
 	if err := cmd.Start(); err != nil {

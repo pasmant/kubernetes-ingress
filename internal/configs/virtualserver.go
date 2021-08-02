@@ -63,8 +63,8 @@ type VirtualServerEx struct {
 	SecretRefs          map[string]*secrets.SecretReference
 	ApPolRefs           map[string]*unstructured.Unstructured
 	LogConfRefs         map[string]*unstructured.Unstructured
-    ApDosPolRefs        map[string]*unstructured.Unstructured
-    DosLogConfRefs      map[string]*unstructured.Unstructured
+	ApDosPolRefs        map[string]*unstructured.Unstructured
+	DosLogConfRefs      map[string]*unstructured.Unstructured
 }
 
 func (vsx *VirtualServerEx) String() string {
@@ -996,7 +996,7 @@ func (p *policiesCfg) addBadosConfig(
 	Bados *conf_v1.Bados,
 	polKey string,
 	polNamespace string,
-    apResources map[string]string,
+	apResources map[string]string,
 ) *validationResults {
 	res := newValidationResults()
 	if p.Bados != nil {
@@ -1010,54 +1010,53 @@ func (p *policiesCfg) addBadosConfig(
 		p.Bados = &version2.Bados{Enable: "off"}
 	}
 
-    if Bados.Name != "" {
-        p.Bados.Name = Bados.Name
+	if Bados.Name != "" {
+		p.Bados.Name = Bados.Name
 	}
 
-    if Bados.ApDosPolicy != "" {
-        apPolKey := Bados.ApDosPolicy
-        hasNamepace := strings.Contains(apPolKey, "/")
-        if !hasNamepace {
-            apPolKey = fmt.Sprintf("%v/%v", polNamespace, apPolKey)
-        }
+	if Bados.ApDosPolicy != "" {
+		apPolKey := Bados.ApDosPolicy
+		hasNamepace := strings.Contains(apPolKey, "/")
+		if !hasNamepace {
+			apPolKey = fmt.Sprintf("%v/%v", polNamespace, apPolKey)
+		}
 
-        if apPolPath, exists := apResources[apPolKey]; exists {
-            p.Bados.ApDosPolicy = apPolPath
-        } else {
-            res.addWarningf("Bados policy %s references an invalid or non-existing App Protect Dos policy %s", polKey, apPolKey)
-            res.isError = true
-            return res
-        }
-    }
+		if apPolPath, exists := apResources[apPolKey]; exists {
+			p.Bados.ApDosPolicy = apPolPath
+		} else {
+			res.addWarningf("Bados policy %s references an invalid or non-existing App Protect Dos policy %s", polKey, apPolKey)
+			res.isError = true
+			return res
+		}
+	}
 
-    if Bados.DosSecurityLog != nil {
-        p.Bados.ApDosSecurityLogEnable = true
+	if Bados.DosSecurityLog != nil {
+		p.Bados.ApDosSecurityLogEnable = true
 
-        logConfKey := Bados.DosSecurityLog.ApDosLogConf
-        hasNamepace := strings.Contains(logConfKey, "/")
-        if !hasNamepace {
-            logConfKey = fmt.Sprintf("%v/%v", polNamespace, logConfKey)
-        }
+		logConfKey := Bados.DosSecurityLog.ApDosLogConf
+		hasNamepace := strings.Contains(logConfKey, "/")
+		if !hasNamepace {
+			logConfKey = fmt.Sprintf("%v/%v", polNamespace, logConfKey)
+		}
 
-        if logConfPath, ok := apResources[logConfKey]; ok {
-            logDest := generateString(Bados.DosSecurityLog.DosLogDest, "stderr")
-            p.Bados.ApDosLogConf = fmt.Sprintf("%s %s", logConfPath, logDest)
-        } else {
-            res.addWarningf("Bados policy %s references an invalid or non-existing log config %s", polKey, logConfKey)
-            res.isError = true
-        }
-        if Bados.DosSecurityLog.DosAccessLogDest != "" {
-            p.Bados.ApDosAccessLogDest = Bados.DosSecurityLog.DosAccessLogDest
-        }
-    }
+		if logConfPath, ok := apResources[logConfKey]; ok {
+			logDest := generateString(Bados.DosSecurityLog.DosLogDest, "stderr")
+			p.Bados.ApDosLogConf = fmt.Sprintf("%s %s", logConfPath, logDest)
+		} else {
+			res.addWarningf("Bados policy %s references an invalid or non-existing log config %s", polKey, logConfKey)
+			res.isError = true
+		}
+		if Bados.DosSecurityLog.DosAccessLogDest != "" {
+			p.Bados.ApDosAccessLogDest = Bados.DosSecurityLog.DosAccessLogDest
+		}
+	}
 
-    if Bados.ApDosMonitor != "" {
-        p.Bados.ApDosMonitor = Bados.ApDosMonitor
-    }
+	if Bados.ApDosMonitor != "" {
+		p.Bados.ApDosMonitor = Bados.ApDosMonitor
+	}
 
 	return res
 }
-
 
 func (vsc *virtualServerConfigurator) generatePolicies(
 	ownerDetails policyOwnerDetails,
@@ -1107,8 +1106,8 @@ func (vsc *virtualServerConfigurator) generatePolicies(
 				res = config.addOIDCConfig(pol.Spec.OIDC, key, polNamespace, policyOpts.secretRefs, vsc.oidcPolCfg)
 			case pol.Spec.WAF != nil:
 				res = config.addWAFConfig(pol.Spec.WAF, key, polNamespace, policyOpts.apResources)
-            case pol.Spec.Bados != nil:
-                res = config.addBadosConfig(pol.Spec.Bados, key, polNamespace, policyOpts.apResources)
+			case pol.Spec.Bados != nil:
+				res = config.addBadosConfig(pol.Spec.Bados, key, polNamespace, policyOpts.apResources)
 			default:
 				res = newValidationResults()
 			}
@@ -1189,7 +1188,7 @@ func addPoliciesCfgToLocation(cfg policiesCfg, location *version2.Location) {
 	location.EgressMTLS = cfg.EgressMTLS
 	location.OIDC = cfg.OIDC
 	location.WAF = cfg.WAF
-    location.Bados = cfg.Bados
+	location.Bados = cfg.Bados
 	location.PoliciesErrorReturn = cfg.ErrorReturn
 }
 

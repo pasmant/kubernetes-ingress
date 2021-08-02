@@ -132,7 +132,7 @@ type Bados struct {
 	ApDosSecurityLogEnable bool
 	ApDosLogConf           string
 	ApDosMonitor           string
-    ApDosAccessLogDest     string
+	ApDosAccessLogDest     string
 }
 
 // Location defines a location.

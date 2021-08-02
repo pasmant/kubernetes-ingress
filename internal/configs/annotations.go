@@ -55,14 +55,14 @@ var minionBlacklist = map[string]bool{
 	"appprotect.f5.com/app_protect_policy":                          true,
 	"appprotect.f5.com/app_protect_security_log_enable":             true,
 	"appprotect.f5.com/app_protect_security_log":                    true,
-    "appprotectdos.f5.com/app_protect_dos_enable":                   true,
-    "appprotectdos.f5.com/app_protect_dos_policy":                   true,
-    "appprotectdos.f5.com/app_protect_dos_security_log_enable":      true,
-    "appprotectdos.f5.com/app_protect_dos_security_log":             true,
-    "appprotectdos.f5.com/app_protect_dos_security_log_destination": true,
-    "appprotectdos.f5.com/app_protect_dos_monitor":                  true,
-    "appprotectdos.f5.com/app_protect_dos_name":                     true,
-    "appprotectdos.f5.com/app_protect_dos_access_log_destination":   true,
+	"appprotectdos.f5.com/app_protect_dos_enable":                   true,
+	"appprotectdos.f5.com/app_protect_dos_policy":                   true,
+	"appprotectdos.f5.com/app_protect_dos_security_log_enable":      true,
+	"appprotectdos.f5.com/app_protect_dos_security_log":             true,
+	"appprotectdos.f5.com/app_protect_dos_security_log_destination": true,
+	"appprotectdos.f5.com/app_protect_dos_monitor":                  true,
+	"appprotectdos.f5.com/app_protect_dos_name":                     true,
+	"appprotectdos.f5.com/app_protect_dos_access_log_destination":   true,
 }
 
 var minionInheritanceList = map[string]bool{
@@ -390,43 +390,43 @@ func parseAnnotations(ingEx *IngressEx, baseCfgParams *ConfigParams, isPlus bool
 		}
 
 	}
-    if hasAppProtectDos {
-        if appProtectDosEnable, exists, err := GetMapKeyAsBool(ingEx.Ingress.Annotations, "appprotectdos.f5.com/app-protect-dos-enable", ingEx.Ingress); exists {
-            if err != nil {
-                glog.Error(err)
-            } else {
-                if appProtectDosEnable {
-                    cfgParams.AppProtectDosEnable = "on"
-                } else {
-                    cfgParams.AppProtectDosEnable = "off"
-                }
-            }
-        }
-        if appProtectDosLogEnable, exists, err := GetMapKeyAsBool(ingEx.Ingress.Annotations, "appprotectdos.f5.com/app-protect-dos-security-log-enable", ingEx.Ingress); exists {
-            if err != nil {
-                glog.Error(err)
-            } else {
-                if appProtectDosLogEnable {
-                    cfgParams.AppProtectDosLogEnable = "on"
-                } else {
-                    cfgParams.AppProtectDosLogEnable = "off"
-                }
-            }
-        }
+	if hasAppProtectDos {
+		if appProtectDosEnable, exists, err := GetMapKeyAsBool(ingEx.Ingress.Annotations, "appprotectdos.f5.com/app-protect-dos-enable", ingEx.Ingress); exists {
+			if err != nil {
+				glog.Error(err)
+			} else {
+				if appProtectDosEnable {
+					cfgParams.AppProtectDosEnable = "on"
+				} else {
+					cfgParams.AppProtectDosEnable = "off"
+				}
+			}
+		}
+		if appProtectDosLogEnable, exists, err := GetMapKeyAsBool(ingEx.Ingress.Annotations, "appprotectdos.f5.com/app-protect-dos-security-log-enable", ingEx.Ingress); exists {
+			if err != nil {
+				glog.Error(err)
+			} else {
+				if appProtectDosLogEnable {
+					cfgParams.AppProtectDosLogEnable = "on"
+				} else {
+					cfgParams.AppProtectDosLogEnable = "off"
+				}
+			}
+		}
 
 		if appProtectDosMonitor, exists := ingEx.Ingress.Annotations["appprotectdos.f5.com/app-protect-dos-monitor"]; exists {
 			cfgParams.AppProtectDosMonitor = appProtectDosMonitor
 		}
 
-        if appProtectDosName, exists := ingEx.Ingress.Annotations["appprotectdos.f5.com/app-protect-dos-name"]; exists {
-            cfgParams.AppProtectDosName = appProtectDosName
-        }
+		if appProtectDosName, exists := ingEx.Ingress.Annotations["appprotectdos.f5.com/app-protect-dos-name"]; exists {
+			cfgParams.AppProtectDosName = appProtectDosName
+		}
 
-        if appProtectDosAccessLogDst, exists := ingEx.Ingress.Annotations["appprotectdos.f5.com/app-protect-dos-access-log-destination"]; exists {
-            cfgParams.AppProtectDosAccessLogDst = appProtectDosAccessLogDst
-        }
+		if appProtectDosAccessLogDst, exists := ingEx.Ingress.Annotations["appprotectdos.f5.com/app-protect-dos-access-log-destination"]; exists {
+			cfgParams.AppProtectDosAccessLogDst = appProtectDosAccessLogDst
+		}
 
-    }
+	}
 	if enableInternalRoutes {
 		if spiffeServerCerts, exists, err := GetMapKeyAsBool(ingEx.Ingress.Annotations, nginxMeshInternalRouteAnnotation, ingEx.Ingress); exists {
 			if err != nil {

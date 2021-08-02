@@ -10,11 +10,11 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
-var appProtectDosPolicyRequiredFields = [][]string {
+var appProtectDosPolicyRequiredFields = [][]string{
 	{"spec", "mitigation_mode"},
 	{"spec", "automation_tools_detection"},
 	{"spec", "tls_fingerprint"},
-    {"spec", "signatures"},
+	{"spec", "signatures"},
 	{"spec", "bad_actors"},
 }
 
@@ -27,33 +27,7 @@ func validateRequiredFields(policy *unstructured.Unstructured, fieldsList [][]st
 	for _, fields := range fieldsList {
 		field, found, err := unstructured.NestedMap(policy.Object, fields...)
 		if err != nil {
-			return fmt.Errorf("Error checking for required field %v: %v", field, err)
-		}
-		if !found {
-			return fmt.Errorf("Required field %v not found", field)
-		}
-	}
-	return nil
-}
-
-func validateRequiredSlices(policy *unstructured.Unstructured, fieldsList [][]string) error {
-	for _, fields := range fieldsList {
-		field, found, err := unstructured.NestedSlice(policy.Object, fields...)
-		if err != nil {
-			return fmt.Errorf("Error checking for required field %v: %v", field, err)
-		}
-		if !found {
-			return fmt.Errorf("Required field %v not found", field)
-		}
-	}
-	return nil
-}
-
-func validateRequiredStrings(policy *unstructured.Unstructured, fieldsList [][]string) error {
-	for _, fields := range fieldsList {
-		field, found, err := unstructured.NestedString(policy.Object, fields...)
-		if err != nil {
-			return fmt.Errorf("Error checking for required field %v: %v", field, err)
+			return fmt.Errorf("Error checking for required field %v: %w", field, err)
 		}
 		if !found {
 			return fmt.Errorf("Required field %v not found", field)
@@ -66,7 +40,7 @@ func validateRequiredFieldsNoCopy(policy *unstructured.Unstructured, fieldsList 
 	for _, fields := range fieldsList {
 		field, found, err := unstructured.NestedFieldNoCopy(policy.Object, fields...)
 		if err != nil {
-			return fmt.Errorf("Error checking for required field %v: %v", field, err)
+			return fmt.Errorf("Error checking for required field %v: %w", field, err)
 		}
 		if !found {
 			return fmt.Errorf("Required field %v not found", field)
@@ -80,14 +54,16 @@ func ValidateAppProtectDosLogConf(logConf *unstructured.Unstructured) error {
 	lcName := logConf.GetName()
 	err := validateRequiredFields(logConf, appProtectDosLogConfRequiredFields)
 	if err != nil {
-		return fmt.Errorf("Error validating App Protect Dos Log Configuration %v: %v", lcName, err)
+		return fmt.Errorf("Error validating App Protect Dos Log Configuration %v: %w", lcName, err)
 	}
 
 	return nil
 }
 
-var logDstEx = regexp.MustCompile(`(?:syslog:server=((?:\d{1,3}\.){3}\d{1,3}|localhost):\d{1,5})|stderr|(?:\/[\S]+)+`)
-var logDstFileEx = regexp.MustCompile(`(?:\/[\S]+)+`)
+var (
+	logDstEx     = regexp.MustCompile(`(?:syslog:server=((?:\d{1,3}\.){3}\d{1,3}|localhost):\d{1,5})|stderr|(?:\/[\S]+)+`)
+	logDstFileEx = regexp.MustCompile(`(?:\/[\S]+)+`)
+)
 
 // ValidateAppProtectDosLogDestination validates destination for log configuration
 func ValidateAppProtectDosLogDestination(dstAntn string) error {
@@ -155,7 +131,7 @@ func ValidateAppProtectDosPolicy(policy *unstructured.Unstructured) error {
 
 	err := validateRequiredFieldsNoCopy(policy, appProtectDosPolicyRequiredFields)
 	if err != nil {
-		return fmt.Errorf("Error validating App Protect Dos Policy %v: %v", polName, err)
+		return fmt.Errorf("Error validating App Protect Dos Policy %v: %w", polName, err)
 	}
 
 	return nil
@@ -168,7 +144,6 @@ func ParseResourceReferenceAnnotation(ns, antn string) string {
 	}
 	return antn
 }
-
 
 // GetNsName gets the key of a resource in the format: "resNamespace/resName"
 func GetNsName(obj *unstructured.Unstructured) string {

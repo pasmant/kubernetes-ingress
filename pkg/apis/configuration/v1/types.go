@@ -444,11 +444,11 @@ type SecurityLog struct {
 // Bados defines an Bados policy.
 // policy status: preview
 type Bados struct {
-	Enable         bool             `json:"enable"`
-	Name           string           `json:"name"`
-    ApDosPolicy    string           `json:"apDosPolicy"`
-    DosSecurityLog *DosSecurityLog  `json:"dosSecurityLog"`
-    ApDosMonitor   string           `json:"apDosMonitor"`
+	Enable         bool            `json:"enable"`
+	Name           string          `json:"name"`
+	ApDosPolicy    string          `json:"apDosPolicy"`
+	DosSecurityLog *DosSecurityLog `json:"dosSecurityLog"`
+	ApDosMonitor   string          `json:"apDosMonitor"`
 }
 
 // DosSecurityLog defines the security log of a Bados policy.
@@ -456,5 +456,5 @@ type DosSecurityLog struct {
 	Enable           bool   `json:"enable"`
 	ApDosLogConf     string `json:"apDosLogConf"`
 	DosLogDest       string `json:"dosLogDest"`
-    DosAccessLogDest string `json:"dosAccessLogDest"`
+	DosAccessLogDest string `json:"dosAccessLogDest"`
 }

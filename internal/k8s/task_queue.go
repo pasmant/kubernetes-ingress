@@ -164,10 +164,10 @@ func newTask(key string, obj interface{}) (task, error) {
 		} else if objectKind == appprotect.UserSigGVK.Kind {
 			k = appProtectUserSig
 		} else if objectKind == appprotectdos.DosPolicyGVK.Kind {
-          k = appProtectDosPolicy
-        } else if objectKind == appprotectdos.DosLogConfGVK.Kind {
-          k = appProtectDosLogConf
-        } else {
+			k = appProtectDosPolicy
+		} else if objectKind == appprotectdos.DosLogConfGVK.Kind {
+			k = appProtectDosLogConf
+		} else {
 			return task{}, fmt.Errorf("Unknown unstructured kind: %v", objectKind)
 		}
 	default:

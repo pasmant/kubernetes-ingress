@@ -37,8 +37,8 @@ const (
 	appProtectLogConfFolder         = "/etc/nginx/waf/nac-logconfs/"
 	appProtectUserSigFolder         = "/etc/nginx/waf/nac-usersigs/"
 	appProtectUserSigIndex          = "/etc/nginx/waf/nac-usersigs/index.conf"
-    appProtectDosPolicyFolder       = "/etc/app_protect_dos/"
-    appProtectDosLogConfFolder      = "/etc/app_protect_dos/"
+	appProtectDosPolicyFolder       = "/etc/app_protect_dos/"
+	appProtectDosLogConfFolder      = "/etc/app_protect_dos/"
 )
 
 // DefaultServerSecretPath is the full path to the Secret with a TLS cert and a key for the default server. #nosec G101
@@ -1238,19 +1238,19 @@ func (cnf *Configurator) updateApResources(ingEx *IngressEx) (apRes AppProtectRe
 		apRes.AppProtectLogconfs = append(apRes.AppProtectLogconfs, logConfFileName+" "+logConf.Dest)
 	}
 
-    if ingEx.AppProtectDosPolicy != nil {
-        policyFileName := appProtectDosPolicyFileNameFromUnstruct(ingEx.AppProtectDosPolicy)
-        policyContent := generateApResourceFileContent(ingEx.AppProtectDosPolicy)
-        cnf.nginxManager.CreateAppProtectResourceFile(policyFileName, policyContent)
-        apRes.AppProtectPolicy = policyFileName
-    }
+	if ingEx.AppProtectDosPolicy != nil {
+		policyFileName := appProtectDosPolicyFileNameFromUnstruct(ingEx.AppProtectDosPolicy)
+		policyContent := generateApResourceFileContent(ingEx.AppProtectDosPolicy)
+		cnf.nginxManager.CreateAppProtectResourceFile(policyFileName, policyContent)
+		apRes.AppProtectPolicy = policyFileName
+	}
 
-    if ingEx.AppProtectDosLogConf != nil {
-        logConfFileName := appProtectDosLogConfFileNameFromUnstruct(ingEx.AppProtectDosLogConf)
-        logConfContent := generateApResourceFileContent(ingEx.AppProtectDosLogConf)
-        cnf.nginxManager.CreateAppProtectResourceFile(logConfFileName, logConfContent)
-        apRes.AppProtectDosLogconfs = logConfFileName + " " + ingEx.AppProtectDosLogDst
-    }
+	if ingEx.AppProtectDosLogConf != nil {
+		logConfFileName := appProtectDosLogConfFileNameFromUnstruct(ingEx.AppProtectDosLogConf)
+		logConfContent := generateApResourceFileContent(ingEx.AppProtectDosLogConf)
+		cnf.nginxManager.CreateAppProtectResourceFile(logConfFileName, logConfContent)
+		apRes.AppProtectDosLogconfs = logConfFileName + " " + ingEx.AppProtectDosLogDst
+	}
 
 	return apRes
 }
@@ -1276,23 +1276,23 @@ func (cnf *Configurator) updateApResourcesForVs(vsEx *VirtualServerEx) map[strin
 		}
 	}
 
-    if vsEx.ApDosPolRefs != nil {
-        for apPolKey, apPol := range vsEx.ApDosPolRefs {
-            policyFileName := appProtectDosPolicyFileNameFromUnstruct(apPol)
-            policyContent := generateApResourceFileContent(apPol)
-            cnf.nginxManager.CreateAppProtectResourceFile(policyFileName, policyContent)
-            apRes[apPolKey] = policyFileName
-        }
-    }
+	if vsEx.ApDosPolRefs != nil {
+		for apPolKey, apPol := range vsEx.ApDosPolRefs {
+			policyFileName := appProtectDosPolicyFileNameFromUnstruct(apPol)
+			policyContent := generateApResourceFileContent(apPol)
+			cnf.nginxManager.CreateAppProtectResourceFile(policyFileName, policyContent)
+			apRes[apPolKey] = policyFileName
+		}
+	}
 
-    if vsEx.DosLogConfRefs != nil {
-        for logConfKey, logConf := range vsEx.DosLogConfRefs {
-            logConfFileName := appProtectDosLogConfFileNameFromUnstruct(logConf)
-            logConfContent := generateApResourceFileContent(logConf)
-            cnf.nginxManager.CreateAppProtectResourceFile(logConfFileName, logConfContent)
-            apRes[logConfKey] = logConfFileName
-        }
-    }
+	if vsEx.DosLogConfRefs != nil {
+		for logConfKey, logConf := range vsEx.DosLogConfRefs {
+			logConfFileName := appProtectDosLogConfFileNameFromUnstruct(logConf)
+			logConfContent := generateApResourceFileContent(logConf)
+			cnf.nginxManager.CreateAppProtectResourceFile(logConfFileName, logConfContent)
+			apRes[logConfKey] = logConfFileName
+		}
+	}
 
 	return apRes
 }
@@ -1498,7 +1498,7 @@ func (cnf *Configurator) DeleteAppProtectDosPolicy(polNamespaceName string, ingE
 	for _, ingEx := range ingExes {
 		warnings, err := cnf.addOrUpdateIngress(ingEx)
 		if err != nil {
-			return allWarnings, fmt.Errorf("Error adding or updating ingress %v/%v: %v", ingEx.Ingress.Namespace, ingEx.Ingress.Name, err)
+			return allWarnings, fmt.Errorf("Error adding or updating ingress %v/%v: %w", ingEx.Ingress.Namespace, ingEx.Ingress.Name, err)
 		}
 		allWarnings.Add(warnings)
 	}
@@ -1506,7 +1506,7 @@ func (cnf *Configurator) DeleteAppProtectDosPolicy(polNamespaceName string, ingE
 	for _, m := range mergeableIngresses {
 		warnings, err := cnf.addOrUpdateMergeableIngress(m)
 		if err != nil {
-			return allWarnings, fmt.Errorf("Error adding or updating mergeableIngress %v/%v: %v", m.Master.Ingress.Namespace, m.Master.Ingress.Name, err)
+			return allWarnings, fmt.Errorf("Error adding or updating mergeableIngress %v/%v: %w", m.Master.Ingress.Namespace, m.Master.Ingress.Name, err)
 		}
 		allWarnings.Add(warnings)
 	}
@@ -1514,13 +1514,13 @@ func (cnf *Configurator) DeleteAppProtectDosPolicy(polNamespaceName string, ingE
 	for _, v := range vsExes {
 		warnings, err := cnf.addOrUpdateVirtualServer(v)
 		if err != nil {
-			return allWarnings, fmt.Errorf("Error adding or updating VirtualServer %v/%v: %v", v.VirtualServer.Namespace, v.VirtualServer.Name, err)
+			return allWarnings, fmt.Errorf("Error adding or updating VirtualServer %v/%v: %w", v.VirtualServer.Namespace, v.VirtualServer.Name, err)
 		}
 		allWarnings.Add(warnings)
 	}
 
 	if err := cnf.nginxManager.Reload(nginx.ReloadForOtherUpdate); err != nil {
-		return allWarnings, fmt.Errorf("Error when reloading NGINX when removing App Protect Policy: %v", err)
+		return allWarnings, fmt.Errorf("Error when reloading NGINX when removing App Protect Dos Policy: %w", err)
 	}
 
 	return allWarnings, nil
@@ -1538,7 +1538,7 @@ func (cnf *Configurator) DeleteAppProtectDosLogConf(logConfNamespaceName string,
 	for _, ingEx := range ingExes {
 		warnings, err := cnf.addOrUpdateIngress(ingEx)
 		if err != nil {
-			return allWarnings, fmt.Errorf("Error adding or updating ingress %v/%v: %v", ingEx.Ingress.Namespace, ingEx.Ingress.Name, err)
+			return allWarnings, fmt.Errorf("Error adding or updating ingress %v/%v: %w", ingEx.Ingress.Namespace, ingEx.Ingress.Name, err)
 		}
 		allWarnings.Add(warnings)
 	}
@@ -1546,7 +1546,7 @@ func (cnf *Configurator) DeleteAppProtectDosLogConf(logConfNamespaceName string,
 	for _, m := range mergeableIngresses {
 		warnings, err := cnf.addOrUpdateMergeableIngress(m)
 		if err != nil {
-			return allWarnings, fmt.Errorf("Error adding or updating mergeableIngress %v/%v: %v", m.Master.Ingress.Namespace, m.Master.Ingress.Name, err)
+			return allWarnings, fmt.Errorf("Error adding or updating mergeableIngress %v/%v: %w", m.Master.Ingress.Namespace, m.Master.Ingress.Name, err)
 		}
 		allWarnings.Add(warnings)
 	}
@@ -1554,18 +1554,17 @@ func (cnf *Configurator) DeleteAppProtectDosLogConf(logConfNamespaceName string,
 	for _, v := range vsExes {
 		warnings, err := cnf.addOrUpdateVirtualServer(v)
 		if err != nil {
-			return allWarnings, fmt.Errorf("Error adding or updating VirtualServer %v/%v: %v", v.VirtualServer.Namespace, v.VirtualServer.Name, err)
+			return allWarnings, fmt.Errorf("Error adding or updating VirtualServer %v/%v: %w", v.VirtualServer.Namespace, v.VirtualServer.Name, err)
 		}
 		allWarnings.Add(warnings)
 	}
 
 	if err := cnf.nginxManager.Reload(nginx.ReloadForOtherUpdate); err != nil {
-		return allWarnings, fmt.Errorf("Error when reloading NGINX when removing App Protect Log Configuration: %v", err)
+		return allWarnings, fmt.Errorf("Error when reloading NGINX when removing App Protect Log Configuration: %w", err)
 	}
 
 	return allWarnings, nil
 }
-
 
 // AddInternalRouteConfig adds internal route server to NGINX Configuration and reloads NGINX
 func (cnf *Configurator) AddInternalRouteConfig() error {

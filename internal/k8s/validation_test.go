@@ -1504,87 +1504,86 @@ func TestValidateNginxIngressAnnotations(t *testing.T) {
 			},
 			msg: "invalid appprotect.f5.com/app-protect-security-log-enable annotation",
 		},
-
-        {
-            annotations: map[string]string{
-                "appprotectdos.f5.com/app-protect-dos-enable": "true",
-            },
-            specServices:          map[string]bool{},
-            isPlus:                true,
-            appProtectEnabled:     false,
-            appProtectDosEnabled:  false,
-            internalRoutesEnabled: false,
-            expectedErrors: []string{
-                "annotations.appprotectdos.f5.com/app-protect-dos-enable: Forbidden: annotation requires AppProtectDos",
-            },
-            msg: "invalid appprotectdos.f5.com/app-protect-dos-enable annotation, requires app protect dos",
-        },
-        {
-            annotations: map[string]string{
-                "appprotectdos.f5.com/app-protect-dos-enable": "true",
-            },
-            specServices:          map[string]bool{},
-            isPlus:                true,
-            appProtectEnabled:     false,
-            appProtectDosEnabled:  true,
-            internalRoutesEnabled: false,
-            expectedErrors:        nil,
-            msg:                   "valid appprotectdos.f5.com/app-protect-dos-enable annotation",
-        },
-        {
-            annotations: map[string]string{
-                "appprotectdos.f5.com/app-protect-dos-enable": "not_a_boolean",
-            },
-            specServices:          map[string]bool{},
-            isPlus:                true,
-            appProtectEnabled:     false,
-            appProtectDosEnabled:  true,
-            internalRoutesEnabled: false,
-            expectedErrors: []string{
-                `annotations.appprotectdos.f5.com/app-protect-dos-enable: Invalid value: "not_a_boolean": must be a boolean`,
-            },
-            msg: "invalid appprotectdos.f5.com/app-protect-dos-enable annotation",
-        },
-        {
-            annotations: map[string]string{
-                "appprotectdos.f5.com/app-protect-dos-security-log-enable": "true",
-            },
-            specServices:          map[string]bool{},
-            isPlus:                true,
-            appProtectEnabled:     false,
-            appProtectDosEnabled:  false,
-            internalRoutesEnabled: false,
-            expectedErrors: []string{
-                "annotations.appprotectdos.f5.com/app-protect-dos-security-log-enable: Forbidden: annotation requires AppProtectDos",
-            },
-            msg: "invalid appprotectdos.f5.com/app-protect-dos-security-log-enable annotation, requires app protect dos",
-        },
-        {
-            annotations: map[string]string{
-                "appprotectdos.f5.com/app-protect-dos-security-log-enable": "true",
-            },
-            specServices:          map[string]bool{},
-            isPlus:                true,
-            appProtectEnabled:     false,
-            appProtectDosEnabled:  true,
-            internalRoutesEnabled: false,
-            expectedErrors:        nil,
-            msg:                   "valid appprotectdos.f5.com/app-protect-dos-security-log-enable annotation",
-        },
-        {
-            annotations: map[string]string{
-                "appprotectdos.f5.com/app-protect-dos-security-log-enable": "not_a_boolean",
-            },
-            specServices:          map[string]bool{},
-            isPlus:                true,
-            appProtectEnabled:     false,
-            appProtectDosEnabled:  true,
-            internalRoutesEnabled: false,
-            expectedErrors: []string{
-                `annotations.appprotectdos.f5.com/app-protect-dos-security-log-enable: Invalid value: "not_a_boolean": must be a boolean`,
-            },
-            msg: "invalid appprotectdos.f5.com/app-protect-dos-security-log-enable annotation",
-        },
+		{
+			annotations: map[string]string{
+				"appprotectdos.f5.com/app-protect-dos-enable": "true",
+			},
+			specServices:          map[string]bool{},
+			isPlus:                true,
+			appProtectEnabled:     false,
+			appProtectDosEnabled:  false,
+			internalRoutesEnabled: false,
+			expectedErrors: []string{
+				"annotations.appprotectdos.f5.com/app-protect-dos-enable: Forbidden: annotation requires AppProtectDos",
+			},
+			msg: "invalid appprotectdos.f5.com/app-protect-dos-enable annotation, requires app protect dos",
+		},
+		{
+			annotations: map[string]string{
+				"appprotectdos.f5.com/app-protect-dos-enable": "true",
+			},
+			specServices:          map[string]bool{},
+			isPlus:                true,
+			appProtectEnabled:     false,
+			appProtectDosEnabled:  true,
+			internalRoutesEnabled: false,
+			expectedErrors:        nil,
+			msg:                   "valid appprotectdos.f5.com/app-protect-dos-enable annotation",
+		},
+		{
+			annotations: map[string]string{
+				"appprotectdos.f5.com/app-protect-dos-enable": "not_a_boolean",
+			},
+			specServices:          map[string]bool{},
+			isPlus:                true,
+			appProtectEnabled:     false,
+			appProtectDosEnabled:  true,
+			internalRoutesEnabled: false,
+			expectedErrors: []string{
+				`annotations.appprotectdos.f5.com/app-protect-dos-enable: Invalid value: "not_a_boolean": must be a boolean`,
+			},
+			msg: "invalid appprotectdos.f5.com/app-protect-dos-enable annotation",
+		},
+		{
+			annotations: map[string]string{
+				"appprotectdos.f5.com/app-protect-dos-security-log-enable": "true",
+			},
+			specServices:          map[string]bool{},
+			isPlus:                true,
+			appProtectEnabled:     false,
+			appProtectDosEnabled:  false,
+			internalRoutesEnabled: false,
+			expectedErrors: []string{
+				"annotations.appprotectdos.f5.com/app-protect-dos-security-log-enable: Forbidden: annotation requires AppProtectDos",
+			},
+			msg: "invalid appprotectdos.f5.com/app-protect-dos-security-log-enable annotation, requires app protect dos",
+		},
+		{
+			annotations: map[string]string{
+				"appprotectdos.f5.com/app-protect-dos-security-log-enable": "true",
+			},
+			specServices:          map[string]bool{},
+			isPlus:                true,
+			appProtectEnabled:     false,
+			appProtectDosEnabled:  true,
+			internalRoutesEnabled: false,
+			expectedErrors:        nil,
+			msg:                   "valid appprotectdos.f5.com/app-protect-dos-security-log-enable annotation",
+		},
+		{
+			annotations: map[string]string{
+				"appprotectdos.f5.com/app-protect-dos-security-log-enable": "not_a_boolean",
+			},
+			specServices:          map[string]bool{},
+			isPlus:                true,
+			appProtectEnabled:     false,
+			appProtectDosEnabled:  true,
+			internalRoutesEnabled: false,
+			expectedErrors: []string{
+				`annotations.appprotectdos.f5.com/app-protect-dos-security-log-enable: Invalid value: "not_a_boolean": must be a boolean`,
+			},
+			msg: "invalid appprotectdos.f5.com/app-protect-dos-security-log-enable annotation",
+		},
 
 		{
 			annotations: map[string]string{

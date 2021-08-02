@@ -255,9 +255,9 @@ func main() {
 		glog.Fatal("NGINX App Protect support is for NGINX Plus only")
 	}
 
-    if *appProtectDos && !*nginxPlus {
-        glog.Fatal("NGINX App Protect Dos support is for NGINX Plus only")
-    }
+	if *appProtectDos && !*nginxPlus {
+		glog.Fatal("NGINX App Protect support is for NGINX Plus only")
+	}
 
 	if *spireAgentAddress != "" && !*nginxPlus {
 		glog.Fatal("spire-agent-address support is for NGINX Plus only")
@@ -450,11 +450,10 @@ func main() {
 
 	if *appProtectDos {
 		aPPDosAgentDone = make(chan error, 1)
-
-		nginxManager.AppProtectDosAgentStart(aPPDosAgentDone, *nginxDebug || *appProtectDosDebug) //Add Debug bool option via config file
+		nginxManager.AppProtectDosAgentStart(aPPDosAgentDone, *nginxDebug || *appProtectDosDebug) // Add Debug bool option via config file
 	}
 
-    var sslRejectHandshake bool
+	var sslRejectHandshake bool
 
 	if *defaultServerSecret != "" {
 		secret, err := getAndValidateSecret(kubeClient, *defaultServerSecret)
@@ -855,23 +854,23 @@ func handleTerminationWithAppProtect(lbc *k8s.LoadBalancerController, nginxManag
 		glog.Fatalf("AppProtectPlugin command exited unexpectedly with status: %v", err)
 	case err := <-agentDone:
 		glog.Fatalf("AppProtectAgent command exited unexpectedly with status: %v", err)
-    case err := <-agentDosDone:
-        glog.Fatalf("AppProtectDosAgent command exited unexpectedly with status: %v", err)
+	case err := <-agentDosDone:
+		glog.Fatalf("AppProtectDosAgent command exited unexpectedly with status: %v", err)
 	case <-signalChan:
 		glog.Infof("Received SIGTERM, shutting down")
 		lbc.Stop()
 		nginxManager.Quit()
 		<-nginxDone
-		if (appProtectEnabled) {
-		    nginxManager.AppProtectPluginQuit()
-            <-pluginDone
-            nginxManager.AppProtectAgentQuit()
-            <-agentDone
+		if appProtectEnabled {
+			nginxManager.AppProtectPluginQuit()
+			<-pluginDone
+			nginxManager.AppProtectAgentQuit()
+			<-agentDone
 		}
-        if (appProtectDosEnabled) {
-            nginxManager.AppProtectDosAgentQuit()
-            <-agentDosDone
-        }
+		if appProtectDosEnabled {
+			nginxManager.AppProtectDosAgentQuit()
+			<-agentDosDone
+		}
 		listener.Stop()
 	}
 	glog.Info("Exiting successfully")

@@ -51,9 +51,9 @@ const (
 	failTimeoutAnnotation                    = "nginx.org/fail-timeout"
 	appProtectEnableAnnotation               = "appprotect.f5.com/app-protect-enable"
 	appProtectSecurityLogEnableAnnotation    = "appprotect.f5.com/app-protect-security-log-enable"
-    appProtectDosEnableAnnotation            = "appprotectdos.f5.com/app-protect-dos-enable"
-    appProtectDosSecurityLogEnableAnnotation = "appprotectdos.f5.com/app-protect-dos-security-log-enable"
-    appProtectDosAccessLogDestAnnotation     = "appprotectdos.f5.com/app-protect-dos-access-log-destination"
+	appProtectDosEnableAnnotation            = "appprotectdos.f5.com/app-protect-dos-enable"
+	appProtectDosSecurityLogEnableAnnotation = "appprotectdos.f5.com/app-protect-dos-security-log-enable"
+	appProtectDosAccessLogDestAnnotation     = "appprotectdos.f5.com/app-protect-dos-access-log-destination"
 	internalRouteAnnotation                  = "nsm.nginx.com/internal-route"
 	websocketServicesAnnotation              = "nginx.org/websocket-services"
 	sslServicesAnnotation                    = "nginx.org/ssl-services"
@@ -231,16 +231,20 @@ var (
 			validateRequiredAnnotation,
 			validateBoolAnnotation,
 		},
-        appProtectDosEnableAnnotation: {
-            validateAppProtectDosOnlyAnnotation,
-            validateRequiredAnnotation,
-            validateBoolAnnotation,
-        },
-        appProtectDosSecurityLogEnableAnnotation: {
-            validateAppProtectDosOnlyAnnotation,
-            validateRequiredAnnotation,
-            validateBoolAnnotation,
-        },
+		appProtectDosEnableAnnotation: {
+			validateAppProtectDosOnlyAnnotation,
+			validateRequiredAnnotation,
+			validateBoolAnnotation,
+		},
+		appProtectDosSecurityLogEnableAnnotation: {
+			validateAppProtectDosOnlyAnnotation,
+			validateRequiredAnnotation,
+			validateBoolAnnotation,
+		},
+		appProtectDosAccessLogDestAnnotation: {
+			validateAppProtectDosOnlyAnnotation,
+			validateRequiredAnnotation,
+		},
 		internalRouteAnnotation: {
 			validateInternalRoutesOnlyAnnotation,
 			validateRequiredAnnotation,
