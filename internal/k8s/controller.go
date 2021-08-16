@@ -45,7 +45,7 @@ import (
 	"github.com/nginxinc/kubernetes-ingress/internal/metrics/collectors"
 
 	api_v1 "k8s.io/api/core/v1"
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	conf_v1 "github.com/nginxinc/kubernetes-ingress/pkg/apis/configuration/v1"
@@ -154,6 +154,7 @@ type LoadBalancerController struct {
 	secretStore                   secrets.SecretStore
 	appProtectConfiguration       appprotect.Configuration
 	appProtectDosConfiguration    appprotectdos.Configuration
+	configMap                     *api_v1.ConfigMap
 }
 
 var keyFunc = cache.DeletionHandlingMetaNamespaceKeyFunc
@@ -414,7 +415,7 @@ func (lbc *LoadBalancerController) addServiceHandler(handlers cache.ResourceEven
 
 // addIngressHandler adds the handler for ingresses to the controller
 func (lbc *LoadBalancerController) addIngressHandler(handlers cache.ResourceEventHandlerFuncs) {
-	informer := lbc.sharedInformerFactory.Networking().V1beta1().Ingresses().Informer()
+	informer := lbc.sharedInformerFactory.Networking().V1().Ingresses().Informer()
 	informer.AddEventHandler(handlers)
 	lbc.ingressLister.Store = informer.GetStore()
 
@@ -655,13 +656,26 @@ func (lbc *LoadBalancerController) syncConfigMap(task task) {
 		lbc.syncQueue.Requeue(task, err)
 		return
 	}
+	if configExists {
+		lbc.configMap = obj.(*api_v1.ConfigMap)
+		lbc.statusUpdater.SaveStatusFromExternalStatus(lbc.configMap.Data["external-status-address"])
+	} else {
+		lbc.configMap = nil
+	}
+
+	if !lbc.isNginxReady {
+		glog.V(3).Infof("Skipping ConfigMap update because the pod is not ready yet")
+		return
+	}
+
+	lbc.updateAllConfigs()
+}
+
+func (lbc *LoadBalancerController) updateAllConfigs() {
 	cfgParams := configs.NewDefaultConfigParams()
 
-	if configExists {
-		cfgm := obj.(*api_v1.ConfigMap)
-		cfgParams = configs.ParseConfigMap(cfgm, lbc.isNginxPlus, lbc.appProtectEnabled, lbc.appProtectDosEnabled)
-
-		lbc.statusUpdater.SaveStatusFromExternalStatus(cfgm.Data["external-status-address"])
+	if lbc.configMap != nil {
+		cfgParams = configs.ParseConfigMap(lbc.configMap, lbc.isNginxPlus, lbc.appProtectEnabled, lbc.appProtectDosEnabled
 	}
 
 	resources := lbc.configuration.GetResources()
@@ -670,7 +684,7 @@ func (lbc *LoadBalancerController) syncConfigMap(task task) {
 
 	resourceExes := lbc.createExtendedResources(resources)
 
-	warnings, updateErr := lbc.configurator.UpdateConfig(cfgParams, resourceExes.IngressExes, resourceExes.MergeableIngresses, resourceExes.VirtualServerExes)
+	warnings, updateErr := lbc.configurator.UpdateConfig(cfgParams, resourceExes)
 
 	eventTitle := "Updated"
 	eventType := api_v1.EventTypeNormal
@@ -686,9 +700,15 @@ func (lbc *LoadBalancerController) syncConfigMap(task task) {
 		eventWarningMessage = "with warnings. Please check the logs"
 	}
 
-	if configExists {
-		cfgm := obj.(*api_v1.ConfigMap)
-		lbc.recorder.Eventf(cfgm, eventType, eventTitle, "Configuration from %v was updated %s", key, eventWarningMessage)
+	if lbc.configMap != nil {
+		key := getResourceKey(&lbc.configMap.ObjectMeta)
+		lbc.recorder.Eventf(lbc.configMap, eventType, eventTitle, "Configuration from %v was updated %s", key, eventWarningMessage)
+	}
+
+	gc := lbc.configuration.GetGlobalConfiguration()
+	if gc != nil {
+		key := getResourceKey(&lbc.configMap.ObjectMeta)
+		lbc.recorder.Eventf(gc, eventType, eventTitle, fmt.Sprintf("GlobalConfiguration %s was updated %s", key, eventWarningMessage))
 	}
 
 	lbc.updateResourcesStatusAndEvents(resources, warnings, updateErr)
@@ -762,6 +782,9 @@ func (lbc *LoadBalancerController) sync(task task) {
 	}
 
 	if !lbc.isNginxReady && lbc.syncQueue.Len() == 0 {
+		lbc.configurator.EnableReloads()
+		lbc.updateAllConfigs()
+
 		lbc.isNginxReady = true
 		glog.V(3).Infof("NGINX is ready")
 	}
@@ -2225,32 +2248,32 @@ func (lbc *LoadBalancerController) createIngressEx(ing *networking.Ingress, vali
 	ingEx.ExternalNameSvcs = make(map[string]bool)
 	ingEx.PodsByIP = make(map[string]configs.PodInfo)
 
-	if ing.Spec.Backend != nil {
+	if ing.Spec.DefaultBackend != nil {
 		podEndps := []podEndpoint{}
 		var external bool
-		svc, err := lbc.getServiceForIngressBackend(ing.Spec.Backend, ing.Namespace)
+		svc, err := lbc.getServiceForIngressBackend(ing.Spec.DefaultBackend, ing.Namespace)
 		if err != nil {
-			glog.V(3).Infof("Error getting service %v: %v", ing.Spec.Backend.ServiceName, err)
+			glog.V(3).Infof("Error getting service %v: %v", ing.Spec.DefaultBackend.Service.Name, err)
 		} else {
-			podEndps, external, err = lbc.getEndpointsForIngressBackend(ing.Spec.Backend, svc)
+			podEndps, external, err = lbc.getEndpointsForIngressBackend(ing.Spec.DefaultBackend, svc)
 			if err == nil && external && lbc.isNginxPlus {
 				ingEx.ExternalNameSvcs[svc.Name] = true
 			}
 		}
 
 		if err != nil {
-			glog.Warningf("Error retrieving endpoints for the service %v: %v", ing.Spec.Backend.ServiceName, err)
+			glog.Warningf("Error retrieving endpoints for the service %v: %v", ing.Spec.DefaultBackend.Service.Name, err)
 		}
 
 		endps := getIPAddressesFromEndpoints(podEndps)
 
 		// endps is empty if there was any error before this point
-		ingEx.Endpoints[ing.Spec.Backend.ServiceName+ing.Spec.Backend.ServicePort.String()] = endps
+		ingEx.Endpoints[ing.Spec.DefaultBackend.Service.Name+configs.GetBackendPortAsString(ing.Spec.DefaultBackend.Service.Port)] = endps
 
 		if lbc.isNginxPlus && lbc.isHealthCheckEnabled(ing) {
-			healthCheck := lbc.getHealthChecksForIngressBackend(ing.Spec.Backend, ing.Namespace)
+			healthCheck := lbc.getHealthChecksForIngressBackend(ing.Spec.DefaultBackend, ing.Namespace)
 			if healthCheck != nil {
-				ingEx.HealthChecks[ing.Spec.Backend.ServiceName+ing.Spec.Backend.ServicePort.String()] = healthCheck
+				ingEx.HealthChecks[ing.Spec.DefaultBackend.Service.Name+configs.GetBackendPortAsString(ing.Spec.DefaultBackend.Service.Port)] = healthCheck
 			}
 		}
 
@@ -2285,7 +2308,7 @@ func (lbc *LoadBalancerController) createIngressEx(ing *networking.Ingress, vali
 			var external bool
 			svc, err := lbc.getServiceForIngressBackend(&path.Backend, ing.Namespace)
 			if err != nil {
-				glog.V(3).Infof("Error getting service %v: %v", &path.Backend.ServiceName, err)
+				glog.V(3).Infof("Error getting service %v: %v", &path.Backend.Service.Name, err)
 			} else {
 				podEndps, external, err = lbc.getEndpointsForIngressBackend(&path.Backend, svc)
 				if err == nil && external && lbc.isNginxPlus {
@@ -2294,19 +2317,19 @@ func (lbc *LoadBalancerController) createIngressEx(ing *networking.Ingress, vali
 			}
 
 			if err != nil {
-				glog.Warningf("Error retrieving endpoints for the service %v: %v", path.Backend.ServiceName, err)
+				glog.Warningf("Error retrieving endpoints for the service %v: %v", path.Backend.Service.Name, err)
 			}
 
 			endps := getIPAddressesFromEndpoints(podEndps)
 
 			// endps is empty if there was any error before this point
-			ingEx.Endpoints[path.Backend.ServiceName+path.Backend.ServicePort.String()] = endps
+			ingEx.Endpoints[path.Backend.Service.Name+configs.GetBackendPortAsString(path.Backend.Service.Port)] = endps
 
 			// Pull active health checks from k8 api
 			if lbc.isNginxPlus && lbc.isHealthCheckEnabled(ing) {
 				healthCheck := lbc.getHealthChecksForIngressBackend(&path.Backend, ing.Namespace)
 				if healthCheck != nil {
-					ingEx.HealthChecks[path.Backend.ServiceName+path.Backend.ServicePort.String()] = healthCheck
+					ingEx.HealthChecks[path.Backend.Service.Name+configs.GetBackendPortAsString(path.Backend.Service.Port)] = healthCheck
 				}
 			}
 
@@ -2982,8 +3005,12 @@ func (lbc *LoadBalancerController) getEndpointsForUpstream(namespace string, ups
 	}
 
 	backend := &networking.IngressBackend{
-		ServiceName: upstreamService,
-		ServicePort: intstr.FromInt(int(upstreamPort)),
+		Service: &networking.IngressServiceBackend{
+			Name: upstreamService,
+			Port: networking.ServiceBackendPort{
+				Number: int32(upstreamPort),
+			},
+		},
 	}
 
 	endps, isExternal, err = lbc.getEndpointsForIngressBackend(backend, svc)
@@ -3078,10 +3105,10 @@ func getPodName(pod *api_v1.ObjectReference) string {
 func (lbc *LoadBalancerController) getHealthChecksForIngressBackend(backend *networking.IngressBackend, namespace string) *api_v1.Probe {
 	svc, err := lbc.getServiceForIngressBackend(backend, namespace)
 	if err != nil {
-		glog.V(3).Infof("Error getting service %v: %v", backend.ServiceName, err)
+		glog.V(3).Infof("Error getting service %v: %v", backend.Service.Name, err)
 		return nil
 	}
-	svcPort := lbc.getServicePortForIngressPort(backend.ServicePort, svc)
+	svcPort := lbc.getServicePortForIngressPort(backend.Service.Port, svc)
 	if svcPort == nil {
 		return nil
 	}
@@ -3125,7 +3152,7 @@ func compareContainerPortAndServicePort(containerPort api_v1.ContainerPort, svcP
 }
 
 func (lbc *LoadBalancerController) getExternalEndpointsForIngressBackend(backend *networking.IngressBackend, svc *api_v1.Service) []podEndpoint {
-	address := fmt.Sprintf("%s:%d", svc.Spec.ExternalName, int32(backend.ServicePort.IntValue()))
+	address := fmt.Sprintf("%s:%d", svc.Spec.ExternalName, backend.Service.Port.Number)
 	endpoints := []podEndpoint{
 		{
 			Address: address,
@@ -3149,30 +3176,30 @@ func (lbc *LoadBalancerController) getEndpointsForIngressBackend(backend *networ
 		return nil, false, err
 	}
 
-	result, err = lbc.getEndpointsForPort(endps, backend.ServicePort, svc)
+	result, err = lbc.getEndpointsForPort(endps, backend.Service.Port, svc)
 	if err != nil {
-		glog.V(3).Infof("Error getting endpoints for service %s port %v: %v", svc.Name, backend.ServicePort, err)
+		glog.V(3).Infof("Error getting endpoints for service %s port %v: %v", svc.Name, configs.GetBackendPortAsString(backend.Service.Port), err)
 		return nil, false, err
 	}
 	return result, false, nil
 }
 
-func (lbc *LoadBalancerController) getEndpointsForPort(endps api_v1.Endpoints, ingSvcPort intstr.IntOrString, svc *api_v1.Service) ([]podEndpoint, error) {
+func (lbc *LoadBalancerController) getEndpointsForPort(endps api_v1.Endpoints, backendPort networking.ServiceBackendPort, svc *api_v1.Service) ([]podEndpoint, error) {
 	var targetPort int32
 	var err error
 
 	for _, port := range svc.Spec.Ports {
-		if (ingSvcPort.Type == intstr.Int && port.Port == int32(ingSvcPort.IntValue())) || (ingSvcPort.Type == intstr.String && port.Name == ingSvcPort.String()) {
+		if (backendPort.Name == "" && port.Port == backendPort.Number) || port.Name == backendPort.Name {
 			targetPort, err = lbc.getTargetPort(port, svc)
 			if err != nil {
-				return nil, fmt.Errorf("Error determining target port for port %v in Ingress: %w", ingSvcPort, err)
+				return nil, fmt.Errorf("Error determining target port for port %v in Ingress: %w", backendPort, err)
 			}
 			break
 		}
 	}
 
 	if targetPort == 0 {
-		return nil, fmt.Errorf("No port %v in service %s", ingSvcPort, svc.Name)
+		return nil, fmt.Errorf("No port %v in service %s", backendPort, svc.Name)
 	}
 
 	for _, subset := range endps.Subsets {
@@ -3229,9 +3256,9 @@ func getPodOwnerTypeAndName(pod *api_v1.Pod) (parentType, parentName string) {
 	return parentType, parentName
 }
 
-func (lbc *LoadBalancerController) getServicePortForIngressPort(ingSvcPort intstr.IntOrString, svc *api_v1.Service) *api_v1.ServicePort {
+func (lbc *LoadBalancerController) getServicePortForIngressPort(backendPort networking.ServiceBackendPort, svc *api_v1.Service) *api_v1.ServicePort {
 	for _, port := range svc.Spec.Ports {
-		if (ingSvcPort.Type == intstr.Int && port.Port == int32(ingSvcPort.IntValue())) || (ingSvcPort.Type == intstr.String && port.Name == ingSvcPort.String()) {
+		if (backendPort.Name == "" && port.Port == backendPort.Number) || port.Name == backendPort.Name {
 			return &port
 		}
 	}
@@ -3268,14 +3295,18 @@ func (lbc *LoadBalancerController) getTargetPort(svcPort api_v1.ServicePort, svc
 
 func (lbc *LoadBalancerController) getServiceForUpstream(namespace string, upstreamService string, upstreamPort uint16) (*api_v1.Service, error) {
 	backend := &networking.IngressBackend{
-		ServiceName: upstreamService,
-		ServicePort: intstr.FromInt(int(upstreamPort)),
+		Service: &networking.IngressServiceBackend{
+			Name: upstreamService,
+			Port: networking.ServiceBackendPort{
+				Number: int32(upstreamPort),
+			},
+		},
 	}
 	return lbc.getServiceForIngressBackend(backend, namespace)
 }
 
 func (lbc *LoadBalancerController) getServiceForIngressBackend(backend *networking.IngressBackend, namespace string) (*api_v1.Service, error) {
-	svcKey := namespace + "/" + backend.ServiceName
+	svcKey := namespace + "/" + backend.Service.Name
 	svcObj, svcExists, err := lbc.svcLister.GetByKey(svcKey)
 	if err != nil {
 		return nil, err
