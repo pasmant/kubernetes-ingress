@@ -32,7 +32,7 @@ controller:
       # name: appprotect-dos-arb
 
       ## The image repository of the Arbitrator.
-      repository: nginx/nginx-arbitrator
+      repository: docker-registry.nginx.com/nap-dos/app_protect_dos_arb:latest
 
   ## Enables the Ingress controller pods to use the host's network namespace.
   hostNetwork: false
