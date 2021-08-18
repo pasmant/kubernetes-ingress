@@ -672,7 +672,7 @@ func (lbc *LoadBalancerController) updateAllConfigs() {
 	cfgParams := configs.NewDefaultConfigParams()
 
 	if lbc.configMap != nil {
-		cfgParams = configs.ParseConfigMap(lbc.configMap, lbc.isNginxPlus, lbc.appProtectEnabled, lbc.appProtectDosEnabled
+		cfgParams = configs.ParseConfigMap(lbc.configMap, lbc.isNginxPlus, lbc.appProtectEnabled, lbc.appProtectDosEnabled)
 	}
 
 	resources := lbc.configuration.GetResources()
