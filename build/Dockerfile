@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.2
+# syntax=docker/dockerfile:1.3
 ARG BUILD_OS=debian
 ARG NGINX_PLUS_VERSION=r24
 ARG UBI_VERSION=8
@@ -9,16 +9,18 @@ FROM nginx:1.21.1 AS debian
 
 RUN apt-get update \
 	&& apt-get install --no-install-recommends --no-install-suggests -y libcap2-bin \
-	# temporary fix for CVE-2021-36222
-	&& apt-get install -y libgssapi-krb5-2 libk5crypto3 \
+	# temporary fix for CVE-2021-3711
+	&& apt-get install -y openssl libssl1.1 \
 	&& rm -rf /var/lib/apt/lists/*
 
 
 ############################################# Base image for Alpine #############################################
 # docker.io/library/nginx is a temporary workaround for Dependabot to see this as different from the one used in Debian
-FROM docker.io/library/nginx:1.21-alpine AS alpine
+FROM docker.io/library/nginx:1.21.1-alpine AS alpine
 
-RUN apk add --no-cache libcap
+RUN apk add --no-cache libcap \
+	# temporary fix for CVE-2021-3711
+	&& apk upgrade --no-cache libcrypto1.1 libssl1.1
 
 
 ############################################# Base image for Alpine with NGINX Plus #############################################
@@ -29,7 +31,9 @@ RUN --mount=type=secret,id=nginx-repo.crt,dst=/etc/apk/cert.pem,mode=0644 \
 	--mount=type=secret,id=nginx-repo.key,dst=/etc/apk/cert.key,mode=0644 \
 	wget -nv -O /etc/apk/keys/nginx_signing.rsa.pub https://cs.nginx.com/static/keys/nginx_signing.rsa.pub \
 	&& printf "%s\n" "https://pkgs.nginx.com/plus/alpine/v$(grep -E -o '^[0-9]+\.[0-9]+' /etc/alpine-release)/main" >> /etc/apk/repositories \
-	&& apk add --no-cache libcap nginx-plus~${NGINX_PLUS_VERSION#r} nginx-plus-module-njs~${NGINX_PLUS_VERSION#r}
+	&& apk add --no-cache libcap nginx-plus~${NGINX_PLUS_VERSION#r} nginx-plus-module-njs~${NGINX_PLUS_VERSION#r} \
+	# temporary fix for CVE-2021-3711 and CVE-2021-36159
+	&& apk upgrade --no-cache libcrypto1.1 libssl1.1 apk-tools
 
 
 ############################################# Base image for Debian with NGINX Plus #############################################
@@ -119,8 +123,6 @@ RUN --mount=type=secret,id=nginx-repo.crt,dst=/etc/ssl/nginx/nginx-repo.crt,mode
 ############################################# Base image for UBI 8 #############################################
 FROM redhat/ubi8-minimal AS ubi-base-8
 
-# temporary fix for CVE-2021-33910
-RUN microdnf --nodocs install -y systemd-pam
 
 ############################################# Base image for UBI 7 #############################################
 FROM registry.access.redhat.com/ubi7/ubi AS ubi-base-7
@@ -191,66 +193,19 @@ RUN --mount=type=secret,id=nginx-repo.crt,dst=/etc/ssl/nginx/nginx-repo.crt,mode
 # RUN update-ca-trust extract
 
 
-############################################# Build image for Opentracing Builder #############################################
-FROM debian as opentracing-builder
-ARG NGINX_OPENTRACING=0.10.0
-ARG OPENTRACING_VERSION=1.6.0
-
-RUN apt-get update && apt-get install -y -q --fix-missing --no-install-recommends \
-	autoconf \
-	automake \
-	build-essential \
-	cmake \
-	git \
-	libcurl4-openssl-dev \
-	libgeoip-dev \
-	liblmdb-dev \
-	libpcre3-dev \
-	libprotobuf-dev \
-	libssl-dev \
-	libtool \
-	libxml2-dev \
-	libyajl-dev \
-	pkgconf \
-	protobuf-compiler \
-	zlib1g-dev
-
-# Get nginx to build against
-RUN curl -sS -O -L http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz \
-	&& tar zxvf nginx-${NGINX_VERSION}.tar.gz && rm -f nginx-${NGINX_VERSION}.tar.gz \
-	&& git clone --branch v${NGINX_OPENTRACING} https://github.com/opentracing-contrib/nginx-opentracing.git \
-	&& git clone --branch v${OPENTRACING_VERSION} https://github.com/opentracing/opentracing-cpp.git
-
-WORKDIR /opentracing-cpp/.build
-RUN	cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DBUILD_STATIC_LIBS=OFF -DBUILD_MOCKTRACER=OFF -DENABLE_LINTING=OFF .. && \
-	make && make install
-
-WORKDIR /nginx-${NGINX_VERSION}
-RUN ./configure \
-	--with-compat --with-debug \
-	--add-dynamic-module=/nginx-opentracing/opentracing && \
-	make modules
-
-
-############################################# Build image for Trace downloader #############################################
-FROM debian AS tracer-downloader
-
-ARG JAEGER_VERSION=v0.4.2
-
-RUN apt-get update \
-	&& apt-get install --no-install-recommends --no-install-suggests -y ca-certificates apt-transport-https wget \
-	&& wget -nv https://github.com/jaegertracing/jaeger-client-cpp/releases/download/${JAEGER_VERSION}/libjaegertracing_plugin.linux_amd64.so -O /usr/local/lib/libjaegertracing_plugin.so
+############################################# Base image containing libs for Opentracing #############################################
+FROM opentracing/nginx-opentracing:nginx-1.21.1 as opentracing-lib
 
 
 ############################################# Build image for Opentracing #############################################
 FROM debian as opentracing
-ARG OPENTRACING_VERSION=1.6.0
 
-COPY --from=opentracing-builder /nginx-${NGINX_VERSION}/objs/ngx_http_opentracing_module.so /usr/lib/nginx/modules/ngx_http_opentracing_module.so
-COPY --from=opentracing-builder /usr/local/lib/libopentracing.so.${OPENTRACING_VERSION} /usr/local/lib/libopentracing.so.1
-COPY --from=tracer-downloader /usr/local/lib/libjaegertracing_plugin.so /usr/local/lib/libjaegertracing_plugin.so
+RUN apt-get update && apt-get install --no-install-recommends --no-install-suggests -y libcurl3-gnutls \
+	&& rm -rf /var/lib/apt/lists/*
 
-RUN ldconfig
+RUN --mount=type=bind,from=opentracing-lib,target=/tmp/ cp -av /tmp/usr/local/lib/libopentracing.so* /tmp/usr/local/lib/libjaegertracing*so* /tmp/usr/local/lib/libzipkin*so* /tmp/usr/local/lib/libdd*so* /tmp/usr/local/lib/libyaml*so* /usr/local/lib/ \
+	&& cp -av /tmp/usr/lib/nginx/modules/ngx_http_opentracing_module.so /usr/lib/nginx/modules/ \
+	&& ldconfig
 
 
 ############################################# Build image for Opentracing with NGINX Plus #############################################
@@ -260,10 +215,11 @@ ARG NGINX_PLUS_VERSION
 RUN --mount=type=secret,id=nginx-repo.crt,dst=/etc/ssl/nginx/nginx-repo.crt,mode=0644 \
 	--mount=type=secret,id=nginx-repo.key,dst=/etc/ssl/nginx/nginx-repo.key,mode=0644 \
 	apt-get update \
-	&& apt-get install --no-install-recommends --no-install-suggests -y nginx-plus-module-opentracing-${NGINX_PLUS_VERSION} \
+	&& apt-get install --no-install-recommends --no-install-suggests -y libcurl3-gnutls nginx-plus-module-opentracing-${NGINX_PLUS_VERSION} \
 	&& rm -rf /var/lib/apt/lists/*
 
-COPY --from=tracer-downloader /usr/local/lib/libjaegertracing_plugin.so /usr/local/lib/libjaegertracing_plugin.so
+RUN --mount=type=bind,from=opentracing-lib,target=/tmp/ cp -av /tmp/usr/local/lib/libjaegertracing*so* /tmp/usr/local/lib/libzipkin*so* /tmp/usr/local/lib/libdd*so* /tmp/usr/local/lib/libyaml*so* /usr/local/lib/ \
+	&& ldconfig
 
 
 ############################################# Create common files for NGINX Plus #############################################
@@ -337,7 +293,7 @@ LABEL org.nginx.kic.image.build.target="${TARGETPLATFORM}"
 
 
 ############################################# Build nginx-ingress in golang container #############################################
-FROM golang:1.16-alpine AS builder
+FROM golang:1.17-alpine AS builder
 ARG IC_VERSION
 ARG GIT_COMMIT
 ARG DATE
@@ -363,7 +319,7 @@ FROM common AS local
 
 LABEL org.nginx.kic.image.build.version="local"
 
-COPY --chown=nginx:0 nginx-ingress /
+COPY --chown=nginx:0 ./nginx-ingress /
 
 
 ############################################# Create image with nginx-ingress built by GoReleaser #############################################
@@ -373,7 +329,7 @@ ARG TARGETVARIANT
 
 LABEL org.nginx.kic.image.build.version="goreleaser"
 
-COPY --chown=nginx:0 dist/kubernetes-ingress_linux_$TARGETARCH${TARGETVARIANT:+_7}/nginx-ingress /
+COPY --chown=nginx:0 ./dist/kubernetes-ingress_linux_$TARGETARCH${TARGETVARIANT:+_7}/nginx-ingress /
 
 
 ############################################# Create image with nginx-ingress built by GoReleaser for AWS Marketplace #############################################
@@ -382,4 +338,4 @@ ARG TARGETARCH
 
 LABEL org.nginx.kic.image.build.version="aws"
 
-COPY --chown=nginx:0 dist/aws_linux_$TARGETARCH/nginx-ingress /
+COPY --chown=nginx:0 ./dist/aws_linux_$TARGETARCH/nginx-ingress /
