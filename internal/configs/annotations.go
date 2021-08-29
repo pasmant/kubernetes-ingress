@@ -13,7 +13,7 @@ const AppProtectPolicyAnnotation = "appprotect.f5.com/app-protect-policy"
 // AppProtectLogConfAnnotation is where the NGINX AppProtect Log Configuration is specified
 const AppProtectLogConfAnnotation = "appprotect.f5.com/app-protect-security-log"
 
-// AppProtectLogConfDstAnnotation is where the NGINX AppProtect Log Configuration is specified
+// AppProtectLogConfDstAnnotation is where the NGINX AppProtect Log Configuration destination is specified
 const AppProtectLogConfDstAnnotation = "appprotect.f5.com/app-protect-security-log-destination"
 
 // AppProtectDosPolicyAnnotation is where the NGINX App Protect Dos policy is specified
@@ -22,7 +22,7 @@ const AppProtectDosPolicyAnnotation = "appprotectdos.f5.com/app-protect-dos-poli
 // AppProtectDosLogConfAnnotation is where the NGINX AppProtect Dos Log Configuration is specified
 const AppProtectDosLogConfAnnotation = "appprotectdos.f5.com/app-protect-dos-security-log"
 
-// AppProtectDosLogConfDstAnnotation is where the NGINX AppProtect Dos Log Configuration is specified
+// AppProtectDosLogConfDstAnnotation is where the NGINX AppProtect Dos Log Configuration destination is specified
 const AppProtectDosLogConfDstAnnotation = "appprotectdos.f5.com/app-protect-dos-security-log-destination"
 
 // nginxMeshInternalRoute specifies if the ingress resource is an internal route.
