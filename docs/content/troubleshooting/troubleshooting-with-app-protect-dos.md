@@ -88,15 +88,3 @@ Note that in the events section, we have a `Normal` event with the `AddedOrUpdat
 When you set the Ingress Controller to use debug mode, the setting also applies to the App Protect Dos module.  See  [Running NGINX in the Debug Mode](/nginx-ingress-controller/troubleshooting/#running-nginx-in-the-debug-mode) for instructions.
 
 You can enable debug log mode to App Protect Dos module by setting the `app-protect-dos-debug` [cli-argument](/nginx-ingress-controller/configuration/global-configuration/command-line-arguments/#app-protect-dos-debug).
-
-## Known Issues
-
-When using the Ingress Controller with the App Protect Dos module, the following issues have been reported. The occurrence of these issues is commonly related to a higher number of Ingress Resources with App Protect Dos being enabled in a cluster.
-
-When you make a change that requires NGINX to apply a new configuration, the Ingress Controller reloads NGINX automatically. Without the App Protect module enabled, usual reload times are around 150ms. If App Protect Dos module is enabled and is being used by any number of Ingress Resources, these reloads might take a few seconds instead.
-
-### NGINX Configuration Skew
-
-If you are running more than one instance of the Ingress Controller, the extended reload time may cause the NGINX configuration of your instances to be out of sync. This can occur because there is no order imposed on how the Ingress Controller processes the Kubernetes Resources. The configurations will be the same after all instances have completed the reload.
-
-In order to reduce these inconsistencies, we advise that you do not apply changes to multiple resources handled by the Ingress Controller at the same time.
