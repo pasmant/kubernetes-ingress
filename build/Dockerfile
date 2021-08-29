@@ -94,12 +94,10 @@ RUN --mount=type=secret,id=nginx-repo.crt,dst=/etc/ssl/nginx/nginx-repo.crt,mode
     --mount=type=secret,id=nginx-repo.key,dst=/etc/ssl/nginx/nginx-repo.key,mode=0644 \
     set -x \
     && apt-get update \
-    && apt-get -y install ca-certificates \
-    && printf "deb https://pkgs.nginx.com/app-protect-dos/debian buster nginx-plus\n" | tee /etc/apt/sources.list.d/nginx-app-protect-dos.list \
+    && apt-get -y install lsb-release ca-certificates \
+    && printf "deb https://pkgs.nginx.com/app-protect-dos/debian `lsb_release -cs` nginx-plus\n" | tee /etc/apt/sources.list.d/nginx-app-protect-dos.list \
     && apt-get update \
-    && apt-get clean all \
-    && apt-get -o DPkg::Options::="--force-confold" -y install nginx-plus-module-appprotectdos \
-    && apt-get -o DPkg::Options::="--force-confold" -y install app-protect-dos
+    && apt-get -y install app-protect-dos
 
 ############################################# Base image for Debian with NGINX, App Protect and App Protect Dos #############################################
 FROM debian-plus-nap as debian-plus-nap-napdos
@@ -113,12 +111,10 @@ RUN --mount=type=secret,id=nginx-repo.crt,dst=/etc/ssl/nginx/nginx-repo.crt,mode
     --mount=type=secret,id=nginx-repo.key,dst=/etc/ssl/nginx/nginx-repo.key,mode=0644 \
     set -x \
     && apt-get update \
-    && apt-get -y install ca-certificates \
-    && printf "deb https://pkgs.nginx.com/app-protect-dos/debian buster nginx-plus\n" | tee /etc/apt/sources.list.d/nginx-app-protect-dos.list \
+    && apt-get -y install lsb-release ca-certificates \
+    && printf "deb https://pkgs.nginx.com/app-protect-dos/debian `lsb_release -cs` nginx-plus\n" | tee /etc/apt/sources.list.d/nginx-app-protect-dos.list \
     && apt-get update \
-    && apt-get clean all \
-    && apt-get -o DPkg::Options::="--force-confold" -y install nginx-plus-module-appprotectdos \
-    && apt-get -o DPkg::Options::="--force-confold" -y install app-protect-dos
+    && apt-get -y install app-protect-dos
 
 ############################################# Base image for UBI 8 #############################################
 FROM redhat/ubi8-minimal AS ubi-base-8
