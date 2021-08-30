@@ -42,7 +42,6 @@ type ConfigParams struct {
 	MainWorkerCPUAffinity                  string
 	MainWorkerProcesses                    string
 	MainWorkerRlimitNofile                 string
-	MainWorkerRlimitCore                   string
 	MainWorkerShutdownTimeout              string
 	MaxConns                               int
 	MaxFails                               int

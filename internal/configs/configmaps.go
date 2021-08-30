@@ -330,10 +330,6 @@ func ParseConfigMap(cfgm *v1.ConfigMap, nginxPlus bool, hasAppProtect bool, hasA
 		cfgParams.MainWorkerRlimitNofile = workerRlimitNofile
 	}
 
-	if workerRlimitCore, exists := cfgm.Data["worker-rlimit-core"]; exists {
-		cfgParams.MainWorkerRlimitCore = workerRlimitCore
-	}
-
 	if keepalive, exists, err := GetMapKeyAsInt(cfgm.Data, "keepalive", cfgm); exists {
 		if err != nil {
 			glog.Error(err)
@@ -582,7 +578,6 @@ func GenerateNginxMainConfig(staticCfgParams *StaticConfigParams, config *Config
 		WorkerShutdownTimeout:              config.MainWorkerShutdownTimeout,
 		WorkerConnections:                  config.MainWorkerConnections,
 		WorkerRlimitNofile:                 config.MainWorkerRlimitNofile,
-		WorkerRlimitCore:                   config.MainWorkerRlimitCore,
 		VariablesHashBucketSize:            config.VariablesHashBucketSize,
 		VariablesHashMaxSize:               config.VariablesHashMaxSize,
 		AppProtectLoadModule:               staticCfgParams.MainAppProtectLoadModule,

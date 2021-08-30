@@ -2,8 +2,6 @@
 worker_processes  {{.WorkerProcesses}};
 {{- if .WorkerRlimitNofile}}
 worker_rlimit_nofile {{.WorkerRlimitNofile}};{{end}}
-{{- if .WorkerRlimitCore}}
-worker_rlimit_core {{.WorkerRlimitCore}};{{end}}
 {{- if .WorkerCPUAffinity}}
 worker_cpu_affinity {{.WorkerCPUAffinity}};{{end}}
 {{- if .WorkerShutdownTimeout}}

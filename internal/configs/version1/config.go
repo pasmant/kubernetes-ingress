@@ -198,7 +198,6 @@ type MainConfig struct {
 	WorkerCPUAffinity                  string
 	WorkerProcesses                    string
 	WorkerRlimitNofile                 string
-	WorkerRlimitCore                   string
 	WorkerShutdownTimeout              string
 	AppProtectLoadModule               bool
 	AppProtectFailureModeAction        string
