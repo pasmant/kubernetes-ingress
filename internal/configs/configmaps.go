@@ -510,31 +510,24 @@ func ParseConfigMap(cfgm *v1.ConfigMap, nginxPlus bool, hasAppProtect bool, hasA
 	}
 
 	if hasAppProtectDos {
-
-		appProtectDosLivenessEnable, livenessExistsEnable, errEnable := GetMapKeyAsBool(cfgm.Data, "app-protect-dos-liveness-enable", cfgm)
-		appProtectDosLivenessURI, livenessExistsURI := cfgm.Data["app-protect-dos-liveness-uri"]
-		appProtectDosLivenessPort, livenessExistsPort, errPort := GetMapKeyAsInt(cfgm.Data, "app-protect-dos-liveness-port", cfgm)
-
-		if livenessExistsEnable {
-			if errEnable != nil {
-				glog.Error(errEnable)
-			} else if errPort != nil {
-				glog.Error(errPort)
-			} else {
-				if appProtectDosLivenessEnable {
-					cfgParams.MainAppProtectDosLivenessEnable = "on"
-				} else {
-					cfgParams.MainAppProtectDosLivenessEnable = "off"
-				}
-				if livenessExistsURI {
-					cfgParams.MainAppProtectDosLivenessURI = appProtectDosLivenessURI
-				}
-				if livenessExistsPort {
-					cfgParams.MainAppProtectDosLivenessPort = appProtectDosLivenessPort
-				}
-			}
-		}
-	}
+        if appProtectDosLivenessEnable, exists, err := GetMapKeyAsBool(cfgm.Data, "app-protect-dos-liveness-enable", cfgm); exists {
+            if err != nil {
+                glog.Error(err)
+            } else {
+                if appProtectDosLivenessEnable {
+                    cfgParams.MainAppProtectDosLivenessEnable = "on"
+                    cfgParams.MainAppProtectDosLivenessURI = cfgm.Data["app-protect-dos-liveness-uri"]
+                    if appProtectDosLivenessPort, exists, err := GetMapKeyAsInt(cfgm.Data, "app-protect-dos-liveness-port", cfgm); exists {
+                        if err != nil {
+                            glog.Error(err)
+                        } else {
+                            cfgParams.MainAppProtectDosLivenessPort = appProtectDosLivenessPort
+                        }
+                    }
+                }
+            }
+        }
+    }
 
 	return cfgParams
 }
