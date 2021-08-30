@@ -25,6 +25,16 @@ controller:
     ## Enable App Protect Dos debug logs.
     debug: false
 
+    livenessStatus:
+      ## Enables liveness from App Protect Dos
+      enable: false
+
+      ## Set the uri of the liveness location.
+      uri: "app_protect_dos_liveness"
+
+      ## Set the port where the liveness is exposed.
+      port: 8090
+
     ## Arbitrator options
     arbitrator:
       ## The name of the app protect dos arbitrator deployment.
