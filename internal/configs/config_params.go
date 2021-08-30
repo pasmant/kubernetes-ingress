@@ -61,7 +61,7 @@ type ConfigParams struct {
 	AppProtectDosMonitor                   string
 	AppProtectDosName                      string
 	AppProtectDosAccessLogDst              string
-	MainAppProtectDosLivenessEnable        string
+	MainAppProtectDosLivenessEnable        bool
 	MainAppProtectDosLivenessURI           string
 	MainAppProtectDosLivenessPort          int
 	ProxyBuffering                         bool
@@ -147,36 +147,36 @@ type Listener struct {
 // NewDefaultConfigParams creates a ConfigParams with default values.
 func NewDefaultConfigParams() *ConfigParams {
 	return &ConfigParams{
-		DefaultServerReturn:            "404",
-		ServerTokens:                   "on",
-		ProxyConnectTimeout:            "60s",
-		ProxyReadTimeout:               "60s",
-		ProxySendTimeout:               "60s",
-		ClientMaxBodySize:              "1m",
-		SSLRedirect:                    true,
-		MainServerNamesHashBucketSize:  "256",
-		MainServerNamesHashMaxSize:     "1024",
-		ProxyBuffering:                 true,
-		MainWorkerProcesses:            "auto",
-		MainWorkerConnections:          "1024",
-		HSTSMaxAge:                     2592000,
-		Ports:                          []int{80},
-		SSLPorts:                       []int{443},
-		MaxFails:                       1,
-		MaxConns:                       0,
-		UpstreamZoneSize:               "256k",
-		FailTimeout:                    "10s",
-		LBMethod:                       "random two least_conn",
-		MainErrorLogLevel:              "notice",
-		MainErrorLogDst:                "stderr",
-		ResolverIPV6:                   true,
-		MainKeepaliveTimeout:           "65s",
-		MainKeepaliveRequests:          100,
-		VariablesHashBucketSize:        256,
-		VariablesHashMaxSize:           1024,
-		MainAppProtectDosLivenessEnable false,
-		MainAppProtectDosLivenessURI:   "app_protect_dos_liveness",
-		MainAppProtectDosLivenessPort:  8090,
+		DefaultServerReturn:             "404",
+		ServerTokens:                    "on",
+		ProxyConnectTimeout:             "60s",
+		ProxyReadTimeout:                "60s",
+		ProxySendTimeout:                "60s",
+		ClientMaxBodySize:               "1m",
+		SSLRedirect:                     true,
+		MainServerNamesHashBucketSize:   "256",
+		MainServerNamesHashMaxSize:      "1024",
+		ProxyBuffering:                  true,
+		MainWorkerProcesses:             "auto",
+		MainWorkerConnections:           "1024",
+		HSTSMaxAge:                      2592000,
+		Ports:                           []int{80},
+		SSLPorts:                        []int{443},
+		MaxFails:                        1,
+		MaxConns:                        0,
+		UpstreamZoneSize:                "256k",
+		FailTimeout:                     "10s",
+		LBMethod:                        "random two least_conn",
+		MainErrorLogLevel:               "notice",
+		MainErrorLogDst:                 "stderr",
+		ResolverIPV6:                    true,
+		MainKeepaliveTimeout:            "65s",
+		MainKeepaliveRequests:           100,
+		VariablesHashBucketSize:         256,
+		VariablesHashMaxSize:            1024,
+		MainAppProtectDosLivenessEnable: false,
+		MainAppProtectDosLivenessURI:    "app_protect_dos_liveness",
+		MainAppProtectDosLivenessPort:   8090,
 	}
 }
 

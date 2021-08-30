@@ -80,7 +80,7 @@ http {
 
     {{- if .AppProtectDosLoadModule}}
         {{- if .AppProtectDosLivenessEnable}}
-    app_protect_dos_liveness {{.AppProtectDosLivenessEnable}} uri:/{{.AppProtectDosLivenessURI}} port:{{.AppProtectDosLivenessPort}};
+    app_protect_dos_liveness on uri:/{{.AppProtectDosLivenessURI}} port:{{.AppProtectDosLivenessPort}};
         {{- end}}
     {{- end}}
 

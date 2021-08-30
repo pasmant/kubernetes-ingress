@@ -511,7 +511,7 @@ func ParseConfigMap(cfgm *v1.ConfigMap, nginxPlus bool, hasAppProtect bool, hasA
                 glog.Error(err)
             } else {
                 if appProtectDosLivenessEnable {
-                    cfgParams.MainAppProtectDosLivenessEnable = "on"
+                    cfgParams.MainAppProtectDosLivenessEnable = true
                     cfgParams.MainAppProtectDosLivenessURI = cfgm.Data["app-protect-dos-liveness-uri"]
                     if appProtectDosLivenessPort, exists, err := GetMapKeyAsInt(cfgm.Data, "app-protect-dos-liveness-port", cfgm); exists {
                         if err != nil {

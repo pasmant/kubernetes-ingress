@@ -85,7 +85,8 @@ spec:
           httpGet:
             path: {{ .Values.controller.appprotectdos.livenessStatus.uri}}
             port: liveness-port
-          periodSeconds: 1
+          initialDelaySeconds: 60
+          periodSeconds: 10
 {{- end }}
         resources:
 {{ toYaml .Values.controller.resources | indent 10 }}
