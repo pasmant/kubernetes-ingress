@@ -7,7 +7,7 @@ controller:
   kind: deployment
 
   ## Deploys the Ingress controller for NGINX Plus.
-  nginxplus: true
+  nginxplus: false
 
   # Timeout in milliseconds which the Ingress Controller will wait for a successful NGINX reload after a change or at the initial start.
   nginxReloadTimeout: 60000
@@ -20,14 +20,14 @@ controller:
   ## Support for App Protect Dos
   appprotectdos:
     ## Enable the App Protect Dos module in the Ingress Controller.
-    enable: true
+    enable: false
 
     ## Enable App Protect Dos debug logs.
     debug: false
 
     livenessStatus:
       ## Enables liveness from App Protect Dos
-      enable: true
+      enable: false
 
       ## Set the uri of the liveness location.
       uri: "app_protect_dos_liveness"
@@ -58,10 +58,10 @@ controller:
 
   image:
     ## The image repository of the Ingress controller.
-    repository: sea-artifactory.olympus.f5net.com/f5-beappprotect-docker/testnic/nginx-plus-ingress
+    repository: nginx/nginx-ingress
 
     ## The tag of the Ingress controller image.
-    tag: "untagged-SNAPSHOT-unknown"
+    tag: "1.12.0"
 
     ## The pull policy for the Ingress controller image.
     pullPolicy: IfNotPresent
@@ -75,7 +75,7 @@ controller:
     annotations: {}
 
     ## The entries of the ConfigMap for customizing NGINX configuration.
-    entries: {app-protect-dos-liveness-enable: "True"}
+    entries: {}
 
   ## It is recommended to use your own TLS certificates and keys
   defaultTLS:
