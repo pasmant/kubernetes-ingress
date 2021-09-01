@@ -65,9 +65,8 @@ server {
 	set $resource_namespace "{{$.Ingress.Namespace}}";
 
 	{{- if $server.AppProtectEnable}}
-	app_protect_enable {{$server.AppProtectEnable}};
+	app_protect_enable {{$server.AppProtectEnable}};{{- end}}
 	{{if $server.AppProtectPolicy}}app_protect_policy_file {{$server.AppProtectPolicy}};{{end}}
-	{{- end}}
 	{{- if $server.AppProtectLogEnable}}
 	app_protect_security_log_enable {{$server.AppProtectLogEnable}};
 	{{range $AppProtectLogConf := $server.AppProtectLogConfs}}app_protect_security_log {{$AppProtectLogConf}};
@@ -77,22 +76,16 @@ server {
 	{{- if $server.AppProtectDosEnable}}
 	app_protect_dos_enable {{$server.AppProtectDosEnable}};
 	{{if $server.AppProtectDosPolicy}}app_protect_dos_policy_file {{$server.AppProtectDosPolicy}};{{end}}
-	{{- end}}
 	{{- if $server.AppProtectDosLogEnable}}
 	app_protect_dos_security_log_enable {{$server.AppProtectDosLogEnable}};
 	{{if $server.AppProtectDosLogConf}}app_protect_dos_security_log {{$server.AppProtectDosLogConf}};{{end}}
-	    {{- if $server.AppProtectDosAccessLogDst}}
-        set $loggable '0';
-        access_log syslog:server={{ .AppProtectDosAccessLogDst }} log_dos if=$loggable;
-        {{- end}}
 	{{- end}}
-
-	{{- if $server.AppProtectDosMonitor}}
-	app_protect_dos_monitor "{{$server.AppProtectDosMonitor}}";
+	{{- if $server.AppProtectDosAccessLogDst}}
+	set $loggable '0';
+	access_log syslog:server={{ .AppProtectDosAccessLogDst }} log_dos if=$loggable;
 	{{- end}}
-
-    {{- if $server.AppProtectDosName}}
-    app_protect_dos_name "{{$server.AppProtectDosName}}";
+	{{if $server.AppProtectDosMonitor}}app_protect_dos_monitor "{{$server.AppProtectDosMonitor}}";{{end}}
+	{{if $server.AppProtectDosName}}app_protect_dos_name "{{$server.AppProtectDosName}}";{{end}}
     {{- end}}
 
 	{{if not $server.GRPCOnly}}

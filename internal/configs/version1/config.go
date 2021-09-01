@@ -206,6 +206,7 @@ type MainConfig struct {
 	AppProtectCPUThresholds            string
 	AppProtectPhysicalMemoryThresholds string
 	AppProtectDosLoadModule            bool
+	AppProtectDosLogFormat             string
 	AppProtectDosLivenessEnable        bool
 	AppProtectDosLivenessURI           string
 	AppProtectDosLivenessPort          int

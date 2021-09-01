@@ -60,10 +60,6 @@ spec:
           containerPort: 80
         - name: https
           containerPort: 443
-{{- if and .Values.controller.appprotectdos.enable (.Values.controller.appprotectdos.livenessStatus.enable)}}
-        - name: liveness-port
-          containerPort: {{ .Values.controller.appprotectdos.livenessStatus.port}}
-{{ end }}
 {{ if .Values.controller.customPorts }}
 {{ toYaml .Values.controller.customPorts | indent 8 }}
 {{ end }}
@@ -71,6 +67,10 @@ spec:
         - name: prometheus
           containerPort: {{ .Values.prometheus.port }}
 {{- end }}
+{{- if and .Values.controller.appprotectdos.enable (.Values.controller.appprotectdos.livenessStatus.enable)}}
+        - name: liveness-port
+          containerPort: {{ .Values.controller.appprotectdos.livenessStatus.port}}
+{{ end }}
 {{- if .Values.controller.readyStatus.enable }}
         - name: readiness-port
           containerPort: {{ .Values.controller.readyStatus.port}}

@@ -506,6 +506,9 @@ func ParseConfigMap(cfgm *v1.ConfigMap, nginxPlus bool, hasAppProtect bool, hasA
 	}
 
 	if hasAppProtectDos {
+	    if appProtectDosLogFormat, exists := cfgm.Data["app-protect-dos-log-format"]; exists {
+            cfgParams.MainAppProtectDosLogFormat = appProtectDosLogFormat
+        }
         if appProtectDosLivenessEnable, exists, err := GetMapKeyAsBool(cfgm.Data, "app-protect-dos-liveness-enable", cfgm); exists {
             if err != nil {
                 glog.Error(err)
@@ -589,6 +592,7 @@ func GenerateNginxMainConfig(staticCfgParams *StaticConfigParams, config *Config
 		AppProtectCookieSeed:               config.MainAppProtectCookieSeed,
 		AppProtectCPUThresholds:            config.MainAppProtectCPUThresholds,
 		AppProtectPhysicalMemoryThresholds: config.MainAppProtectPhysicalMemoryThresholds,
+		AppProtectDosLogFormat:             config.MainAppProtectDosLogFormat,
 		AppProtectDosLivenessEnable:        config.MainAppProtectDosLivenessEnable,
 		AppProtectDosLivenessURI:           config.MainAppProtectDosLivenessURI,
 		AppProtectDosLivenessPort:          config.MainAppProtectDosLivenessPort,
