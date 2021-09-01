@@ -11,7 +11,8 @@ RUN apt-get update \
 	&& apt-get install --no-install-recommends --no-install-suggests -y libcap2-bin \
 	# temporary fix for CVE-2021-3711
 	&& apt-get install -y openssl libssl1.1 \
-	&& rm -rf /var/lib/apt/lists/*
+	&& rm -rf /var/lib/apt/lists/* \
+	&& echo $NGINX_VERSION > nginx_version
 
 
 ############################################# Base image for Alpine #############################################
@@ -61,6 +62,13 @@ RUN --mount=type=secret,id=nginx-repo.crt,dst=/etc/ssl/nginx/nginx-repo.crt,mode
 FROM debian-plus as debian-plus-nap
 ARG IC_VERSION
 ARG NGINX_PLUS_VERSION
+ENV APPPROTECT_MODULE_VERSION 24+3.612.0-1~buster
+ENV APPPROTECT_PLUGIN_VERSION 3.612.0-1~buster
+ENV APPPROTECT_ENGINE_VERSION 7.19.6-1~buster
+ENV APPPROTECT_COMPILER_VERSION 7.19.6-1~buster
+ENV APPPROTECT_SIG_VERSION 2021.07.29-1~buster
+ENV APPPROTECT_THREAT_CAMPAIGNS_VERSION 2021.08.29-1~buster
+
 
 RUN --mount=type=secret,id=nginx-repo.crt,dst=/etc/ssl/nginx/nginx-repo.crt,mode=0644 \
 	--mount=type=secret,id=nginx-repo.key,dst=/etc/ssl/nginx/nginx-repo.key,mode=0644 \
@@ -70,11 +78,14 @@ RUN --mount=type=secret,id=nginx-repo.crt,dst=/etc/ssl/nginx/nginx-repo.crt,mode
 	&& sed -i "s/$IC_VERSION/$IC_VERSION-nap/g" /etc/apt/apt.conf.d/90pkgs-nginx \
 	&& printf "%s\n" "deb https://pkgs.nginx.com/app-protect/debian buster nginx-plus" \
 	"deb https://pkgs.nginx.com/app-protect-security-updates/debian buster nginx-plus" > /etc/apt/sources.list.d/nginx-app-protect.list \
-	&& apt-get update \
-	# searching apt-cache for the latest version of NAP package compatible with the $NGINX_PLUS_VERSION
-	&& module_version=$(apt-cache showpkg nginx-plus-module-appprotect | awk -v ver="nginx-plus-$NGINX_PLUS_VERSION" '{ if ($6 == ver) {print $1; exit}}') \
-	&& apt-get install --no-install-recommends --no-install-suggests -y nginx-plus-module-appprotect=${module_version} app-protect=${module_version} \
-	&& apt-get install --no-install-recommends --no-install-suggests -y app-protect-attack-signatures app-protect-threat-campaigns \
+	&& apt-get update && apt-get install -y apt-transport-https nginx-plus-module-appprotect=$APPPROTECT_MODULE_VERSION \
+	app-protect-common=$APPPROTECT_ENGINE_VERSION \
+	app-protect-plugin=$APPPROTECT_PLUGIN_VERSION \
+	app-protect-engine=$APPPROTECT_ENGINE_VERSION \
+	app-protect-compiler=$APPPROTECT_COMPILER_VERSION \
+	app-protect=$APPPROTECT_MODULE_VERSION \
+	&& apt-get install -y app-protect-attack-signatures${APPPROTECT_SIG_VERSION:+=$APPPROTECT_SIG_VERSION} \
+	&& apt-get install -y app-protect-threat-campaigns${APPPROTECT_THREAT_CAMPAIGNS_VERSION:+=$APPPROTECT_THREAT_CAMPAIGNS_VERSION} \
 	&& apt-get purge --auto-remove -y apt-transport-https gnupg curl \
 	&& rm -rf /var/lib/apt/lists/* \
 	&& rm /etc/apt/sources.list.d/nginx-app-protect.list
@@ -144,9 +155,10 @@ COPY --chown=nginx:0 LICENSE /licenses/
 
 ############################################# Base image for UBI OSS #############################################
 FROM ubi-base AS ubi
-ARG NGINX_VERSION
 
-RUN rpm --import https://nginx.org/keys/nginx_signing.key \
+RUN --mount=type=bind,from=debian,source=/nginx_version,target=/tmp/nginx_version \
+	export NGINX_VERSION=$(</tmp/nginx_version) \
+	&& rpm --import https://nginx.org/keys/nginx_signing.key \
 	&& version=$(grep -E -o '[0-9]+\.[0-9]+' /etc/redhat-release | cut -d"." -f1) \
 	&& printf "%s\n" "[nginx]" "name=nginx repo" \
 	"baseurl=https://nginx.org/packages/mainline/centos/${version}/\$basearch/" \

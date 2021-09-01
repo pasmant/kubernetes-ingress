@@ -90,7 +90,7 @@ debian-image-nap-napdos-plus: build ## Create Docker image for Ingress Controlle
 
 .PHONY: openshift-image
 openshift-image: build ## Create Docker image for Ingress Controller (ubi)
-	$(DOCKER_CMD) --build-arg BUILD_OS=ubi --build-arg NGINX_VERSION=$(shell cat build/Dockerfile | grep -m1 "FROM nginx:" | cut -d":" -f2 | cut -d" " -f1)
+	$(DOCKER_CMD) --build-arg BUILD_OS=ubi
 
 .PHONY: openshift-image-plus
 openshift-image-plus: build ## Create Docker image for Ingress Controller (ubi with plus)
