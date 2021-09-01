@@ -2858,7 +2858,7 @@ func (lbc *LoadBalancerController) addBadosPolicyRefs(
 
 			apDosPolicy, err := lbc.appProtectDosConfiguration.GetAppDosResource(appprotectdos.DosPolicyGVK.Kind, apDosPolKey)
 			if err != nil {
-				return fmt.Errorf("Bados policy %q is invalid: %w", apDosPolKey, err)
+				return fmt.Errorf("Bados policy %v is invalid: %w", apDosPolKey, err)
 			}
 			apDosPolRef[apDosPolKey] = apDosPolicy
 		}
@@ -2871,7 +2871,7 @@ func (lbc *LoadBalancerController) addBadosPolicyRefs(
 
 			logConf, err := lbc.appProtectDosConfiguration.GetAppDosResource(appprotectdos.DosLogConfGVK.Kind, logConfKey)
 			if err != nil {
-				return fmt.Errorf("Bados policy %q is invalid: %w", logConfKey, err)
+				return fmt.Errorf("Bados policy %v is invalid: %w", logConfKey, err)
 			}
 			logConfRef[logConfKey] = logConf
 		}
