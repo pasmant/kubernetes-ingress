@@ -1044,9 +1044,9 @@ func (p *policiesCfg) addBadosConfig(
 			res.addWarningf("Bados policy %s references an invalid or non-existing log config %s", polKey, logConfKey)
 			res.isError = true
 		}
-        p.Bados.ApDosAccessLogDest = Bados.DosSecurityLog.DosAccessLogDest
 	}
 
+    p.Bados.ApDosAccessLogDest = Bados.DosAccessLogDest
     p.Bados.ApDosMonitor = Bados.ApDosMonitor
 
 	return res

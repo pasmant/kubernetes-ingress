@@ -1530,7 +1530,7 @@ func appProtectDosLogConfFileNameFromUnstruct(unst *unstructured.Unstructured) s
 func (cnf *Configurator) DeleteAppProtectDosPolicy(polNamespaceName string, ingExes []*IngressEx, mergeableIngresses []*MergeableIngresses, vsExes []*VirtualServerEx) (Warnings, error) {
 	if len(ingExes)+len(mergeableIngresses)+len(vsExes) > 0 {
 		fName := strings.Replace(polNamespaceName, "/", "_", 1)
-		polFileName := appProtectDosPolicyFolder + fName + ".json"
+		polFileName := appProtectDosPolicyFolder + fName
 		cnf.nginxManager.DeleteAppProtectResourceFile(polFileName)
 	}
 

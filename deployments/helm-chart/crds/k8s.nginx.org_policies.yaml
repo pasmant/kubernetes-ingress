@@ -62,13 +62,13 @@ spec:
                       type: string
                     apDosPolicy:
                       type: string
+                    dosAccessLogDest:
+                      type: string
                     dosSecurityLog:
                       description: DosSecurityLog defines the security log of a Bados policy.
                       type: object
                       properties:
                         apDosLogConf:
-                          type: string
-                        dosAccessLogDest:
                           type: string
                         dosLogDest:
                           type: string
