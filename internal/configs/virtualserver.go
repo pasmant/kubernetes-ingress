@@ -1010,9 +1010,7 @@ func (p *policiesCfg) addBadosConfig(
 		p.Bados = &version2.Bados{Enable: "off"}
 	}
 
-	if Bados.Name != "" {
-		p.Bados.Name = Bados.Name
-	}
+    p.Bados.Name = Bados.Name
 
 	if Bados.ApDosPolicy != "" {
 		apPolKey := Bados.ApDosPolicy
@@ -1046,14 +1044,10 @@ func (p *policiesCfg) addBadosConfig(
 			res.addWarningf("Bados policy %s references an invalid or non-existing log config %s", polKey, logConfKey)
 			res.isError = true
 		}
-		if Bados.DosSecurityLog.DosAccessLogDest != "" {
-			p.Bados.ApDosAccessLogDest = Bados.DosSecurityLog.DosAccessLogDest
-		}
+        p.Bados.ApDosAccessLogDest = Bados.DosSecurityLog.DosAccessLogDest
 	}
 
-	if Bados.ApDosMonitor != "" {
-		p.Bados.ApDosMonitor = Bados.ApDosMonitor
-	}
+    p.Bados.ApDosMonitor = Bados.ApDosMonitor
 
 	return res
 }
