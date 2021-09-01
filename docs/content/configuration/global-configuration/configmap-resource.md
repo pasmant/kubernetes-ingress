@@ -187,4 +187,5 @@ See the doc about [VirtualServer and VirtualServerRoute resources](/nginx-ingres
 |``app-protect-dos-liveness-enable`` | Enable the app protect dos liveness by setting the ``app_protect_dos_liveness`` [global directive](/nginx-app-protect-dos/directives-and-policy/learn-about-directives-and-policy/#directives-table). | False |  |
 |``app-protect-dos-liveness-uri`` | Set the URI for the ``app_protect_dos_liveness`` [global directive](/nginx-app-protect-dos/directives-and-policy/learn-about-directives-and-policy/#directives-table). | app_protect_dos_liveness |  |
 |``app-protect-dos-liveness-port`` | Set the port destination for the ``app_protect_dos_liveness`` [global directive](/nginx-app-protect-dos/directives-and-policy/learn-about-directives-and-policy/#directives-table). | 8090 |  | 
+|``app-protect-dos-log-format`` | Set new directive ``log_format`` with the name "log_dos" with customize format | N/A |  | 
 {{% /table %}} 

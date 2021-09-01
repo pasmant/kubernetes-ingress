@@ -54,8 +54,8 @@ http {
                       '"$http_user_agent" "$http_x_forwarded_for"';
     {{- end}}
 
-    {{- if .AppProtectDosLoadModule}}
-    log_format log_dos ', vs_name_al=$app_protect_dos_vs_name, ip=$remote_addr, tls_fp=$app_protect_dos_tls_fp, outcome=$app_protect_dos_outcome, reason=$app_protect_dos_outcome_reason, policy_name=$app_protect_dos_policy_name, dos_version=$app_protect_dos_version, ip_tls=$remote_addr:$app_protect_dos_tls_fp, ';
+    {{- if and .AppProtectDosLoadModule (.AppProtectDosLogFormat)}}
+    log_format log_dos '{{.AppProtectDosLogFormat}}';
     {{- end}}
 
     {{if .AccessLogOff}}
