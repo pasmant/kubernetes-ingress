@@ -22,7 +22,6 @@ type ConfigParams struct {
 	LocationSnippets                       []string
 	MainAccessLogOff                       bool
 	MainErrorLogLevel                      string
-	MainErrorLogDst                        string
 	MainHTTPSnippets                       []string
 	MainKeepaliveRequests                  int64
 	MainKeepaliveTimeout                   string
@@ -169,7 +168,6 @@ func NewDefaultConfigParams() *ConfigParams {
 		FailTimeout:                     "10s",
 		LBMethod:                        "random two least_conn",
 		MainErrorLogLevel:               "notice",
-		MainErrorLogDst:                 "stderr",
 		ResolverIPV6:                    true,
 		MainKeepaliveTimeout:            "65s",
 		MainKeepaliveRequests:           100,

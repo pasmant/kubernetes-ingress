@@ -154,7 +154,6 @@ type MainConfig struct {
 	DefaultServerAccessLogOff          bool
 	DefaultServerReturn                string
 	ErrorLogLevel                      string
-	ErrorLogDst                        string
 	HealthStatus                       bool
 	HealthStatusURI                    string
 	HTTP2                              bool

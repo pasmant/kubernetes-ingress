@@ -8,7 +8,7 @@ worker_cpu_affinity {{.WorkerCPUAffinity}};{{end}}
 worker_shutdown_timeout {{.WorkerShutdownTimeout}};{{end}}
 daemon off;
 
-error_log  {{.ErrorLogDst}} {{.ErrorLogLevel}};
+error_log  stderr {{.ErrorLogLevel}};
 pid        /var/lib/nginx/nginx.pid;
 
 {{- if .OpenTracingLoadModule}}

@@ -200,10 +200,6 @@ func ParseConfigMap(cfgm *v1.ConfigMap, nginxPlus bool, hasAppProtect bool, hasA
 		cfgParams.MainErrorLogLevel = errorLogLevel
 	}
 
-	if errorLogDst, exists := cfgm.Data["error-log-destination"]; exists {
-		cfgParams.MainErrorLogDst = errorLogDst
-	}
-
 	if accessLogOff, exists, err := GetMapKeyAsBool(cfgm.Data, "access-log-off", cfgm); exists {
 		if err != nil {
 			glog.Error(err)
@@ -540,7 +536,6 @@ func GenerateNginxMainConfig(staticCfgParams *StaticConfigParams, config *Config
 		DefaultServerAccessLogOff:          config.DefaultServerAccessLogOff,
 		DefaultServerReturn:                config.DefaultServerReturn,
 		ErrorLogLevel:                      config.MainErrorLogLevel,
-		ErrorLogDst:                        config.MainErrorLogDst,
 		HealthStatus:                       staticCfgParams.HealthStatus,
 		HealthStatusURI:                    staticCfgParams.HealthStatusURI,
 		HTTP2:                              config.HTTP2,
