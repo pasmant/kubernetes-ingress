@@ -1283,7 +1283,7 @@ func (cnf *Configurator) updateApResources(ingEx *IngressEx) (apRes AppProtectRe
 		policyFileName := appProtectDosPolicyFileNameFromUnstruct(ingEx.AppProtectDosPolicy)
 		policyContent := generateApResourceFileContent(ingEx.AppProtectDosPolicy)
 		cnf.nginxManager.CreateAppProtectResourceFile(policyFileName, policyContent)
-		apRes.AppProtectPolicy = policyFileName
+		apRes.AppProtectDosPolicy = policyFileName
 	}
 
 	if ingEx.AppProtectDosLogConf != nil {
