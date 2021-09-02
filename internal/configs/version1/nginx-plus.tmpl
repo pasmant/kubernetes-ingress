@@ -132,6 +132,7 @@ http {
     server {
         server_name probe;
         listen {{.AppProtectDosLivenessPort}};
+        access_log off;
         location /{{.AppProtectDosLivenessURI}} {
             app_protect_dos_enable on;
             proxy_pass http://localhost:8091;
