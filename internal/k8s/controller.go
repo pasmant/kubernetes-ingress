@@ -1169,7 +1169,7 @@ func (lbc *LoadBalancerController) processAppProtectChanges(changes []appprotect
 
 				resourceExes := lbc.createExtendedResources(resources)
 
-				warnings, updateErr := lbc.configurator.AddOrUpdateAppProtectResource(impl.Obj, resourceExes.IngressExes, resourceExes.MergeableIngresses, resourceExes.VirtualServerExes)
+				warnings, updateErr := lbc.configurator.AddOrUpdateAppProtectResource(impl.Obj, resourceExes.IngressExes, resourceExes.MergeableIngresses, resourceExes.VirtualServerExes, true)
 				lbc.updateResourcesStatusAndEvents(resources, warnings, updateErr)
 				lbc.recorder.Eventf(impl.Obj, api_v1.EventTypeNormal, "AddedOrUpdated", "AppProtectPolicy %v was added or updated", namespace+"/"+name)
 			case *appprotect.LogConfEx:
@@ -1183,7 +1183,7 @@ func (lbc *LoadBalancerController) processAppProtectChanges(changes []appprotect
 
 				resourceExes := lbc.createExtendedResources(resources)
 
-				warnings, updateErr := lbc.configurator.AddOrUpdateAppProtectResource(impl.Obj, resourceExes.IngressExes, resourceExes.MergeableIngresses, resourceExes.VirtualServerExes)
+				warnings, updateErr := lbc.configurator.AddOrUpdateAppProtectResource(impl.Obj, resourceExes.IngressExes, resourceExes.MergeableIngresses, resourceExes.VirtualServerExes, true)
 				lbc.updateResourcesStatusAndEvents(resources, warnings, updateErr)
 				lbc.recorder.Eventf(impl.Obj, api_v1.EventTypeNormal, "AddedOrUpdated", "AppProtectLogConfig %v was added or updated", namespace+"/"+name)
 			}
@@ -1200,7 +1200,7 @@ func (lbc *LoadBalancerController) processAppProtectChanges(changes []appprotect
 
 				resourceExes := lbc.createExtendedResources(resources)
 
-				warnings, deleteErr := lbc.configurator.DeleteAppProtectPolicy(namespace+"/"+name, resourceExes.IngressExes, resourceExes.MergeableIngresses, resourceExes.VirtualServerExes)
+				warnings, deleteErr := lbc.configurator.DeleteAppProtectPolicy(impl.Obj, namespace+"/"+name, resourceExes.IngressExes, resourceExes.MergeableIngresses, resourceExes.VirtualServerExes)
 
 				lbc.updateResourcesStatusAndEvents(resources, warnings, deleteErr)
 
@@ -1215,7 +1215,7 @@ func (lbc *LoadBalancerController) processAppProtectChanges(changes []appprotect
 
 				resourceExes := lbc.createExtendedResources(resources)
 
-				warnings, deleteErr := lbc.configurator.DeleteAppProtectLogConf(namespace+"/"+name, resourceExes.IngressExes, resourceExes.MergeableIngresses, resourceExes.VirtualServerExes)
+				warnings, deleteErr := lbc.configurator.DeleteAppProtectLogConf(impl.Obj, namespace+"/"+name, resourceExes.IngressExes, resourceExes.MergeableIngresses, resourceExes.VirtualServerExes)
 
 				lbc.updateResourcesStatusAndEvents(resources, warnings, deleteErr)
 			}
@@ -1294,7 +1294,8 @@ func (lbc *LoadBalancerController) processAppProtectDosChanges(changes []appprot
 
 				resourceExes := lbc.createExtendedResources(resources)
 
-				warnings, updateErr := lbc.configurator.AddOrUpdateAppProtectResource(impl.Obj, resourceExes.IngressExes, resourceExes.MergeableIngresses, resourceExes.VirtualServerExes)
+				warnings, updateErr := lbc.configurator.AddOrUpdateAppProtectResource(impl.Obj, resourceExes.IngressExes, resourceExes.MergeableIngresses,
+					resourceExes.VirtualServerExes, true)
 				lbc.updateResourcesStatusAndEvents(resources, warnings, updateErr)
 				lbc.recorder.Eventf(impl.Obj, api_v1.EventTypeNormal, "AddedOrUpdated", "AppProtectDosPolicy %v was added or updated", namespace+"/"+name)
 			case *appprotectdos.DosLogConfEx:
@@ -1308,7 +1309,8 @@ func (lbc *LoadBalancerController) processAppProtectDosChanges(changes []appprot
 
 				resourceExes := lbc.createExtendedResources(resources)
 
-				warnings, updateErr := lbc.configurator.AddOrUpdateAppProtectResource(impl.Obj, resourceExes.IngressExes, resourceExes.MergeableIngresses, resourceExes.VirtualServerExes)
+				warnings, updateErr := lbc.configurator.AddOrUpdateAppProtectResource(impl.Obj, resourceExes.IngressExes, resourceExes.MergeableIngresses,
+					resourceExes.VirtualServerExes, true)
 				lbc.updateResourcesStatusAndEvents(resources, warnings, updateErr)
 				lbc.recorder.Eventf(impl.Obj, api_v1.EventTypeNormal, "AddedOrUpdated", "AppProtectDosLogConfig %v was added or updated", namespace+"/"+name)
 
@@ -1326,7 +1328,7 @@ func (lbc *LoadBalancerController) processAppProtectDosChanges(changes []appprot
 
 				resourceExes := lbc.createExtendedResources(resources)
 
-				warnings, deleteErr := lbc.configurator.DeleteAppProtectDosPolicy(namespace+"/"+name, resourceExes.IngressExes, resourceExes.MergeableIngresses, resourceExes.VirtualServerExes)
+				warnings, deleteErr := lbc.configurator.DeleteAppProtectDosPolicy(impl.Obj, namespace+"/"+name, resourceExes.IngressExes, resourceExes.MergeableIngresses, resourceExes.VirtualServerExes)
 
 				lbc.updateResourcesStatusAndEvents(resources, warnings, deleteErr)
 			case *appprotectdos.DosLogConfEx:
@@ -1340,7 +1342,7 @@ func (lbc *LoadBalancerController) processAppProtectDosChanges(changes []appprot
 
 				resourceExes := lbc.createExtendedResources(resources)
 
-				warnings, deleteErr := lbc.configurator.DeleteAppProtectLogConf(namespace+"/"+name, resourceExes.IngressExes, resourceExes.MergeableIngresses, resourceExes.VirtualServerExes)
+				warnings, deleteErr := lbc.configurator.DeleteAppProtectLogConf(impl.Obj, namespace+"/"+name, resourceExes.IngressExes, resourceExes.MergeableIngresses, resourceExes.VirtualServerExes)
 
 				lbc.updateResourcesStatusAndEvents(resources, warnings, deleteErr)
 			}

@@ -37,8 +37,8 @@ const (
 	appProtectLogConfFolder         = "/etc/nginx/waf/nac-logconfs/"
 	appProtectUserSigFolder         = "/etc/nginx/waf/nac-usersigs/"
 	appProtectUserSigIndex          = "/etc/nginx/waf/nac-usersigs/index.conf"
-	appProtectDosPolicyFolder       = "/etc/app_protect_dos/"
-	appProtectDosLogConfFolder      = "/etc/app_protect_dos/"
+	appProtectDosPolicyFolder       = "/etc/nginx/dos/policies/"
+	appProtectDosLogConfFolder      = "/etc/nginx/dos/logconfs/"
 )
 
 // DefaultServerSecretPath is the full path to the Secret with a TLS cert and a key for the default server. #nosec G101
@@ -1357,8 +1357,13 @@ func generateApResourceFileContent(apResource *unstructured.Unstructured) []byte
 	return data
 }
 
+func appProtectResourceFromNsName(folderName string, polNamespaceName string) string {
+	fName := strings.Replace(polNamespaceName, "/", "_", 1)
+	return folderName + fName
+}
+
 // AddOrUpdateAppProtectResource updates Ingresses and VirtualServers that use App Protect Resources
-func (cnf *Configurator) AddOrUpdateAppProtectResource(resource *unstructured.Unstructured, ingExes []*IngressEx, mergeableIngresses []*MergeableIngresses, vsExes []*VirtualServerEx) (Warnings, error) {
+func (cnf *Configurator) AddOrUpdateAppProtectResource(resource *unstructured.Unstructured, ingExes []*IngressEx, mergeableIngresses []*MergeableIngresses, vsExes []*VirtualServerEx, reload bool) (Warnings, error) {
 	allWarnings := newWarnings()
 
 	for _, ingEx := range ingExes {
@@ -1385,121 +1390,41 @@ func (cnf *Configurator) AddOrUpdateAppProtectResource(resource *unstructured.Un
 		allWarnings.Add(warnings)
 	}
 
-	if err := cnf.reload(nginx.ReloadForOtherUpdate); err != nil {
-		return allWarnings, fmt.Errorf("Error when reloading NGINX when updating %v: %w", resource.GetKind(), err)
+	if reload {
+		if err := cnf.reload(nginx.ReloadForOtherUpdate); err != nil {
+			return allWarnings, fmt.Errorf("Error when reloading NGINX when updating %v: %w", resource.GetKind(), err)
+		}
 	}
 
 	return allWarnings, nil
 }
 
 // DeleteAppProtectPolicy updates Ingresses and VirtualServers that use AP Policy after that policy is deleted
-func (cnf *Configurator) DeleteAppProtectPolicy(polNamespaceName string, ingExes []*IngressEx, mergeableIngresses []*MergeableIngresses, vsExes []*VirtualServerEx) (Warnings, error) {
+func (cnf *Configurator) DeleteAppProtectPolicy(resource *unstructured.Unstructured, polNamespaceName string, ingExes []*IngressEx, mergeableIngresses []*MergeableIngresses, vsExes []*VirtualServerEx) (Warnings, error) {
 	if len(ingExes)+len(mergeableIngresses)+len(vsExes) > 0 {
-		fName := strings.Replace(polNamespaceName, "/", "_", 1)
-		polFileName := appProtectPolicyFolder + fName
-		cnf.nginxManager.DeleteAppProtectResourceFile(polFileName)
+		cnf.nginxManager.DeleteAppProtectResourceFile(appProtectResourceFromNsName(appProtectPolicyFolder, polNamespaceName))
 	}
 
-	allWarnings := newWarnings()
-
-	for _, ingEx := range ingExes {
-		warnings, err := cnf.addOrUpdateIngress(ingEx)
-		if err != nil {
-			return allWarnings, fmt.Errorf("Error adding or updating ingress %v/%v: %w", ingEx.Ingress.Namespace, ingEx.Ingress.Name, err)
-		}
-		allWarnings.Add(warnings)
-	}
-
-	for _, m := range mergeableIngresses {
-		warnings, err := cnf.addOrUpdateMergeableIngress(m)
-		if err != nil {
-			return allWarnings, fmt.Errorf("Error adding or updating mergeableIngress %v/%v: %w", m.Master.Ingress.Namespace, m.Master.Ingress.Name, err)
-		}
-		allWarnings.Add(warnings)
-	}
-
-	for _, v := range vsExes {
-		warnings, err := cnf.addOrUpdateVirtualServer(v)
-		if err != nil {
-			return allWarnings, fmt.Errorf("Error adding or updating VirtualServer %v/%v: %w", v.VirtualServer.Namespace, v.VirtualServer.Name, err)
-		}
-		allWarnings.Add(warnings)
-	}
-
-	if err := cnf.reload(nginx.ReloadForOtherUpdate); err != nil {
-		return allWarnings, fmt.Errorf("Error when reloading NGINX when removing App Protect Policy: %w", err)
-	}
-
-	return allWarnings, nil
+	return cnf.AddOrUpdateAppProtectResource(resource, ingExes, mergeableIngresses, vsExes, true)
 }
 
 // DeleteAppProtectLogConf updates Ingresses and VirtualServers that use AP Log Configuration after that policy is deleted
-func (cnf *Configurator) DeleteAppProtectLogConf(logConfNamespaceName string, ingExes []*IngressEx, mergeableIngresses []*MergeableIngresses, vsExes []*VirtualServerEx) (Warnings, error) {
+func (cnf *Configurator) DeleteAppProtectLogConf(resource *unstructured.Unstructured, logConfNamespaceName string, ingExes []*IngressEx, mergeableIngresses []*MergeableIngresses, vsExes []*VirtualServerEx) (Warnings, error) {
 	if len(ingExes)+len(mergeableIngresses)+len(vsExes) > 0 {
-		fName := strings.Replace(logConfNamespaceName, "/", "_", 1)
-		logConfFileName := appProtectLogConfFolder + fName
-		cnf.nginxManager.DeleteAppProtectResourceFile(logConfFileName)
-	}
-	allWarnings := newWarnings()
-
-	for _, ingEx := range ingExes {
-		warnings, err := cnf.addOrUpdateIngress(ingEx)
-		if err != nil {
-			return allWarnings, fmt.Errorf("Error adding or updating ingress %v/%v: %w", ingEx.Ingress.Namespace, ingEx.Ingress.Name, err)
-		}
-		allWarnings.Add(warnings)
+		cnf.nginxManager.DeleteAppProtectResourceFile(appProtectResourceFromNsName(appProtectLogConfFolder, logConfNamespaceName))
 	}
 
-	for _, m := range mergeableIngresses {
-		warnings, err := cnf.addOrUpdateMergeableIngress(m)
-		if err != nil {
-			return allWarnings, fmt.Errorf("Error adding or updating mergeableIngress %v/%v: %w", m.Master.Ingress.Namespace, m.Master.Ingress.Name, err)
-		}
-		allWarnings.Add(warnings)
-	}
-
-	for _, v := range vsExes {
-		warnings, err := cnf.addOrUpdateVirtualServer(v)
-		if err != nil {
-			return allWarnings, fmt.Errorf("Error adding or updating VirtualServer %v/%v: %w", v.VirtualServer.Namespace, v.VirtualServer.Name, err)
-		}
-		allWarnings.Add(warnings)
-	}
-
-	if err := cnf.reload(nginx.ReloadForOtherUpdate); err != nil {
-		return allWarnings, fmt.Errorf("Error when reloading NGINX when removing App Protect Log Configuration: %w", err)
-	}
-
-	return allWarnings, nil
+	return cnf.AddOrUpdateAppProtectResource(resource, ingExes, mergeableIngresses, vsExes, true)
 }
 
 // RefreshAppProtectUserSigs writes all valid UDS files to fs and reloads NGINX
 func (cnf *Configurator) RefreshAppProtectUserSigs(
 	userSigs []*unstructured.Unstructured, delPols []string, ingExes []*IngressEx, mergeableIngresses []*MergeableIngresses, vsExes []*VirtualServerEx,
 ) (Warnings, error) {
-	allWarnings := newWarnings()
-	for _, ingEx := range ingExes {
-		warnings, err := cnf.addOrUpdateIngress(ingEx)
-		if err != nil {
-			return allWarnings, fmt.Errorf("Error adding or updating ingress %v/%v: %w", ingEx.Ingress.Namespace, ingEx.Ingress.Name, err)
-		}
-		allWarnings.Add(warnings)
-	}
 
-	for _, m := range mergeableIngresses {
-		warnings, err := cnf.addOrUpdateMergeableIngress(m)
-		if err != nil {
-			return allWarnings, fmt.Errorf("Error adding or updating mergeableIngress %v/%v: %w", m.Master.Ingress.Namespace, m.Master.Ingress.Name, err)
-		}
-		allWarnings.Add(warnings)
-	}
-
-	for _, v := range vsExes {
-		warnings, err := cnf.addOrUpdateVirtualServer(v)
-		if err != nil {
-			return allWarnings, fmt.Errorf("Error adding or updating VirtualServer %v/%v: %w", v.VirtualServer.Namespace, v.VirtualServer.Name, err)
-		}
-		allWarnings.Add(warnings)
+	allWarnings, err := cnf.AddOrUpdateAppProtectResource(userSigs[0], ingExes, mergeableIngresses, vsExes, false)
+	if err != nil {
+		return allWarnings, err
 	}
 
 	for _, file := range delPols {
@@ -1527,84 +1452,21 @@ func appProtectDosLogConfFileNameFromUnstruct(unst *unstructured.Unstructured) s
 }
 
 // DeleteAppProtectDosPolicy updates Ingresses and VirtualServers that use AP Dos Policy after that policy is deleted
-func (cnf *Configurator) DeleteAppProtectDosPolicy(polNamespaceName string, ingExes []*IngressEx, mergeableIngresses []*MergeableIngresses, vsExes []*VirtualServerEx) (Warnings, error) {
+func (cnf *Configurator) DeleteAppProtectDosPolicy(resource *unstructured.Unstructured, polNamespaceName string, ingExes []*IngressEx, mergeableIngresses []*MergeableIngresses, vsExes []*VirtualServerEx) (Warnings, error) {
 	if len(ingExes)+len(mergeableIngresses)+len(vsExes) > 0 {
-		fName := strings.Replace(polNamespaceName, "/", "_", 1)
-		polFileName := appProtectDosPolicyFolder + fName
-		cnf.nginxManager.DeleteAppProtectResourceFile(polFileName)
+		cnf.nginxManager.DeleteAppProtectResourceFile(appProtectResourceFromNsName(appProtectDosPolicyFolder, polNamespaceName))
 	}
 
-	allWarnings := newWarnings()
-
-	for _, ingEx := range ingExes {
-		warnings, err := cnf.addOrUpdateIngress(ingEx)
-		if err != nil {
-			return allWarnings, fmt.Errorf("Error adding or updating ingress %v/%v: %w", ingEx.Ingress.Namespace, ingEx.Ingress.Name, err)
-		}
-		allWarnings.Add(warnings)
-	}
-
-	for _, m := range mergeableIngresses {
-		warnings, err := cnf.addOrUpdateMergeableIngress(m)
-		if err != nil {
-			return allWarnings, fmt.Errorf("Error adding or updating mergeableIngress %v/%v: %w", m.Master.Ingress.Namespace, m.Master.Ingress.Name, err)
-		}
-		allWarnings.Add(warnings)
-	}
-
-	for _, v := range vsExes {
-		warnings, err := cnf.addOrUpdateVirtualServer(v)
-		if err != nil {
-			return allWarnings, fmt.Errorf("Error adding or updating VirtualServer %v/%v: %w", v.VirtualServer.Namespace, v.VirtualServer.Name, err)
-		}
-		allWarnings.Add(warnings)
-	}
-
-	if err := cnf.nginxManager.Reload(nginx.ReloadForOtherUpdate); err != nil {
-		return allWarnings, fmt.Errorf("Error when reloading NGINX when removing App Protect Dos Policy: %w", err)
-	}
-
-	return allWarnings, nil
+	return  cnf.AddOrUpdateAppProtectResource(resource, ingExes, mergeableIngresses, vsExes, true)
 }
 
 // DeleteAppProtectLogConf updates Ingresses and VirtualServers that use AP Log Configuration after that policy is deleted
-func (cnf *Configurator) DeleteAppProtectDosLogConf(logConfNamespaceName string, ingExes []*IngressEx, mergeableIngresses []*MergeableIngresses, vsExes []*VirtualServerEx) (Warnings, error) {
+func (cnf *Configurator) DeleteAppProtectDosLogConf(resource *unstructured.Unstructured, logConfNamespaceName string, ingExes []*IngressEx, mergeableIngresses []*MergeableIngresses, vsExes []*VirtualServerEx) (Warnings, error) {
 	if len(ingExes)+len(mergeableIngresses)+len(vsExes) > 0 {
-		fName := strings.Replace(logConfNamespaceName, "/", "_", 1)
-		logConfFileName := appProtectDosLogConfFolder + fName
-		cnf.nginxManager.DeleteAppProtectResourceFile(logConfFileName)
-	}
-	allWarnings := newWarnings()
-
-	for _, ingEx := range ingExes {
-		warnings, err := cnf.addOrUpdateIngress(ingEx)
-		if err != nil {
-			return allWarnings, fmt.Errorf("Error adding or updating ingress %v/%v: %w", ingEx.Ingress.Namespace, ingEx.Ingress.Name, err)
-		}
-		allWarnings.Add(warnings)
+		cnf.nginxManager.DeleteAppProtectResourceFile(appProtectResourceFromNsName(appProtectDosLogConfFolder, logConfNamespaceName))
 	}
 
-	for _, m := range mergeableIngresses {
-		warnings, err := cnf.addOrUpdateMergeableIngress(m)
-		if err != nil {
-			return allWarnings, fmt.Errorf("Error adding or updating mergeableIngress %v/%v: %w", m.Master.Ingress.Namespace, m.Master.Ingress.Name, err)
-		}
-		allWarnings.Add(warnings)
-	}
-
-	for _, v := range vsExes {
-		warnings, err := cnf.addOrUpdateVirtualServer(v)
-		if err != nil {
-			return allWarnings, fmt.Errorf("Error adding or updating VirtualServer %v/%v: %w", v.VirtualServer.Namespace, v.VirtualServer.Name, err)
-		}
-		allWarnings.Add(warnings)
-	}
-
-	if err := cnf.nginxManager.Reload(nginx.ReloadForOtherUpdate); err != nil {
-		return allWarnings, fmt.Errorf("Error when reloading NGINX when removing App Protect Log Configuration: %w", err)
-	}
-
-	return allWarnings, nil
+	return cnf.AddOrUpdateAppProtectResource(resource, ingExes, mergeableIngresses, vsExes, true)
 }
 
 // AddInternalRouteConfig adds internal route server to NGINX Configuration and reloads NGINX
