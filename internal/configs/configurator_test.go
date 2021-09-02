@@ -1287,3 +1287,111 @@ func TestUpdateApResourcesForVs(t *testing.T) {
 		}
 	}
 }
+
+func TestUpdateApDosResourcesForVs(t *testing.T) {
+	apDosPolRefs := map[string]*unstructured.Unstructured{
+		"test-ns-1/test-name-1": {
+			Object: map[string]interface{}{
+				"metadata": map[string]interface{}{
+					"namespace": "test-ns-1",
+					"name":      "test-name-1",
+				},
+			},
+		},
+		"test-ns-2/test-name-2": {
+			Object: map[string]interface{}{
+				"metadata": map[string]interface{}{
+					"namespace": "test-ns-2",
+					"name":      "test-name-2",
+				},
+			},
+		},
+	}
+	dosLogConfRefs := map[string]*unstructured.Unstructured{
+		"test-ns-1/test-name-1": {
+			Object: map[string]interface{}{
+				"metadata": map[string]interface{}{
+					"namespace": "test-ns-1",
+					"name":      "test-name-1",
+				},
+			},
+		},
+		"test-ns-2/test-name-2": {
+			Object: map[string]interface{}{
+				"metadata": map[string]interface{}{
+					"namespace": "test-ns-2",
+					"name":      "test-name-2",
+				},
+			},
+		},
+	}
+
+	tests := []struct {
+		vsEx     *VirtualServerEx
+		expected map[string]string
+		msg      string
+	}{
+		{
+			vsEx: &VirtualServerEx{
+				VirtualServer: &conf_v1.VirtualServer{
+					ObjectMeta: meta_v1.ObjectMeta{},
+				},
+			},
+			expected: map[string]string{},
+			msg:      "no app protect dos resources",
+		},
+		{
+			vsEx: &VirtualServerEx{
+				VirtualServer: &conf_v1.VirtualServer{
+					ObjectMeta: meta_v1.ObjectMeta{},
+				},
+				ApDosPolRefs: apDosPolRefs,
+			},
+			expected: map[string]string{
+				"test-ns-1/test-name-1": "/etc/nginx/dos/policies/test-ns-1_test-name-1.json",
+				"test-ns-2/test-name-2": "/etc/nginx/dos/policies/test-ns-2_test-name-2.json",
+			},
+			msg: "app protect dos policies",
+		},
+		{
+			vsEx: &VirtualServerEx{
+				VirtualServer: &conf_v1.VirtualServer{
+					ObjectMeta: meta_v1.ObjectMeta{},
+				},
+				DosLogConfRefs: dosLogConfRefs,
+			},
+			expected: map[string]string{
+				"test-ns-1/test-name-1": "/etc/nginx/dos/logconfs/test-ns-1_test-name-1.json",
+				"test-ns-2/test-name-2": "/etc/nginx/dos/logconfs/test-ns-2_test-name-2.json",
+			},
+			msg: "app protect dos log confs",
+		},
+		{
+			vsEx: &VirtualServerEx{
+				VirtualServer: &conf_v1.VirtualServer{
+					ObjectMeta: meta_v1.ObjectMeta{},
+				},
+				ApDosPolRefs:   apDosPolRefs,
+				DosLogConfRefs: dosLogConfRefs,
+			},
+			expected: map[string]string{
+				// this is a bug - the result needs to include both policies and log confs
+				"test-ns-1/test-name-1": "/etc/nginx/dos/logconfs/test-ns-1_test-name-1.json",
+				"test-ns-2/test-name-2": "/etc/nginx/dos/logconfs/test-ns-2_test-name-2.json",
+			},
+			msg: "app protect Dos policies and log confs",
+		},
+	}
+
+	conf, err := createTestConfigurator()
+	if err != nil {
+		t.Errorf("Failed to create a test configurator: %v", err)
+	}
+
+	for _, test := range tests {
+		result := conf.updateApResourcesForVs(test.vsEx)
+		if !reflect.DeepEqual(result, test.expected) {
+			t.Errorf("updateApResourcesForVs() returned \n%v but exexpected\n%v for the case of %s", result, test.expected, test.msg)
+		}
+	}
+}
