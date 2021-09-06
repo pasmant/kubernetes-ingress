@@ -108,8 +108,8 @@ func ValidateAppProtectDosAccessLogDest(accessLogDest string) error {
 	return nil
 }
 
-// ValidateAppProtectDosPolicy validates Policy resource
-func ValidateAppProtectDosPolicy(policy *unstructured.Unstructured) error {
+// validateAppProtectDosPolicy validates Policy resource
+func validateAppProtectDosPolicy(policy *unstructured.Unstructured) error {
 	polName := policy.GetName()
 
 	err := validateRequiredFields(policy, appProtectDosPolicyRequiredFields)
