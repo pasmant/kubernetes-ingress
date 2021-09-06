@@ -3,6 +3,8 @@ package appprotectdos
 import (
 	"strings"
 	"testing"
+
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
 func TestValidateAppProtectDsLogDestinationAnnotation(t *testing.T) {
@@ -63,4 +65,69 @@ func TestValidateAppProtectDosAccessLogDest(t *testing.T) {
 		}
 	}
 	
+}
+
+func TestValidateAppProtectDosLogConf(t *testing.T) {
+	tests := []struct {
+		logConf   *unstructured.Unstructured
+		expectErr bool
+		msg       string
+	}{
+		{
+			logConf: &unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"spec": map[string]interface{}{
+						"content": map[string]interface{}{},
+						"filter":  map[string]interface{}{},
+					},
+				},
+			},
+			expectErr: false,
+			msg:       "valid log conf",
+		},
+		{
+			logConf: &unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"spec": map[string]interface{}{
+						"filter": map[string]interface{}{},
+					},
+				},
+			},
+			expectErr: true,
+			msg:       "invalid log conf with no content field",
+		},
+		{
+			logConf: &unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"spec": map[string]interface{}{
+						"content": map[string]interface{}{},
+					},
+				},
+			},
+			expectErr: true,
+			msg:       "invalid log conf with no filter field",
+		},
+		{
+			logConf: &unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"something": map[string]interface{}{
+						"content": map[string]interface{}{},
+						"filter":  map[string]interface{}{},
+					},
+				},
+			},
+			expectErr: true,
+			msg:       "invalid log conf with no spec field",
+		},
+	}
+
+	for _, test := range tests {
+		err := ValidateAppProtectDosLogConf(test.logConf)
+		if test.expectErr && err == nil {
+			t.Errorf("validateAppProtectDosLogConf() returned no error for the case of %s", test.msg)
+		}
+		if !test.expectErr && err != nil {
+			t.Errorf("validateAppProtectDosLogConf() returned unexpected error %v for the case of %s", err, test.msg)
+		}
+	}
 }
