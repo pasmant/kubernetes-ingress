@@ -13,6 +13,7 @@ import (
 	"github.com/nginxinc/kubernetes-ingress/internal/configs/version1"
 	"github.com/nginxinc/kubernetes-ingress/internal/configs/version2"
 	"github.com/nginxinc/kubernetes-ingress/internal/k8s/appprotect"
+	"github.com/nginxinc/kubernetes-ingress/internal/k8s/appprotectdos"
 	"github.com/nginxinc/kubernetes-ingress/internal/k8s/secrets"
 	"github.com/nginxinc/kubernetes-ingress/internal/metrics/collectors"
 	"github.com/nginxinc/kubernetes-ingress/internal/nginx"
@@ -1973,6 +1974,133 @@ func TestGetWAFPoliciesForAppProtectLogConf(t *testing.T) {
 		got := getWAFPoliciesForAppProtectLogConf(test.pols, test.key)
 		if diff := cmp.Diff(test.want, got); diff != "" {
 			t.Errorf("getWAFPoliciesForAppProtectLogConf() returned unexpected result for the case of: %v (-want +got):\n%s", test.msg, diff)
+		}
+	}
+}
+
+func TestAddBadosPolicyRefs(t *testing.T) {
+	apDosPol := &unstructured.Unstructured{
+		Object: map[string]interface{}{
+			"metadata": map[string]interface{}{
+				"namespace": "default",
+				"name":      "apdos-pol",
+			},
+		},
+	}
+
+	dosLogConf := &unstructured.Unstructured{
+		Object: map[string]interface{}{
+			"metadata": map[string]interface{}{
+				"namespace": "default",
+				"name":      "dosLog-conf",
+			},
+		},
+	}
+
+	tests := []struct {
+		policies            []*conf_v1.Policy
+		expectedApDosPolRefs   map[string]*unstructured.Unstructured
+		expectedDosLogConfRefs map[string]*unstructured.Unstructured
+		wantErr             bool
+		msg                 string
+	}{
+		{
+			policies: []*conf_v1.Policy{
+				{
+					ObjectMeta: meta_v1.ObjectMeta{
+						Name:      "bados-pol",
+						Namespace: "default",
+					},
+					Spec: conf_v1.PolicySpec{
+						Bados: &conf_v1.Bados{
+							Enable:   true,
+							Name: "bados",
+							ApDosPolicy: "default/apdos-pol",
+							DosSecurityLog: &conf_v1.DosSecurityLog{
+								Enable:    true,
+								ApDosLogConf: "dosLog-conf",
+							},
+							ApDosMonitor: "example.com",
+							DosAccessLogDest: "10.10.1.1:514",
+						},
+					},
+				},
+			},
+			expectedApDosPolRefs: map[string]*unstructured.Unstructured{
+				"default/apdos-pol": apDosPol,
+			},
+			expectedDosLogConfRefs: map[string]*unstructured.Unstructured{
+				"default/dosLog-conf": dosLogConf,
+			},
+			wantErr: false,
+			msg:     "base test",
+		},
+		{
+			policies: []*conf_v1.Policy{
+				{
+					ObjectMeta: meta_v1.ObjectMeta{
+						Name:      "bados-pol",
+						Namespace: "default",
+					},
+					Spec: conf_v1.PolicySpec{
+						Bados: &conf_v1.Bados{
+							Enable:   true,
+							ApDosPolicy: "non-existing-apdos-pol",
+						},
+					},
+				},
+			},
+			wantErr:             true,
+			expectedApDosPolRefs:   make(map[string]*unstructured.Unstructured),
+			expectedDosLogConfRefs: make(map[string]*unstructured.Unstructured),
+			msg:                 "apDosPol doesn't exist",
+		},
+		{
+			policies: []*conf_v1.Policy{
+				{
+					ObjectMeta: meta_v1.ObjectMeta{
+						Name:      "bados-pol",
+						Namespace: "default",
+					},
+					Spec: conf_v1.PolicySpec{
+						Bados: &conf_v1.Bados{
+							Enable:   true,
+							ApDosPolicy: "apdos-pol",
+							DosSecurityLog: &conf_v1.DosSecurityLog{
+								Enable:    true,
+								ApDosLogConf: "non-existing-dos-log-conf",
+							},
+						},
+					},
+				},
+			},
+			wantErr: true,
+			expectedApDosPolRefs: map[string]*unstructured.Unstructured{
+				"default/apdos-pol": apDosPol,
+			},
+			expectedDosLogConfRefs: make(map[string]*unstructured.Unstructured),
+			msg:                 "dosLogConf doesn't exist",
+		},
+	}
+
+	lbc := LoadBalancerController{
+		appProtectDosConfiguration: appprotectdos.NewFakeConfiguration(),
+	}
+	lbc.appProtectDosConfiguration.AddOrUpdateDosPolicy(apDosPol)
+	lbc.appProtectDosConfiguration.AddOrUpdateDosLogConf(dosLogConf)
+
+	for _, test := range tests {
+		resApDosPolicy := make(map[string]*unstructured.Unstructured)
+		resDosLogConf := make(map[string]*unstructured.Unstructured)
+
+		if err := lbc.addBadosPolicyRefs(resApDosPolicy, resDosLogConf, test.policies); (err != nil) != test.wantErr {
+			t.Errorf("LoadBalancerController.addBadosPolicyRefs() error = %v, wantErr %v", err, test.wantErr)
+		}
+		if diff := cmp.Diff(test.expectedApDosPolRefs, resApDosPolicy); diff != "" {
+			t.Errorf("LoadBalancerController.addBadosPolicyRefs() '%v' mismatch (-want +got):\n%s", test.msg, diff)
+		}
+		if diff := cmp.Diff(test.expectedDosLogConfRefs, resDosLogConf); diff != "" {
+			t.Errorf("LoadBalancerController.addBadosPolicyRefs() '%v' mismatch (-want +got):\n%s", test.msg, diff)
 		}
 	}
 }
