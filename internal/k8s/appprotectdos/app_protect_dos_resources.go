@@ -11,11 +11,7 @@ import (
 )
 
 var appProtectDosPolicyRequiredFields = [][]string{
-	{"spec", "mitigation_mode"},
-	{"spec", "automation_tools_detection"},
-	{"spec", "tls_fingerprint"},
-	{"spec", "signatures"},
-	{"spec", "bad_actors"},
+	{"spec"},
 }
 
 var appProtectDosLogConfRequiredFields = [][]string{
@@ -26,19 +22,6 @@ var appProtectDosLogConfRequiredFields = [][]string{
 func validateRequiredFields(policy *unstructured.Unstructured, fieldsList [][]string) error {
 	for _, fields := range fieldsList {
 		field, found, err := unstructured.NestedMap(policy.Object, fields...)
-		if err != nil {
-			return fmt.Errorf("Error checking for required field %v: %w", field, err)
-		}
-		if !found {
-			return fmt.Errorf("Required field %v not found", field)
-		}
-	}
-	return nil
-}
-
-func validateRequiredFieldsNoCopy(policy *unstructured.Unstructured, fieldsList [][]string) error {
-	for _, fields := range fieldsList {
-		field, found, err := unstructured.NestedFieldNoCopy(policy.Object, fields...)
 		if err != nil {
 			return fmt.Errorf("Error checking for required field %v: %w", field, err)
 		}
@@ -129,7 +112,7 @@ func ValidateAppProtectDosAccessLogDest(accessLogDest string) error {
 func ValidateAppProtectDosPolicy(policy *unstructured.Unstructured) error {
 	polName := policy.GetName()
 
-	err := validateRequiredFieldsNoCopy(policy, appProtectDosPolicyRequiredFields)
+	err := validateRequiredFields(policy, appProtectDosPolicyRequiredFields)
 	if err != nil {
 		return fmt.Errorf("Error validating App Protect Dos Policy %v: %w", polName, err)
 	}

@@ -17,7 +17,6 @@ func TestCreateAppProtectDosPolicyEx(t *testing.T) {
 		{
 			policy: &unstructured.Unstructured{
 				Object: map[string]interface{}{
-					"spec": map[string]interface{}{},
 				},
 			},
 			expectedPolicyEx: &DosPolicyEx{
@@ -25,24 +24,21 @@ func TestCreateAppProtectDosPolicyEx(t *testing.T) {
 				ErrorMsg: "Validation Failed",
 			},
 			wantErr: true,
-			msg:     "dos policy empty spec",
+			msg:     "dos policy no spec",
 		},
 		{
 			policy: &unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"spec": map[string]interface{}{
-						"policy": map[string]interface{}{
-							"name": "TestPolicy",
-						},
 					},
 				},
 			},
 			expectedPolicyEx: &DosPolicyEx{
-				IsValid:  false,
-				ErrorMsg: failedValidationErrorMsg,
+				IsValid:  true,
+				ErrorMsg: "",
 			},
-			wantErr: true,
-			msg:     "dos policy with incorrect structure",
+			wantErr: false,
+			msg:     "dos policy is valid",
 		},
 	}
 
@@ -132,7 +128,6 @@ func TestAddOrUpdateDosPolicy(t *testing.T) {
 			"metadata": map[string]interface{}{
 				"namespace": "testing",
 			},
-			"spec": map[string]interface{}{},
 		},
 	}
 	apc := newConfigurationImpl()
@@ -172,7 +167,7 @@ func TestAddOrUpdateDosPolicy(t *testing.T) {
 				{
 					Object:  invalidTestPolicy,
 					Reason:  "Rejected",
-					Message: "Error validating dos policy : Error validating App Protect Dos Policy : Required field <nil> not found",
+					Message: "Error validating dos policy : Error validating App Protect Dos Policy : Required field map[] not found",
 				},
 			},
 			msg: "validation failed",
