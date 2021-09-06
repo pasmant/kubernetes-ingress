@@ -105,7 +105,7 @@ type DosPolicyEx struct {
 }
 
 func createAppProtectDosPolicyEx(policyObj *unstructured.Unstructured) (*DosPolicyEx, error) {
-	err := ValidateAppProtectDosPolicy(policyObj)
+	err := validateAppProtectDosPolicy(policyObj)
 	if err != nil {
 		errMsg := fmt.Sprintf("Error validating dos policy %s: %v", policyObj.GetName(), err)
 		return &DosPolicyEx{Obj: policyObj, IsValid: false, ErrorMsg: failedValidationErrorMsg}, fmt.Errorf(errMsg)

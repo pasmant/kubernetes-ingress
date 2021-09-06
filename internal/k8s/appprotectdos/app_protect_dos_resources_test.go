@@ -64,7 +64,6 @@ func TestValidateAppProtectDosAccessLogDest(t *testing.T) {
 			}
 		}
 	}
-	
 }
 
 func TestValidateAppProtectDosLogConf(t *testing.T) {
@@ -128,6 +127,43 @@ func TestValidateAppProtectDosLogConf(t *testing.T) {
 		}
 		if !test.expectErr && err != nil {
 			t.Errorf("validateAppProtectDosLogConf() returned unexpected error %v for the case of %s", err, test.msg)
+		}
+	}
+}
+
+func TestValidateAppProtectDosPolicy(t *testing.T) {
+	tests := []struct {
+		policy    *unstructured.Unstructured
+		expectErr bool
+		msg       string
+	}{
+		{
+			policy: &unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"spec": map[string]interface{}{},
+				},
+			},
+			expectErr: false,
+			msg:       "valid policy",
+		},
+		{
+			policy: &unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"something": map[string]interface{}{},
+				},
+			},
+			expectErr: true,
+			msg:       "invalid policy with no spec field",
+		},
+	}
+
+	for _, test := range tests {
+		err := validateAppProtectDosPolicy(test.policy)
+		if test.expectErr && err == nil {
+			t.Errorf("validateAppProtectPolicy() returned no error for the case of %s", test.msg)
+		}
+		if !test.expectErr && err != nil {
+			t.Errorf("validateAppProtectPolicy() returned unexpected error %v for the case of %s", err, test.msg)
 		}
 	}
 }
