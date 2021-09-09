@@ -343,7 +343,7 @@ func validateDosLogAccessLogDest(accessLogDest string, fieldPath *field.Path) fi
 
 	err := appprotectdos.ValidateAppProtectDosAccessLogDest(accessLogDest)
 	if err != nil {
-		allErrs = append(allErrs, field.Invalid(fieldPath.Child("dosAccessLogDest"), accessLogDest, err.Error()))
+		allErrs = append(allErrs, field.Invalid(fieldPath, accessLogDest, err.Error()))
 	}
 	return allErrs
 }
