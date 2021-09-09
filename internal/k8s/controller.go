@@ -374,7 +374,7 @@ func (lbc *LoadBalancerController) addAppProtectUserSigHandler(handlers cache.Re
 	lbc.cacheSyncs = append(lbc.cacheSyncs, informer.HasSynced)
 }
 
-// addappProtectDosPolicyHandler creates dynamic informers for custom appprotectdos policy resource
+// addAppProtectDosPolicyHandler creates dynamic informers for custom appprotectdos policy resource
 func (lbc *LoadBalancerController) addAppProtectDosPolicyHandler(handlers cache.ResourceEventHandlerFuncs) {
 	informer := lbc.dynInformerFactory.ForResource(appprotectdos.DosPolicyGVR).Informer()
 	informer.AddEventHandler(handlers)
@@ -383,7 +383,7 @@ func (lbc *LoadBalancerController) addAppProtectDosPolicyHandler(handlers cache.
 	lbc.cacheSyncs = append(lbc.cacheSyncs, informer.HasSynced)
 }
 
-// addappProtectDosLogConfHandler creates dynamic informer for custom appprotectdos logging config resource
+// addAppProtectDosLogConfHandler creates dynamic informer for custom appprotectdos logging config resource
 func (lbc *LoadBalancerController) addAppProtectDosLogConfHandler(handlers cache.ResourceEventHandlerFuncs) {
 	informer := lbc.dynInformerFactory.ForResource(appprotectdos.DosLogConfGVR).Informer()
 	informer.AddEventHandler(handlers)
@@ -2233,7 +2233,7 @@ func (lbc *LoadBalancerController) createIngressEx(ing *networking.Ingress, vali
 			if apDosLogConfAntn, exists := ingEx.Ingress.Annotations[configs.AppProtectDosLogConfAnnotation]; exists {
 				logConf, logDst, err := lbc.getAppProtectDosLogConfAndDst(ing)
 				if err != nil {
-					glog.Warningf("Error Getting App Protect policy %v for Ingress %v/%v: %v", apDosLogConfAntn, ing.Namespace, ing.Name, err)
+					glog.Warningf("Error Getting App Protect Dos log Config %v for Ingress %v/%v: %v", apDosLogConfAntn, ing.Namespace, ing.Name, err)
 				} else {
 					ingEx.AppProtectDosLogConf = logConf
 					ingEx.AppProtectDosLogDst = logDst
