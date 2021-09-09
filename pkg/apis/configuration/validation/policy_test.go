@@ -1203,3 +1203,83 @@ func TestValidateWAFInvalid(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateBados(t *testing.T) {
+	tests := []struct {
+		bados *v1.Bados
+		msg string
+	}{
+		{
+			bados: &v1.Bados{
+				Enable: true,
+			},
+			msg: "waf enabled",
+		},
+		{
+			bados: &v1.Bados{
+				Enable:   true,
+				ApDosPolicy: "ns1/bados-pol",
+			},
+			msg: "cross ns reference",
+		},
+		{
+			bados: &v1.Bados{
+				Enable: true,
+				DosSecurityLog: &v1.DosSecurityLog{
+					Enable:  true,
+					DosLogDest: "syslog:server=8.7.7.7:517",
+				},
+			},
+			msg: "custom logdest",
+		},
+	}
+
+	for _, test := range tests {
+		allErrs := validateBados(test.bados, field.NewPath("bados"))
+		if len(allErrs) != 0 {
+			t.Errorf("validateBados() returned errors %v for valid input for the case of %v", allErrs, test.msg)
+		}
+	}
+}
+
+func TestValidateBadosInvalid(t *testing.T) {
+	tests := []struct {
+		bados *v1.Bados
+		msg string
+	}{
+		{
+			bados: &v1.Bados{
+				Enable:   true,
+				ApDosPolicy: "ns1/ap-pol/ns2",
+			},
+			msg: "invalid apDosPolicy format",
+		},
+		{
+			bados: &v1.Bados{
+				Enable: true,
+				DosSecurityLog: &v1.DosSecurityLog{
+					Enable:  true,
+					DosLogDest: "stdout",
+				},
+			},
+			msg: "invalid doslogdest",
+		},
+		{
+			bados: &v1.Bados{
+				Enable: true,
+				DosSecurityLog: &v1.DosSecurityLog{
+					Enable:    true,
+					ApDosLogConf: "ns1/log-conf/ns2",
+				},
+			},
+			msg: "invalid doslogConf format",
+		},
+	}
+
+	for _, test := range tests {
+		allErrs := validateBados(test.bados, field.NewPath("bados"))
+		if len(allErrs) == 0 {
+			t.Errorf("validateBados() returned no errors for invalid input for the case of %v", test.msg)
+		}
+	}
+}
