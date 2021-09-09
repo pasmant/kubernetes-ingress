@@ -39,8 +39,8 @@ const (
 	appProtectLogConfigFileName = "/etc/app_protect/bd/logger.cfg"
 
 	appProtectDosAgentInstallCmd    = "/usr/bin/adminstall"
-	appProtectDosAgentStartCmd      = "/usr/bin/admd -d --standalone > /var/log/adm/admd.log 2>&1"
-	appProtectDosAgentStartDebugCmd = "/usr/bin/admd -d --standalone --log debug > /var/log/adm/admd.log 2>&1"
+	appProtectDosAgentStartCmd      = "/usr/bin/admd -d --standalone"
+	appProtectDosAgentStartDebugCmd = "/usr/bin/admd -d --standalone"
 )
 
 // ServerConfig holds the config data for an upstream server in NGINX Plus.
@@ -532,7 +532,7 @@ func (lm *LocalManager) AppProtectDosAgentQuit() {
 func (lm *LocalManager) AppProtectDosAgentStart(apdaDone chan error, debug bool) {
 	glog.V(3).Info("Starting AppProtectDos Agent")
 
-	// Perform installtion by adminstall
+	// Perform installation by adminstall
 	cmdInstall := exec.Command(appProtectDosAgentInstallCmd)
 
 	if err := cmdInstall.Run(); err != nil {
@@ -546,6 +546,8 @@ func (lm *LocalManager) AppProtectDosAgentStart(apdaDone chan error, debug bool)
 	}
 
 	cmd := exec.Command("sh", "-c", appProtectDosAgentCmd)
+    cmd.Stdout = os.Stdout
+    cmd.Stderr = os.Stdout
 	if err := cmd.Start(); err != nil {
 		glog.Fatalf("Failed to start AppProtectDos Agent: %v", err)
 	}
