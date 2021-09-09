@@ -2105,6 +2105,92 @@ func TestAddBadosPolicyRefs(t *testing.T) {
 	}
 }
 
+func TestGetBadosPoliciesForAppProtectLogConf(t *testing.T) {
+	logConf := &conf_v1.Policy{
+		Spec: conf_v1.PolicySpec{
+			Bados: &conf_v1.Bados{
+				Enable: true,
+				DosSecurityLog: &conf_v1.DosSecurityLog{
+					Enable:    true,
+					ApDosLogConf: "ns1/logConf",
+				},
+			},
+		},
+	}
+
+	logConfNs2 := &conf_v1.Policy{
+		ObjectMeta: meta_v1.ObjectMeta{
+			Namespace: "ns1",
+		},
+		Spec: conf_v1.PolicySpec{
+			Bados: &conf_v1.Bados{
+				Enable: true,
+				DosSecurityLog: &conf_v1.DosSecurityLog{
+					Enable:    true,
+					ApDosLogConf: "ns2/logConf",
+				},
+			},
+		},
+	}
+
+	logConfNoNs := &conf_v1.Policy{
+		ObjectMeta: meta_v1.ObjectMeta{
+			Namespace: "default",
+		},
+		Spec: conf_v1.PolicySpec{
+			Bados: &conf_v1.Bados{
+				Enable: true,
+				DosSecurityLog: &conf_v1.DosSecurityLog{
+					Enable:    true,
+					ApDosLogConf: "logConf",
+				},
+			},
+		},
+	}
+
+	policies := []*conf_v1.Policy{
+		logConf, logConfNs2, logConfNoNs,
+	}
+
+	tests := []struct {
+		pols []*conf_v1.Policy
+		key  string
+		want []*conf_v1.Policy
+		msg  string
+	}{
+		{
+			pols: policies,
+			key:  "ns1/logConf",
+			want: []*conf_v1.Policy{logConf},
+			msg:  "Bados pols that ref logConf which has a namepace",
+		},
+		{
+			pols: policies,
+			key:  "default/logConf",
+			want: []*conf_v1.Policy{logConfNoNs},
+			msg:  "Bados pols that ref logConf which has no namepace",
+		},
+		{
+			pols: policies,
+			key:  "ns2/logConf",
+			want: []*conf_v1.Policy{logConfNs2},
+			msg:  "Bados pols that ref logConf which is in another ns",
+		},
+		{
+			pols: policies,
+			key:  "ns1/logConf-with-no-valid-refs",
+			want: nil,
+			msg:  "Bados pols where there is no valid logConf ref",
+		},
+	}
+	for _, test := range tests {
+		got := getBadosPoliciesForAppProtectLogConf(test.pols, test.key)
+		if diff := cmp.Diff(test.want, got); diff != "" {
+			t.Errorf("getBadosPoliciesForAppProtectLogConf() returned unexpected result for the case of: %v (-want +got):\n%s", test.msg, diff)
+		}
+	}
+}
+
 func TestPreSyncSecrets(t *testing.T) {
 	lbc := LoadBalancerController{
 		isNginxPlus: true,
