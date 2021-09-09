@@ -2394,7 +2394,7 @@ func (lbc *LoadBalancerController) getAppProtectDosLogConfAndDst(ing *networking
 		return nil, "", fmt.Errorf("Error Validating App Protect Destination Config for Ingress %v: %w", ing.Name, err)
 	}
 
-	logConf, err = lbc.appProtectDosConfiguration.GetAppDosResource(appprotectdos.DosLogConfGVK.Kind, logConfNsN)
+	logConf, err = lbc.appProtectDosConfiguration.GetAppResource(appprotectdos.DosLogConfGVK.Kind, logConfNsN)
 	if err != nil {
 		return nil, "", fmt.Errorf("Error retrieving App Protect Log Config for Ingress %v: %w", ing.Name, err)
 	}
@@ -2416,7 +2416,7 @@ func (lbc *LoadBalancerController) getAppProtectPolicy(ing *networking.Ingress) 
 func (lbc *LoadBalancerController) getAppProtectDosPolicy(ing *networking.Ingress) (apPolicy *unstructured.Unstructured, err error) {
 	polNsN := appprotect.ParseResourceReferenceAnnotation(ing.Namespace, ing.Annotations[configs.AppProtectDosPolicyAnnotation])
 
-	apPolicy, err = lbc.appProtectDosConfiguration.GetAppDosResource(appprotectdos.DosPolicyGVK.Kind, polNsN)
+	apPolicy, err = lbc.appProtectDosConfiguration.GetAppResource(appprotectdos.DosPolicyGVK.Kind, polNsN)
 	if err != nil {
 		return nil, fmt.Errorf("Error retrieving App Protect Dos Policy for Ingress %v: %w ", ing.Name, err)
 	}
@@ -2858,7 +2858,7 @@ func (lbc *LoadBalancerController) addBadosPolicyRefs(
 				apDosPolKey = fmt.Sprintf("%v/%v", pol.Namespace, apDosPolKey)
 			}
 
-			apDosPolicy, err := lbc.appProtectDosConfiguration.GetAppDosResource(appprotectdos.DosPolicyGVK.Kind, apDosPolKey)
+			apDosPolicy, err := lbc.appProtectDosConfiguration.GetAppResource(appprotectdos.DosPolicyGVK.Kind, apDosPolKey)
 			if err != nil {
 				return fmt.Errorf("Bados policy %v is invalid: %w", apDosPolKey, err)
 			}
@@ -2871,7 +2871,7 @@ func (lbc *LoadBalancerController) addBadosPolicyRefs(
 				logConfKey = fmt.Sprintf("%v/%v", pol.Namespace, logConfKey)
 			}
 
-			logConf, err := lbc.appProtectDosConfiguration.GetAppDosResource(appprotectdos.DosLogConfGVK.Kind, logConfKey)
+			logConf, err := lbc.appProtectDosConfiguration.GetAppResource(appprotectdos.DosLogConfGVK.Kind, logConfKey)
 			if err != nil {
 				return fmt.Errorf("Bados policy %v is invalid: %w", logConfKey, err)
 			}
@@ -3465,11 +3465,11 @@ func (lbc *LoadBalancerController) syncAppProtectDosPolicy(task task) {
 	if !polExists {
 		glog.V(2).Infof("Deleting AppProtectDosPolicy: %v\n", key)
 
-		changes, problems = lbc.appProtectDosConfiguration.DeleteDosPolicy(key)
+		changes, problems = lbc.appProtectDosConfiguration.DeletePolicy(key)
 	} else {
 		glog.V(2).Infof("Adding or Updating AppProtectDosPolicy: %v\n", key)
 
-		changes, problems = lbc.appProtectDosConfiguration.AddOrUpdateDosPolicy(obj.(*unstructured.Unstructured))
+		changes, problems = lbc.appProtectDosConfiguration.AddOrUpdatePolicy(obj.(*unstructured.Unstructured))
 	}
 
 	lbc.processAppProtectDosChanges(changes)
@@ -3491,11 +3491,11 @@ func (lbc *LoadBalancerController) syncAppProtectDosLogConf(task task) {
 	if !confExists {
 		glog.V(2).Infof("Deleting AppProtectDosLogConf: %v\n", key)
 
-		changes, problems = lbc.appProtectDosConfiguration.DeleteDosLogConf(key)
+		changes, problems = lbc.appProtectDosConfiguration.DeleteLogConf(key)
 	} else {
 		glog.V(2).Infof("Adding or Updating AppProtectDosLogConf: %v\n", key)
 
-		changes, problems = lbc.appProtectDosConfiguration.AddOrUpdateDosLogConf(obj.(*unstructured.Unstructured))
+		changes, problems = lbc.appProtectDosConfiguration.AddOrUpdateLogConf(obj.(*unstructured.Unstructured))
 	}
 
 	lbc.processAppProtectDosChanges(changes)

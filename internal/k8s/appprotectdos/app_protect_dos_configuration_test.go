@@ -174,7 +174,7 @@ func TestAddOrUpdateDosPolicy(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		aPChans, aPProbs := apc.AddOrUpdateDosPolicy(test.policy)
+		aPChans, aPProbs := apc.AddOrUpdatePolicy(test.policy)
 		if diff := cmp.Diff(test.expectedChanges, aPChans); diff != "" {
 			t.Errorf("test.expectedChanges: %q", test.expectedChanges)
 			t.Errorf("aPChans              : %q", aPChans)
@@ -256,7 +256,7 @@ func TestAddOrUpdateDosLogConf(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		aPChans, aPProbs := apc.AddOrUpdateDosLogConf(test.logconf)
+		aPChans, aPProbs := apc.AddOrUpdateLogConf(test.logconf)
 		if diff := cmp.Diff(test.expectedChanges, aPChans); diff != "" {
 			t.Errorf("AddOrUpdateLogConf() %q changes returned unexpected result (-want +got):\n%s", test.msg, diff)
 		}
@@ -294,7 +294,7 @@ func TestDeletePolicy(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		apChan, apProbs := appProtectConfiguration.DeleteDosPolicy(test.key)
+		apChan, apProbs := appProtectConfiguration.DeletePolicy(test.key)
 		if diff := cmp.Diff(test.expectedChanges, apChan); diff != "" {
 			t.Errorf("DeletePolicy() %q changes returned unexpected result (-want +got):\n%s", test.msg, diff)
 		}
@@ -332,7 +332,7 @@ func TestDeleteDosLogConf(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		apChan, apProbs := appProtectConfiguration.DeleteDosLogConf(test.key)
+		apChan, apProbs := appProtectConfiguration.DeleteLogConf(test.key)
 		if diff := cmp.Diff(test.expectedChanges, apChan); diff != "" {
 			t.Errorf("DeleteLogConf() %q changes returned unexpected result (-want +got):\n%s", test.msg, diff)
 		}
@@ -405,7 +405,7 @@ func TestGetAppProtectDosResource(t *testing.T) {
 	appProtectConfiguration.DosLogConfs["testing/test2"] = &DosLogConfEx{IsValid: false, Obj: &unstructured.Unstructured{}, ErrorMsg: "Validation Failed"}
 
 	for _, test := range tests {
-		_, err := appProtectConfiguration.GetAppDosResource(test.kind, test.key)
+		_, err := appProtectConfiguration.GetAppResource(test.kind, test.key)
 		if (err != nil) != test.wantErr {
 			t.Errorf("GetAppResource() returned %v on case %s", err, test.msg)
 		}

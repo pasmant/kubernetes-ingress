@@ -2086,8 +2086,8 @@ func TestAddBadosPolicyRefs(t *testing.T) {
 	lbc := LoadBalancerController{
 		appProtectDosConfiguration: appprotectdos.NewFakeConfiguration(),
 	}
-	lbc.appProtectDosConfiguration.AddOrUpdateDosPolicy(apDosPol)
-	lbc.appProtectDosConfiguration.AddOrUpdateDosLogConf(dosLogConf)
+	lbc.appProtectDosConfiguration.AddOrUpdatePolicy(apDosPol)
+	lbc.appProtectDosConfiguration.AddOrUpdateLogConf(dosLogConf)
 
 	for _, test := range tests {
 		resApDosPolicy := make(map[string]*unstructured.Unstructured)
