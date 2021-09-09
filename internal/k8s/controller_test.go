@@ -2105,6 +2105,83 @@ func TestAddBadosPolicyRefs(t *testing.T) {
 	}
 }
 
+func TestGetBadosPoliciesForAppProtectDosPolicy(t *testing.T) {
+	apDosPol := &conf_v1.Policy{
+		Spec: conf_v1.PolicySpec{
+			Bados: &conf_v1.Bados{
+				Enable:   true,
+				ApDosPolicy: "ns1/apDosPol",
+			},
+		},
+	}
+
+	apDosPolNs2 := &conf_v1.Policy{
+		ObjectMeta: meta_v1.ObjectMeta{
+			Namespace: "ns1",
+		},
+		Spec: conf_v1.PolicySpec{
+			Bados: &conf_v1.Bados{
+				Enable:   true,
+				ApDosPolicy: "ns2/apDosPol",
+			},
+		},
+	}
+
+	apDosPolNoNs := &conf_v1.Policy{
+		ObjectMeta: meta_v1.ObjectMeta{
+			Namespace: "default",
+		},
+		Spec: conf_v1.PolicySpec{
+			Bados: &conf_v1.Bados{
+				Enable:   true,
+				ApDosPolicy: "apDosPol",
+			},
+		},
+	}
+
+	policies := []*conf_v1.Policy{
+		apDosPol, apDosPolNs2, apDosPolNoNs,
+	}
+
+	tests := []struct {
+		pols []*conf_v1.Policy
+		key  string
+		want []*conf_v1.Policy
+		msg  string
+	}{
+		{
+			pols: policies,
+			key:  "ns1/apDosPol",
+			want: []*conf_v1.Policy{apDosPol},
+			msg:  "Bados pols that ref apDosPol which has a namepace",
+		},
+		{
+			pols: policies,
+			key:  "default/apDosPol",
+			want: []*conf_v1.Policy{apDosPolNoNs},
+			msg:  "Bados pols that ref apDosPol which has no namepace",
+		},
+		{
+			pols: policies,
+			key:  "ns2/apDosPol",
+			want: []*conf_v1.Policy{apDosPolNs2},
+			msg:  "Bados pols that ref apDosPol which is in another ns",
+		},
+		{
+			pols: policies,
+			key:  "ns1/apDosPol-with-no-valid-refs",
+			want: nil,
+			msg:  "Bados pols where there is no valid ref",
+		},
+	}
+	for _, test := range tests {
+		got := getBadosPoliciesForAppProtectDosPolicy(test.pols, test.key)
+		if diff := cmp.Diff(test.want, got); diff != "" {
+			t.Errorf("getBadosPoliciesForAppProtectDosPolicy() returned unexpected result for the case of: %v (-want +got):\n%s", test.msg, diff)
+		}
+	}
+}
+
 func TestGetBadosPoliciesForAppProtectLogConf(t *testing.T) {
 	logConf := &conf_v1.Policy{
 		Spec: conf_v1.PolicySpec{
