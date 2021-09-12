@@ -44,21 +44,16 @@ func ValidateAppProtectDosLogConf(logConf *unstructured.Unstructured) error {
 }
 
 var (
-	logDstEx     = regexp.MustCompile(`(?:syslog:server=((?:\d{1,3}\.){3}\d{1,3}|localhost):\d{1,5})|stderr|(?:\/[\S]+)+`)
-	logDstFileEx = regexp.MustCompile(`(?:\/[\S]+)+`)
+	logDstEx     = regexp.MustCompile(`(?:syslog:server=((?:\d{1,3}\.){3}\d{1,3}|localhost):\d{1,5})|stderr`)
 )
 
 // ValidateAppProtectDosLogDestination validates destination for log configuration
 func ValidateAppProtectDosLogDestination(dstAntn string) error {
-	errormsg := "Error parsing App Protect Dos Log config: Destination must follow format: syslog:server=<ip-address | localhost>:<port> or stderr or absolute path to file"
+	errormsg := "Error parsing App Protect Dos Log config: Destination must follow format: syslog:server=<ip-address | localhost>:<port> or stderr"
 	if !logDstEx.MatchString(dstAntn) {
 		return fmt.Errorf("%s Log Destination did not follow format", errormsg)
 	}
 	if dstAntn == "stderr" {
-		return nil
-	}
-
-	if logDstFileEx.MatchString(dstAntn) {
 		return nil
 	}
 
