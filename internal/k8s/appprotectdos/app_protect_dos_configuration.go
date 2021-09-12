@@ -3,6 +3,8 @@ package appprotectdos
 import (
 	"fmt"
 
+	"github.com/nginxinc/kubernetes-ingress/internal/k8s/appprotect_common"
+
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
@@ -125,7 +127,7 @@ type DosLogConfEx struct {
 }
 
 func createAppProtectDosLogConfEx(dosLogConfObj *unstructured.Unstructured) (*DosLogConfEx, error) {
-	err := ValidateAppProtectDosLogConf(dosLogConfObj)
+	err := validateAppProtectDosLogConf(dosLogConfObj)
 	if err != nil {
 		return &DosLogConfEx{
 			Obj:      dosLogConfObj,
@@ -141,7 +143,7 @@ func createAppProtectDosLogConfEx(dosLogConfObj *unstructured.Unstructured) (*Do
 
 // AddOrUpdatePolicy adds or updates an App Protect Dos Policy to App Protect Dos Configuration
 func (ci *ConfigurationImpl) AddOrUpdatePolicy(policyObj *unstructured.Unstructured) (changes []Change, problems []Problem) {
-	resNsName := GetNsName(policyObj)
+	resNsName := appprotect_common.GetNsName(policyObj)
 	policy, err := createAppProtectDosPolicyEx(policyObj)
 	if err != nil {
 		ci.DosPolicies[resNsName] = policy
@@ -154,7 +156,7 @@ func (ci *ConfigurationImpl) AddOrUpdatePolicy(policyObj *unstructured.Unstructu
 
 // AddOrUpdateLogConf adds or updates App Protect Dos Log Configuration to App Protect Dos Configuration
 func (ci *ConfigurationImpl) AddOrUpdateLogConf(logconfObj *unstructured.Unstructured) (changes []Change, problems []Problem) {
-	resNsName := GetNsName(logconfObj)
+	resNsName := appprotect_common.GetNsName(logconfObj)
 	logConf, err := createAppProtectDosLogConfEx(logconfObj)
 	ci.DosLogConfs[resNsName] = logConf
 	if err != nil {
@@ -223,7 +225,7 @@ func NewFakeConfiguration() Configuration {
 
 // AddOrUpdatePolicy adds or updates an App Protect Policy to App Protect Dos Configuration
 func (fc *FakeConfiguration) AddOrUpdatePolicy(policyObj *unstructured.Unstructured) (changes []Change, problems []Problem) {
-	resNsName := GetNsName(policyObj)
+	resNsName := appprotect_common.GetNsName(policyObj)
 	policy := &DosPolicyEx{
 		Obj:     policyObj,
 		IsValid: true,
@@ -234,7 +236,7 @@ func (fc *FakeConfiguration) AddOrUpdatePolicy(policyObj *unstructured.Unstructu
 
 // AddOrUpdateLogConf adds or updates App Protect Dos Log Configuration to App Protect Dos Configuration
 func (fc *FakeConfiguration) AddOrUpdateLogConf(logConfObj *unstructured.Unstructured) (changes []Change, problems []Problem) {
-	resNsName := GetNsName(logConfObj)
+	resNsName := appprotect_common.GetNsName(logConfObj)
 	logConf := &DosLogConfEx{
 		Obj:     logConfObj,
 		IsValid: true,

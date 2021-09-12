@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/nginxinc/kubernetes-ingress/internal/k8s/appprotect"
+	"github.com/nginxinc/kubernetes-ingress/internal/k8s/appprotect_common"
 	"github.com/nginxinc/kubernetes-ingress/internal/k8s/appprotectdos"
 	v1 "github.com/nginxinc/kubernetes-ingress/pkg/apis/configuration/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
@@ -295,7 +295,7 @@ func validateLogConf(logConf, logDest string, fieldPath *field.Path) field.Error
 		}
 	}
 
-	err := appprotect.ValidateAppProtectLogDestination(logDest)
+	err := appprotect_common.ValidateAppProtectLogDestination(logDest)
 	if err != nil {
 		allErrs = append(allErrs, field.Invalid(fieldPath.Child("logDest"), logDest, err.Error()))
 	}
@@ -331,7 +331,7 @@ func validateDosLogConf(logConf, logDest string, fieldPath *field.Path) field.Er
 		}
 	}
 
-	err := appprotectdos.ValidateAppProtectDosLogDestination(logDest)
+	err := appprotect_common.ValidateAppProtectLogDestination(logDest)
 	if err != nil {
 		allErrs = append(allErrs, field.Invalid(fieldPath.Child("dosLogDest"), logDest, err.Error()))
 	}
