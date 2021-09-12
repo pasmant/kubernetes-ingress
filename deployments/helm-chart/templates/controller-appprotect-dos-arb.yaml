@@ -17,12 +17,10 @@ spec:
     spec:
       containers:
         - name: {{ include "nginx-ingress.appProtectDosArbName" . }}
-          image: "{{ .Values.controller.appprotectdos.arbitrator.repository }}"
-          imagePullPolicy: IfNotPresent
+          image: "{{ .Values.controller.appprotectdos.arbitrator.image.repository }}:{{ .Values.controller.appprotectdos.arbitrator.image.tag }}"
+          imagePullPolicy: "{{ .Values.controller.appprotectdos.arbitrator.image.pullPolicy }}"
           resources:
-            limits:
-              memory: "128Mi"
-              cpu: "500m"
+{{ toYaml .Values.controller.appprotectdos.arbitrator.resources | indent 12 }}
           ports:
             - containerPort: 3000
 ---
