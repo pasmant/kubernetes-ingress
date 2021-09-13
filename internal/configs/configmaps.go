@@ -502,6 +502,14 @@ func ParseConfigMap(cfgm *v1.ConfigMap, nginxPlus bool, hasAppProtect bool, hasA
 	}
 
 	if hasAppProtectDos {
+		if debugFlag, exists, err := GetMapKeyAsBool(cfgm.Data, "app-protect-dos-debug", cfgm); exists {
+			if err != nil {
+				glog.Error(err)
+			} else {
+				cfgParams.AppProtectDosDebug = debugFlag
+			}
+		}
+
 	    if appProtectDosLogFormat, exists := cfgm.Data["app-protect-dos-log-format"]; exists {
             cfgParams.MainAppProtectDosLogFormat = appProtectDosLogFormat
         }

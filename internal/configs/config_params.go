@@ -54,6 +54,7 @@ type ConfigParams struct {
 	MainAppProtectCPUThresholds            string
 	MainAppProtectPhysicalMemoryThresholds string
 	AppProtectDosEnable                    string
+	AppProtectDosDebug					   bool
 	AppProtectDosPolicy                    string
 	AppProtectDosLogConf                   string
 	AppProtectDosLogEnable                 string

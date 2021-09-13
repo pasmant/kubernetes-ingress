@@ -244,10 +244,6 @@ Below we describe the available command-line arguments:
    	Requires -nginx-plus
 
 	 	- If the argument is set, but `nginx-plus` is set to false, the Ingress Controller will fail to start.
-
--app-protect-dos-debug
-
-	  Enable debugging for App Protect Dos. Run the module with debug log mode.
 	
 -ready-status
 

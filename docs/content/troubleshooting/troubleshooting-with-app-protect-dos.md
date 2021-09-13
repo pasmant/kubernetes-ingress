@@ -83,8 +83,8 @@ Events:
 ```
 Note that in the events section, we have a `Normal` event with the `AddedOrUpdated` reason, which informs us that the configuration was successfully applied.
 
-## Run App Protect Dos in Debug Mode
+## Run App Protect Dos in Debug log Mode
 
-When you set the Ingress Controller to use debug mode, the setting also applies to the App Protect Dos module.  See  [Running NGINX in the Debug Mode](/nginx-ingress-controller/troubleshooting/#running-nginx-in-the-debug-mode) for instructions.
+When you set the Ingress Controller to use debug log mode, the setting also applies to the App Protect Dos module.  See  [Running NGINX in the Debug Mode](/nginx-ingress-controller/troubleshooting/#running-nginx-in-the-debug-mode) for instructions.
 
-You can enable debug log mode to App Protect Dos module by setting the `app-protect-dos-debug` [cli-argument](/nginx-ingress-controller/configuration/global-configuration/command-line-arguments/#app-protect-dos-debug).
+You can enable debug log mode to App Protect Dos module only by setting the `app-protect-dos-debug` [configmap](/nginx-ingress-controller/configuration/global-configuration/configmap-resource#modules).

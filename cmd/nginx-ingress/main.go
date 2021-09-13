@@ -72,8 +72,6 @@ var (
 
 	appProtectDos = flag.Bool("enable-app-protect-dos", false, "Enable support for NGINX App Protect dos. Requires -nginx-plus.")
 
-	appProtectDosDebug = flag.Bool("app-protect-dos-debug", false, "Enable debugging for App Protect Dos. Uses the log debug flag")
-
 	ingressClass = flag.String("ingress-class", "nginx",
 		`A class of the Ingress controller.
 
@@ -431,13 +429,6 @@ func main() {
 		nginxManager.AppProtectPluginStart(aPPluginDone)
 	}
 
-	var aPPDosAgentDone chan error
-
-	if *appProtectDos {
-		aPPDosAgentDone = make(chan error, 1)
-		nginxManager.AppProtectDosAgentStart(aPPDosAgentDone, *nginxDebug || *appProtectDosDebug) // Add Debug bool option via config file
-	}
-
 	var sslRejectHandshake bool
 
 	if *defaultServerSecret != "" {
@@ -562,6 +553,14 @@ func main() {
 	if *enableTLSPassthrough {
 		var emptyFile []byte
 		nginxManager.CreateTLSPassthroughHostsConfig(emptyFile)
+	}
+
+	var aPPDosAgentDone chan error
+
+	if *appProtectDos {
+		glog.Errorf("cfgParams.AppProtectDosDebug: %v", cfgParams.AppProtectDosDebug)
+		aPPDosAgentDone = make(chan error, 1)
+		nginxManager.AppProtectDosAgentStart(aPPDosAgentDone, *nginxDebug || cfgParams.AppProtectDosDebug) // Add Debug bool option via config file
 	}
 
 	nginxDone := make(chan error, 1)
