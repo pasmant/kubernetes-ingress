@@ -22,9 +22,6 @@ controller:
     ## Enable the App Protect Dos module in the Ingress Controller.
     enable: false
 
-    ## Enable App Protect Dos debug logs.
-    debug: false
-
     livenessStatus:
       ## Enables liveness from App Protect Dos
       enable: false
