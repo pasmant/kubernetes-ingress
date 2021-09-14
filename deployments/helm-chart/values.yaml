@@ -32,24 +32,6 @@ controller:
       ## Set the port where the liveness is exposed.
       port: 8090
 
-    ## Arbitrator options
-    arbitrator:
-      ## The resources of the Arbitrator pods.
-      resources: {}
-#        limits:
-#          cpu: 500m
-#          memory: 128Mi
-
-      image:
-        ## The image repository of the Arbitrator.
-        repository: docker-registry.nginx.com/nap-dos/app_protect_dos_arb
-
-        ## The tag of the Ingress controller image.
-        tag: "latest"
-
-        ## The pull policy for the Ingress controller image.
-        pullPolicy: IfNotPresent
-
   ## Enables the Ingress controller pods to use the host's network namespace.
   hostNetwork: false
 

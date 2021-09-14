@@ -14,6 +14,8 @@ This chart deploys the NGINX Ingress controller in your Kubernetes cluster.
     - Alternatively, pull an Ingress controller image with NGINX Plus and push it to your private registry by following the instructions from [here](https://docs.nginx.com/nginx-ingress-controller/installation/pulling-ingress-controller-image).
     - Alternatively, you can build an Ingress controller image with NGINX Plus and push it to your private registry by following the instructions from [here](https://docs.nginx.com/nginx-ingress-controller/installation/building-ingress-controller-image).
     - Update the `controller.image.repository` field of the `values-plus.yaml` accordingly.
+  - If you’d like to use App Protect Dos, please install App Protect Dos Arbitrator helm chart
+
 
 ## Getting the Chart Sources
 
@@ -59,9 +61,9 @@ For NGINX Plus: (assuming you have pushed the Ingress controller image `nginx-pl
 ```console
 $ helm install my-release nginx-stable/nginx-ingress --set controller.image.repository=myregistry.example.com/nginx-plus-ingress --set controller.nginxplus=true
 ```
-For App Protect Dos: (assuming you have pushed the Ingress controller image `nginx-plus-ingress` to your private registry `myregistry.example.com` and pushed the arbitrator image `app-protect-dos-arb` to your private registry `myregistry.example.com`)
+For App Protect Dos: (assuming you have pushed the Ingress controller image `nginx-plus-ingress` to your private registry `myregistry.example.com`
 ```console
-$ helm install --create-namespace -n nginx-ingress my-release nginx-stable/nginx-ingress --set controller.image.repository=myregistry.example.com/nginx-plus-ingress --set controller.nginxplus=true --set controller.appprotectdos.enable=true --set controller.appprotectdos.arbitrator.repository=myregistry.example.com/app-protect-dos-arb
+$ helm install --create-namespace -n nginx-ingress my-release nginx-stable/nginx-ingress --set controller.image.repository=myregistry.example.com/nginx-plus-ingress --set controller.nginxplus=true --set controller.appprotectdos.enable=true
 ```
 
 **Note**: If you wish to use the experimental repository, replace `stable` with `edge` and add the `--devel` flag.
@@ -245,14 +247,9 @@ Parameter | Description | Default
 `controller.pod.extraLabels` | The additional extra labels of the Ingress Controller pod. | {}
 `controller.appprotect.enable` | Enables the App Protect module in the Ingress Controller. | false
 `controller.appprotectdos.enable` | Enables the App Protect Dos module in the Ingress Controller. | false
-`controller.appprotectdos.debug` | Enables debug logs for App Protect Dos | false
 `controller.appprotectdos.livenessStatus.enable` | Enables the liveness inside the deployment. Need also add to the configmap liveness enable. | false
-`controller.appprotectdos.livenessStatus.uri` | et the uri of the liveness location. | app_protect_dos_liveness
+`controller.appprotectdos.livenessStatus.uri` | Set the uri of the liveness location. | app_protect_dos_liveness
 `controller.appprotectdos.livenessStatus.port` | Set the port where the liveness is exposed. | 8090
-`controller.appprotectdos.arbitrator.resources` | The resources of the Arbitrator pods. | {}
-`controller.appprotectdos.arbitrator.image.repository` | The image repository of the Arbitrator image. | docker-registry.nginx.com/nap-dos/app_protect_dos_arb
-`controller.appprotectdos.arbitrator.image.tag` | The tag of the Arbitrator image. | latest
-`controller.appprotectdos.arbitrator.image.pullPolicy` | The pull policy for the Arbitrator image. | IfNotPresent
 `controller.readyStatus.enable` | Enables the readiness endpoint `"/nginx-ready"`. The endpoint returns a success code when NGINX has loaded all the config after the startup. This also configures a readiness probe for the Ingress Controller pods that uses the readiness endpoint. | true
 `controller.readyStatus.port` | The HTTP port for the readiness endpoint. | 8081
 `controller.enableLatencyMetrics` |  Enable collection of latency metrics for upstreams. Requires `prometheus.create`. | false

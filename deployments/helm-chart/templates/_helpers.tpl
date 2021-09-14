@@ -69,10 +69,3 @@ Expand app name.
 {{- define "nginx-ingress.appName" -}}
 {{- default (include "nginx-ingress.name" .) .Values.controller.name -}}
 {{- end -}}
-
-{{/*
-Expand app protect dos arb name.
-*/}}
-{{- define "nginx-ingress.appProtectDosArbName" -}}
-{{- printf "%s-%s" (include "nginx-ingress.name" .) "appprotect-dos-arb" -}}
-{{- end -}}
