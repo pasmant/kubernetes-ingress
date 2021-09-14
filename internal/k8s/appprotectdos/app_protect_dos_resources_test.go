@@ -138,3 +138,59 @@ func TestValidateAppProtectDosPolicy(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateAppProtectDosName(t *testing.T) {
+	// Positive test cases
+	posDstAntns := []string{"example.com"}
+
+	// Negative test cases item, expected error message
+	negDstAntns := [][]string{
+		{"very very very very very very very very very very very very very very very very very very long Name", "App Protect Dos Name max length is 64"},
+	}
+
+	for _, tCase := range posDstAntns {
+		err := ValidateAppProtectDosName(tCase)
+		if err != nil {
+			t.Errorf("got %v expected nil", err)
+		}
+	}
+
+	for _, nTCase := range negDstAntns {
+		err := ValidateAppProtectDosName(nTCase[0])
+		if err == nil {
+			t.Errorf("got no error expected error containing %s", nTCase[1])
+		} else {
+			if !strings.Contains(err.Error(), nTCase[1]) {
+				t.Errorf("got %v expected to contain: %s", err, nTCase[1])
+			}
+		}
+	}
+}
+
+func TestValidateAppProtectDosMonitor(t *testing.T) {
+	// Positive test cases
+	posDstAntns := []string{"example.com", "https://example.com/good_path"}
+
+	// Negative test cases item, expected error message
+	negDstAntns := [][]string{
+		{"http://example.com/%", "App Protect Dos Monitor must have valid URL"},
+	}
+
+	for _, tCase := range posDstAntns {
+		err := ValidateAppProtectDosMonitor(tCase)
+		if err != nil {
+			t.Errorf("got %v expected nil", err)
+		}
+	}
+
+	for _, nTCase := range negDstAntns {
+		err := ValidateAppProtectDosMonitor(nTCase[0])
+		if err == nil {
+			t.Errorf("got no error expected error containing %s", nTCase[1])
+		} else {
+			if !strings.Contains(err.Error(), nTCase[1]) {
+				t.Errorf("got %v expected to contain: %s", err, nTCase[1])
+			}
+		}
+	}
+}

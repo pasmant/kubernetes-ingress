@@ -2383,17 +2383,7 @@ func (lbc *LoadBalancerController) getAppProtectLogConfAndDst(ing *networking.In
 func (lbc *LoadBalancerController) getAppProtectDosLogConfAndDst(ing *networking.Ingress) (logConf *unstructured.Unstructured, logDst string, err error) {
 	logConfNsN := appprotect_common.ParseResourceReferenceAnnotation(ing.Namespace, ing.Annotations[configs.AppProtectDosLogConfAnnotation])
 
-	if _, exists := ing.Annotations[configs.AppProtectDosLogConfDstAnnotation]; !exists {
-		return nil, "", fmt.Errorf("Error: %v requires %v in %v", configs.AppProtectDosLogConfAnnotation, configs.AppProtectDosLogConfDstAnnotation, ing.Name)
-	}
-
 	logDst = ing.Annotations[configs.AppProtectDosLogConfDstAnnotation]
-
-	err = appprotect_common.ValidateAppProtectLogDestination(logDst)
-
-	if err != nil {
-		return nil, "", fmt.Errorf("Error Validating App Protect Destination Config for Ingress %v: %w", ing.Name, err)
-	}
 
 	logConf, err = lbc.appProtectDosConfiguration.GetAppResource(appprotectdos.DosLogConfGVK.Kind, logConfNsN)
 	if err != nil {
