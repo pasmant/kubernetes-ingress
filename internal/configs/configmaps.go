@@ -513,6 +513,30 @@ func ParseConfigMap(cfgm *v1.ConfigMap, nginxPlus bool, hasAppProtect bool, hasA
 	    if appProtectDosLogFormat, exists := cfgm.Data["app-protect-dos-log-format"]; exists {
             cfgParams.MainAppProtectDosLogFormat = appProtectDosLogFormat
         }
+
+		if appProtectDosMaxDaemon, exists, err := GetMapKeyAsUint64(cfgm.Data, "app-protect-dos-install-max-daemons", cfgm, true); exists {
+			if err != nil {
+				glog.Error(err)
+			} else {
+				cfgParams.AppProtectDosMaxDaemon = appProtectDosMaxDaemon
+			}
+		}
+
+		if appProtectDosMaxWorkers, exists, err := GetMapKeyAsUint64(cfgm.Data, "app-protect-dos-install-max-workers", cfgm, true); exists {
+			if err != nil {
+				glog.Error(err)
+			} else {
+				cfgParams.AppProtectDosMaxWorkers = appProtectDosMaxWorkers
+			}
+		}
+
+		if appProtectDosMemory, exists, err := GetMapKeyAsUint64(cfgm.Data, "app-protect-dos-install-memory", cfgm, true); exists {
+			if err != nil {
+				glog.Error(err)
+			} else {
+				cfgParams.AppProtectDosMemory = appProtectDosMemory
+			}
+		}
     }
 
 	return cfgParams

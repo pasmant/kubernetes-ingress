@@ -186,4 +186,7 @@ See the doc about [VirtualServer and VirtualServerRoute resources](/nginx-ingres
 |``app-protect-physical-memory-util-thresholds`` | Sets the ``app_protect_physical_memory_util_thresholds`` [global directive](/nginx-app-protect/configuration/#global-directives). | ``high=100 low=100`` |  | 
 |``app-protect-dos-log-format`` | Set new directive ``log_format`` with the name "log_dos" with customize format | N/A |  | 
 |``app-protect-dos-debug`` | Set debug log level for App Protect Dos | False |  |
+|``app-protect-dos-install-max-daemons`` | Max number of ADMD instances | 1 |  |
+|``app-protect-dos-install-memory`` | RAM memory size to consume in MB | 50% of free RAM in the container or 80MB, the smaller |  |
+|``app-protect-dos-install-max-workers`` | Max number of nginx processes to support | Number of CPU cores in the machine |  |
 {{% /table %}} 

@@ -558,9 +558,8 @@ func main() {
 	var aPPDosAgentDone chan error
 
 	if *appProtectDos {
-		glog.Errorf("cfgParams.AppProtectDosDebug: %v", cfgParams.AppProtectDosDebug)
 		aPPDosAgentDone = make(chan error, 1)
-		nginxManager.AppProtectDosAgentStart(aPPDosAgentDone, *nginxDebug || cfgParams.AppProtectDosDebug) // Add Debug bool option via config file
+		nginxManager.AppProtectDosAgentStart(aPPDosAgentDone, *nginxDebug || cfgParams.AppProtectDosDebug, cfgParams.AppProtectDosMaxDaemon, cfgParams.AppProtectDosMaxWorkers, cfgParams.AppProtectDosMemory) // Add Debug bool option via config file
 	}
 
 	nginxDone := make(chan error, 1)
