@@ -67,10 +67,6 @@ spec:
         - name: prometheus
           containerPort: {{ .Values.prometheus.port }}
 {{- end }}
-{{- if and .Values.controller.appprotectdos.enable (.Values.controller.appprotectdos.livenessStatus.enable)}}
-        - name: liveness-port
-          containerPort: {{ .Values.controller.appprotectdos.livenessStatus.port}}
-{{ end }}
 {{- if .Values.controller.readyStatus.enable }}
         - name: readiness-port
           containerPort: {{ .Values.controller.readyStatus.port}}
@@ -79,14 +75,6 @@ spec:
             path: /nginx-ready
             port: readiness-port
           periodSeconds: 1
-{{- end }}
-{{- if and .Values.controller.appprotectdos.enable (.Values.controller.appprotectdos.livenessStatus.enable)}}
-        livenessProbe:
-          httpGet:
-            path: {{ .Values.controller.appprotectdos.livenessStatus.uri}}
-            port: liveness-port
-          initialDelaySeconds: 60
-          periodSeconds: 10
 {{- end }}
         resources:
 {{ toYaml .Values.controller.resources | indent 10 }}

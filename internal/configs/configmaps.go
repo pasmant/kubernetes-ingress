@@ -513,25 +513,6 @@ func ParseConfigMap(cfgm *v1.ConfigMap, nginxPlus bool, hasAppProtect bool, hasA
 	    if appProtectDosLogFormat, exists := cfgm.Data["app-protect-dos-log-format"]; exists {
             cfgParams.MainAppProtectDosLogFormat = appProtectDosLogFormat
         }
-        if appProtectDosLivenessEnable, exists, err := GetMapKeyAsBool(cfgm.Data, "app-protect-dos-liveness-enable", cfgm); exists {
-            if err != nil {
-                glog.Error(err)
-            } else {
-                if appProtectDosLivenessEnable {
-                    cfgParams.MainAppProtectDosLivenessEnable = true
-                    if appProtectDosLivenessURI, exists := cfgm.Data["app-protect-dos-liveness-uri"]; exists {
-                        cfgParams.MainAppProtectDosLivenessURI = appProtectDosLivenessURI
-                    }
-                    if appProtectDosLivenessPort, exists, err := GetMapKeyAsInt(cfgm.Data, "app-protect-dos-liveness-port", cfgm); exists {
-                        if err != nil {
-                            glog.Error(err)
-                        } else {
-                            cfgParams.MainAppProtectDosLivenessPort = appProtectDosLivenessPort
-                        }
-                    }
-                }
-            }
-        }
     }
 
 	return cfgParams
@@ -596,9 +577,6 @@ func GenerateNginxMainConfig(staticCfgParams *StaticConfigParams, config *Config
 		AppProtectCPUThresholds:            config.MainAppProtectCPUThresholds,
 		AppProtectPhysicalMemoryThresholds: config.MainAppProtectPhysicalMemoryThresholds,
 		AppProtectDosLogFormat:             config.MainAppProtectDosLogFormat,
-		AppProtectDosLivenessEnable:        config.MainAppProtectDosLivenessEnable,
-		AppProtectDosLivenessURI:           config.MainAppProtectDosLivenessURI,
-		AppProtectDosLivenessPort:          config.MainAppProtectDosLivenessPort,
 		InternalRouteServer:                staticCfgParams.EnableInternalRoutes,
 		InternalRouteServerName:            staticCfgParams.PodName,
 		LatencyMetrics:                     staticCfgParams.EnableLatencyMetrics,

@@ -247,9 +247,6 @@ Parameter | Description | Default
 `controller.pod.extraLabels` | The additional extra labels of the Ingress Controller pod. | {}
 `controller.appprotect.enable` | Enables the App Protect module in the Ingress Controller. | false
 `controller.appprotectdos.enable` | Enables the App Protect Dos module in the Ingress Controller. | false
-`controller.appprotectdos.livenessStatus.enable` | Enables the liveness inside the deployment. Need also add to the configmap liveness enable. | false
-`controller.appprotectdos.livenessStatus.uri` | Set the uri of the liveness location. | app_protect_dos_liveness
-`controller.appprotectdos.livenessStatus.port` | Set the port where the liveness is exposed. | 8090
 `controller.readyStatus.enable` | Enables the readiness endpoint `"/nginx-ready"`. The endpoint returns a success code when NGINX has loaded all the config after the startup. This also configures a readiness probe for the Ingress Controller pods that uses the readiness endpoint. | true
 `controller.readyStatus.port` | The HTTP port for the readiness endpoint. | 8081
 `controller.enableLatencyMetrics` |  Enable collection of latency metrics for upstreams. Requires `prometheus.create`. | false

@@ -78,12 +78,6 @@ http {
     include /etc/nginx/waf/nac-usersigs/index.conf;
     {{- end}}
 
-    {{- if .AppProtectDosLoadModule}}
-        {{- if .AppProtectDosLivenessEnable}}
-    app_protect_dos_liveness on uri:/{{.AppProtectDosLivenessURI}} port:{{.AppProtectDosLivenessPort}};
-        {{- end}}
-    {{- end}}
-
     sendfile        on;
     #tcp_nopush     on;
 
@@ -127,24 +121,6 @@ http {
     include oidc/oidc_common.conf;
     {{- end}}
 
-    {{- if .AppProtectDosLoadModule}}
-        {{- if .AppProtectDosLivenessEnable}}
-    server {
-        server_name probe;
-        listen {{.AppProtectDosLivenessPort}};
-        access_log off;
-        location /{{.AppProtectDosLivenessURI}} {
-            app_protect_dos_enable on;
-            proxy_pass http://localhost:8091;
-        }
-    }
-
-    server {
-        listen 8091;
-        return 503;
-    }
-        {{- end}}
-    {{- end}}
     server {
         # required to support the Websocket protocol in VirtualServer/VirtualServerRoutes
         set $default_connection_header "";

@@ -206,9 +206,6 @@ type MainConfig struct {
 	AppProtectPhysicalMemoryThresholds string
 	AppProtectDosLoadModule            bool
 	AppProtectDosLogFormat             string
-	AppProtectDosLivenessEnable        bool
-	AppProtectDosLivenessURI           string
-	AppProtectDosLivenessPort          int
 	InternalRouteServer                bool
 	InternalRouteServerName            string
 	LatencyMetrics                     bool
