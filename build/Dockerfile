@@ -236,7 +236,7 @@ LABEL org.nginx.kic.image.build.nginx.vesion="${NGINX_PLUS_VERSION}${NGINX_VERSI
 
 
 ############################################# Build nginx-ingress in golang container #############################################
-FROM golang:1.17-alpine AS builder
+FROM golang:1.17.3-alpine AS builder
 ARG IC_VERSION
 ARG GIT_COMMIT
 ARG DATE
