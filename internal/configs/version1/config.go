@@ -209,6 +209,7 @@ type MainConfig struct {
 	AppProtectDosLoadModule            bool
 	AppProtectDosLogFormat             []string
 	AppProtectDosLogFormatEscaping     string
+	AppProtectDosArbFqdn               string
 	InternalRouteServer                bool
 	InternalRouteServerName            string
 	LatencyMetrics                     bool
