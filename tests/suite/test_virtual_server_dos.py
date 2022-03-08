@@ -5,7 +5,10 @@ import pytest
 import subprocess
 from datetime import datetime
 
-from settings import TEST_DATA
+from settings import (
+    DEPLOYMENTS,
+    TEST_DATA,
+)
 from suite.custom_resources_utils import (
     create_dos_logconf_from_yaml,
     create_dos_policy_from_yaml,
@@ -28,7 +31,9 @@ from suite.resources_utils import (
     nginx_reload,
     scale_deployment,
     get_pods_amount_with_name,
-    get_pods_amount, clear_file_contents,
+    clear_file_contents,
+    delete_dos_arbitrator,
+    create_dos_arbitrator,
 )
 from suite.vs_vsr_resources_utils import create_virtual_server_from_yaml, delete_virtual_server, \
     get_vs_nginx_template_conf
@@ -435,8 +440,8 @@ class TestDos:
             [f"exec {TEST_DATA}/dos/good_clients_xff.sh {virtual_server_setup_dos.vs_host} {dos_setup.req_url}"],
             preexec_fn=os.setsid, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-        print("Learning for max 10 minutes")
-        find_in_log(kube_apis, log_loc, syslog_pod, ingress_controller_prerequisites.namespace, 600, "learning_confidence=\"Ready\"")
+        print("Learning for max 15 minutes")
+        find_in_log(kube_apis, log_loc, syslog_pod, ingress_controller_prerequisites.namespace, 900, "learning_confidence=\"Ready\"")
 
         print("------------------------- Check new IC pod get info from arbitrator -----------------------------")
         ic_ns = ingress_controller_prerequisites.namespace
@@ -446,8 +451,8 @@ class TestDos:
             wait_before_test()
 
         print("------------------------- Check if new pod receive info from arbitrator -----------------------------")
-        print("Wait for 30 seconds")
-        wait_before_test(30)
+        print("Wait for 60 seconds")
+        wait_before_test(60)
 
         log_contents = get_file_contents(kube_apis.v1, log_loc, syslog_pod, ingress_controller_prerequisites.namespace)
         log_info_dic = log_content_to_dic(log_contents)
@@ -459,6 +464,105 @@ class TestDos:
         for log in log_info_dic:
             if log['unit_hostname'] not in learning_units_hostname and log['learning_confidence'] == "Ready":
                 learning_units_hostname.append(log['unit_hostname'])
+
+        assert (
+                len(learning_units_hostname) == 2
+        )
+
+    @pytest.mark.skip
+    def test_dos_arbitrator_different_ns(
+            self, kube_apis, ingress_controller_prerequisites, crd_ingress_controller_with_dos,
+            virtual_server_setup_dos, dos_setup, test_namespace
+    ):
+        """
+        Test App Protect Dos: Check new IC pod get learning info with arbitrator from different namespace
+        """
+
+        print("Remove dos arbitrator from namesapce: ", ingress_controller_prerequisites.namespace)
+        delete_dos_arbitrator(
+            kube_apis.v1, kube_apis.apps_v1_api, "appprotect-dos-arb", ingress_controller_prerequisites.namespace
+        )
+
+        print("------------------------- Create dos arbitrator Namespace -----------------------")
+        arbitrator_ns_yaml = f"{TEST_DATA}/dos/arbitrator_ns.yaml"
+        res = create_items_from_yaml(kube_apis, arbitrator_ns_yaml, "")
+
+        print("------------------------- Create dos arbitrator in arbitrator namespace -----------------------")
+        create_dos_arbitrator(
+            kube_apis.v1,
+            kube_apis.apps_v1_api,
+            res["Namespace"],
+            f"{TEST_DATA}/dos/appprotect-dos-arb.yaml",
+            f"{TEST_DATA}/dos/appprotect-dos-arb-svc.yaml"
+        )
+
+        print(f"------------- Replace ConfigMap --------------")
+        replace_configmap_from_yaml(
+            kube_apis.v1,
+            ingress_controller_prerequisites.config_map["metadata"]["name"],
+            ingress_controller_prerequisites.namespace,
+            f"{TEST_DATA}/dos/nginx-config-arb-dif-ns.yaml"
+        )
+
+        print("----------------------- Get syslog pod name ----------------------")
+        syslog_pod = self.getPodNameThatContains(kube_apis, ingress_controller_prerequisites.namespace, "syslog")
+        assert "syslog" in syslog_pod
+        log_loc = f"/var/log/messages"
+        clear_file_contents(kube_apis.v1, log_loc, syslog_pod, ingress_controller_prerequisites.namespace)
+
+
+        # print("------------------------- Learning Phase -----------------------------")
+        print("start good clients requests")
+        p_good_client = subprocess.Popen(
+            [f"exec {TEST_DATA}/dos/good_clients_xff.sh {virtual_server_setup_dos.vs_host} {dos_setup.req_url}"],
+            preexec_fn=os.setsid, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+        print("Learning for max 15 minutes")
+        find_in_log(kube_apis, log_loc, syslog_pod, ingress_controller_prerequisites.namespace, 900, "learning_confidence=\"Ready\"")
+
+        print("------------------------- Check new IC pod get info from arbitrator -----------------------------")
+        ic_ns = ingress_controller_prerequisites.namespace
+        scale_deployment(kube_apis.v1, kube_apis.apps_v1_api, "nginx-ingress", ic_ns, 2)
+        while get_pods_amount_with_name(kube_apis.v1, "nginx-ingress", "nginx-ingress") is not 2:
+            print(f"Number of replicas is not 2, retrying...")
+            wait_before_test()
+
+        print(
+            "------------------------- Check if new pod receive info from arbitrator -----------------------------")
+        print("Wait for 60 seconds")
+        wait_before_test(60)
+
+        log_contents = get_file_contents(kube_apis.v1, log_loc, syslog_pod,
+                                         ingress_controller_prerequisites.namespace)
+        log_info_dic = log_content_to_dic(log_contents)
+
+        print("Stop Good Client")
+        p_good_client.terminate()
+
+        learning_units_hostname = []
+        for log in log_info_dic:
+            if log['unit_hostname'] not in learning_units_hostname and log['learning_confidence'] == "Ready":
+                learning_units_hostname.append(log['unit_hostname'])
+
+        print("Delete namespace: arbitrator")
+        delete_items_from_yaml(kube_apis, arbitrator_ns_yaml, "")
+
+        print("------------------------- Restore dos arbitrator in nginx namespace -----------------------")
+        create_dos_arbitrator(
+            kube_apis.v1,
+            kube_apis.apps_v1_api,
+            ingress_controller_prerequisites.namespace,
+            f"{DEPLOYMENTS}/deployment/appprotect-dos-arb.yaml",
+            f"{DEPLOYMENTS}/service/appprotect-dos-arb-svc.yaml",
+        )
+
+        print(f"------------- Restore ConfigMap --------------")
+        replace_configmap_from_yaml(
+            kube_apis.v1,
+            ingress_controller_prerequisites.config_map["metadata"]["name"],
+            ingress_controller_prerequisites.namespace,
+            f"{TEST_DATA}/dos/nginx-config.yaml"
+        )
 
         assert (
                 len(learning_units_hostname) == 2
