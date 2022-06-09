@@ -76,6 +76,7 @@ func createTestConfiguratorInvalidIngressTemplate() (*Configurator, error) {
 }
 
 func TestAddOrUpdateIngress(t *testing.T) {
+	t.Parallel()
 	cnf, err := createTestConfigurator()
 	if err != nil {
 		t.Errorf("Failed to create a test configurator: %v", err)
@@ -98,14 +99,15 @@ func TestAddOrUpdateIngress(t *testing.T) {
 }
 
 func TestAddOrUpdateMergeableIngress(t *testing.T) {
+	t.Parallel()
 	cnf, err := createTestConfigurator()
 	if err != nil {
 		t.Errorf("Failed to create a test configurator: %v", err)
 	}
 
-	mergeableIngess := createMergeableCafeIngress()
+	mergeableIngress := createMergeableCafeIngress()
 
-	warnings, err := cnf.AddOrUpdateMergeableIngress(mergeableIngess)
+	warnings, err := cnf.AddOrUpdateMergeableIngress(mergeableIngress)
 	if err != nil {
 		t.Errorf("AddOrUpdateMergeableIngress returned \n%v, expected \n%v", err, nil)
 	}
@@ -113,13 +115,14 @@ func TestAddOrUpdateMergeableIngress(t *testing.T) {
 		t.Errorf("AddOrUpdateMergeableIngress returned warnings: %v", warnings)
 	}
 
-	cnfHasMergeableIngress := cnf.HasIngress(mergeableIngess.Master.Ingress)
+	cnfHasMergeableIngress := cnf.HasIngress(mergeableIngress.Master.Ingress)
 	if !cnfHasMergeableIngress {
 		t.Errorf("AddOrUpdateMergeableIngress didn't add mergeable ingress successfully. HasIngress returned %v, expected %v", cnfHasMergeableIngress, true)
 	}
 }
 
 func TestAddOrUpdateIngressFailsWithInvalidIngressTemplate(t *testing.T) {
+	t.Parallel()
 	cnf, err := createTestConfiguratorInvalidIngressTemplate()
 	if err != nil {
 		t.Errorf("Failed to create a test configurator: %v", err)
@@ -137,14 +140,15 @@ func TestAddOrUpdateIngressFailsWithInvalidIngressTemplate(t *testing.T) {
 }
 
 func TestAddOrUpdateMergeableIngressFailsWithInvalidIngressTemplate(t *testing.T) {
+	t.Parallel()
 	cnf, err := createTestConfiguratorInvalidIngressTemplate()
 	if err != nil {
 		t.Errorf("Failed to create a test configurator: %v", err)
 	}
 
-	mergeableIngess := createMergeableCafeIngress()
+	mergeableIngress := createMergeableCafeIngress()
 
-	warnings, err := cnf.AddOrUpdateMergeableIngress(mergeableIngess)
+	warnings, err := cnf.AddOrUpdateMergeableIngress(mergeableIngress)
 	if err == nil {
 		t.Errorf("AddOrUpdateMergeableIngress returned \n%v, but expected \n%v", nil, "template execution error")
 	}
@@ -154,6 +158,7 @@ func TestAddOrUpdateMergeableIngressFailsWithInvalidIngressTemplate(t *testing.T
 }
 
 func TestUpdateEndpoints(t *testing.T) {
+	t.Parallel()
 	cnf, err := createTestConfigurator()
 	if err != nil {
 		t.Errorf("Failed to create a test configurator: %v", err)
@@ -174,6 +179,7 @@ func TestUpdateEndpoints(t *testing.T) {
 }
 
 func TestUpdateEndpointsMergeableIngress(t *testing.T) {
+	t.Parallel()
 	cnf, err := createTestConfigurator()
 	if err != nil {
 		t.Errorf("Failed to create a test configurator: %v", err)
@@ -194,6 +200,7 @@ func TestUpdateEndpointsMergeableIngress(t *testing.T) {
 }
 
 func TestUpdateEndpointsFailsWithInvalidTemplate(t *testing.T) {
+	t.Parallel()
 	cnf, err := createTestConfiguratorInvalidIngressTemplate()
 	if err != nil {
 		t.Errorf("Failed to create a test configurator: %v", err)
@@ -209,6 +216,7 @@ func TestUpdateEndpointsFailsWithInvalidTemplate(t *testing.T) {
 }
 
 func TestUpdateEndpointsMergeableIngressFailsWithInvalidTemplate(t *testing.T) {
+	t.Parallel()
 	cnf, err := createTestConfiguratorInvalidIngressTemplate()
 	if err != nil {
 		t.Errorf("Failed to create a test configurator: %v", err)
@@ -224,6 +232,7 @@ func TestUpdateEndpointsMergeableIngressFailsWithInvalidTemplate(t *testing.T) {
 }
 
 func TestGetVirtualServerConfigFileName(t *testing.T) {
+	t.Parallel()
 	vs := conf_v1.VirtualServer{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Namespace: "test",
@@ -240,6 +249,7 @@ func TestGetVirtualServerConfigFileName(t *testing.T) {
 }
 
 func TestGetFileNameForVirtualServerFromKey(t *testing.T) {
+	t.Parallel()
 	key := "default/cafe"
 
 	expected := "vs_default_cafe"
@@ -251,6 +261,7 @@ func TestGetFileNameForVirtualServerFromKey(t *testing.T) {
 }
 
 func TestGetFileNameForTransportServer(t *testing.T) {
+	t.Parallel()
 	transportServer := &conf_v1alpha1.TransportServer{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Namespace: "default",
@@ -267,6 +278,7 @@ func TestGetFileNameForTransportServer(t *testing.T) {
 }
 
 func TestGetFileNameForTransportServerFromKey(t *testing.T) {
+	t.Parallel()
 	key := "default/test-server"
 
 	expected := "ts_default_test-server"
@@ -278,6 +290,7 @@ func TestGetFileNameForTransportServerFromKey(t *testing.T) {
 }
 
 func TestGenerateNamespaceNameKey(t *testing.T) {
+	t.Parallel()
 	objectMeta := &meta_v1.ObjectMeta{
 		Namespace: "default",
 		Name:      "test-server",
@@ -292,6 +305,7 @@ func TestGenerateNamespaceNameKey(t *testing.T) {
 }
 
 func TestGenerateTLSPassthroughHostsConfig(t *testing.T) {
+	t.Parallel()
 	tlsPassthroughPairs := map[string]tlsPassthroughPair{
 		"default/ts-1": {
 			Host:       "one.example.com",
@@ -315,12 +329,18 @@ func TestGenerateTLSPassthroughHostsConfig(t *testing.T) {
 }
 
 func TestAddInternalRouteConfig(t *testing.T) {
+	t.Parallel()
 	cnf, err := createTestConfigurator()
 	if err != nil {
 		t.Errorf("Failed to create a test configurator: %v", err)
 	}
-	// set pod name in env
-	err = os.Setenv("POD_NAME", "nginx-ingress")
+	// set service account in env
+	err = os.Setenv("POD_SERVICEACCOUNT", "nginx-ingress")
+	if err != nil {
+		t.Errorf("Failed to set pod name in environment: %v", err)
+	}
+	// set namespace in env
+	err = os.Setenv("POD_NAMESPACE", "default")
 	if err != nil {
 		t.Errorf("Failed to set pod name in environment: %v", err)
 	}
@@ -330,14 +350,15 @@ func TestAddInternalRouteConfig(t *testing.T) {
 	}
 
 	if !cnf.staticCfgParams.EnableInternalRoutes {
-		t.Errorf("AddInternalRouteConfig failed to set EnableInteralRoutes field of staticCfgParams to true")
+		t.Errorf("AddInternalRouteConfig failed to set EnableInternalRoutes field of staticCfgParams to true")
 	}
-	if cnf.staticCfgParams.PodName != "nginx-ingress" {
-		t.Errorf("AddInternalRouteConfig failed to set PodName field of staticCfgParams")
+	if cnf.staticCfgParams.InternalRouteServerName != "nginx-ingress.default.svc" {
+		t.Errorf("AddInternalRouteConfig failed to set InternalRouteServerName field of staticCfgParams")
 	}
 }
 
 func TestFindRemovedKeys(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		currentKeys []string
 		newKeys     map[string]bool
@@ -564,8 +585,7 @@ func TestUpdateIngressMetricsLabels(t *testing.T) {
 			Name: "upstream-1",
 			UpstreamServers: []version1.UpstreamServer{
 				{
-					Address: "10.0.0.1",
-					Port:    "80",
+					Address: "10.0.0.1:80",
 				},
 			},
 			UpstreamLabels: version1.UpstreamLabels{
@@ -579,8 +599,7 @@ func TestUpdateIngressMetricsLabels(t *testing.T) {
 			Name: "upstream-2",
 			UpstreamServers: []version1.UpstreamServer{
 				{
-					Address: "10.0.0.2",
-					Port:    "80",
+					Address: "10.0.0.2:80",
 				},
 			},
 			UpstreamLabels: version1.UpstreamLabels{
@@ -628,8 +647,7 @@ func TestUpdateIngressMetricsLabels(t *testing.T) {
 			Name: "upstream-1",
 			UpstreamServers: []version1.UpstreamServer{
 				{
-					Address: "10.0.0.1",
-					Port:    "80",
+					Address: "10.0.0.1:80",
 				},
 			},
 			UpstreamLabels: version1.UpstreamLabels{
@@ -702,6 +720,7 @@ func TestUpdateIngressMetricsLabels(t *testing.T) {
 }
 
 func TestUpdateVirtualServerMetricsLabels(t *testing.T) {
+	t.Parallel()
 	cnf, err := createTestConfigurator()
 	if err != nil {
 		t.Fatalf("Failed to create a test configurator: %v", err)
@@ -871,6 +890,7 @@ func TestUpdateVirtualServerMetricsLabels(t *testing.T) {
 }
 
 func TestUpdateTransportServerMetricsLabels(t *testing.T) {
+	t.Parallel()
 	cnf, err := createTestConfigurator()
 	if err != nil {
 		t.Fatalf("Failed to create a test configurator: %v", err)
@@ -1086,6 +1106,7 @@ func TestUpdateTransportServerMetricsLabels(t *testing.T) {
 }
 
 func TestUpdateApResources(t *testing.T) {
+	t.Parallel()
 	appProtectPolicy := &unstructured.Unstructured{
 		Object: map[string]interface{}{
 			"metadata": map[string]interface{}{
@@ -1182,6 +1203,7 @@ func TestUpdateApResources(t *testing.T) {
 }
 
 func TestUpdateApResourcesForVs(t *testing.T) {
+	t.Parallel()
 	apPolRefs := map[string]*unstructured.Unstructured{
 		"test-ns-1/test-name-1": {
 			Object: map[string]interface{}{

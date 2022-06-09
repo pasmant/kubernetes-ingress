@@ -6,6 +6,126 @@ doctypes: ["concept"]
 toc: true
 docs: "DOCS-616"
 ---
+## NGINX Ingress Controller 2.2.2
+
+23 May 2022
+
+FIXES:
+* [2627](https://github.com/nginxinc/kubernetes-ingress/pull/2627) Update InternalRoute server_name.
+
+HELM CHART:
+* The version of the Helm chart is now 0.13.2.
+
+UPGRADE:
+* For NGINX, use the 2.2.2 images from our [DockerHub](https://hub.docker.com/r/nginx/nginx-ingress/tags?page=1&ordering=last_updated&name=2.2.2), [GitHub Container](https://github.com/nginxinc/kubernetes-ingress/pkgs/container/kubernetes-ingress) or [Amazon ECR Public Gallery](https://gallery.ecr.aws/nginx/nginx-ingress).
+* For NGINX Plus, use the 2.2.2 images from the F5 Container registry or build your own image using the 2.2.2 source code.
+* For Helm, use version 0.13.2 of the chart.
+
+## NGINX Ingress Controller 2.2.1
+
+17 May 2022
+
+CHANGES:
+* Update Go dependencies.
+
+FIXES:
+* [2654](https://github.com/nginxinc/kubernetes-ingress/pull/2654) Sync changes from [nginx-openid-connect](https://github.com/nginxinc/nginx-openid-connect) repo, add zoneSyncLeeway field in policy. For more information on the fixes, see [52](https://github.com/nginxinc/nginx-openid-connect/pull/52).
+
+HELM CHART:
+* The version of the Helm chart is now 0.13.1.
+
+UPGRADE:
+* For NGINX, use the 2.2.1 images from our [DockerHub](https://hub.docker.com/r/nginx/nginx-ingress/tags?page=1&ordering=last_updated&name=2.2.1), [GitHub Container](https://github.com/nginxinc/kubernetes-ingress/pkgs/container/kubernetes-ingress) or [Amazon ECR Public Gallery](https://gallery.ecr.aws/nginx/nginx-ingress).
+* For NGINX Plus, use the 2.2.1 images from the F5 Container registry or build your own image using the 2.2.1 source code.
+* For Helm, use version 0.13.1 of the chart.
+
+## NGINX Ingress Controller 2.2.0
+
+12 Apr 2022
+
+OVERVIEW:
+
+* Support for automatic provisioning and management of Certificate resources for VirtualServer resources using [cert-manager](https://cert-manager.io/docs/). Examples for configuring cert-manager with NGINX Ingress Controller can be found [here](https://github.com/nginxinc/kubernetes-ingress/tree/v2.2.0/examples/custom-resources/certmanager). Please note that HTTP01 type ACME Issuers are not yet supported for use with VirtualServer resources.
+
+* Full support for IPv6 using the NGINX Ingress Controller [VirtualServer and VirtualServerRoute](https://docs.nginx.com/nginx-ingress-controller/configuration/virtualserver-and-virtualserverroute-resources) custom resources, and Ingress resources.
+
+* The [-enable-preview-policies](https://docs.nginx.com/nginx-ingress-controller/configuration/global-configuration/command-line-arguments/#-enable-preview-policies) cli argument has been deprecated and is no longer required for the usage of any Policy resource type. This argument will be removed completely in v2.6.0.
+
+* A new [-enable-oidc](https://docs.nginx.com/nginx-ingress-controller/configuration/global-configuration/command-line-arguments/#-enable-oidc) cli argument has been added to enable OIDC policies. Previously, this behaviour was achieved through the usage of the `-enable-preview-policies` cli argument.
+
+FEATURES:
+* [2576](https://github.com/nginxinc/kubernetes-ingress/pull/2576) Add support for IPv6.
+* [2572](https://github.com/nginxinc/kubernetes-ingress/pull/2572) Automate provisioning of Certificate resources for VirtualServer resources using cert-manager.
+
+IMPROVEMENTS:
+* [2346](https://github.com/nginxinc/kubernetes-ingress/pull/2346) Use os.ReadDir for lightweight directory reading. Thanks to [Eng Zer Jun](https://github.com/Juneezee).
+* [2360](https://github.com/nginxinc/kubernetes-ingress/pull/2360) Add NGINX App Protect reconnect period directive.
+* [2479](https://github.com/nginxinc/kubernetes-ingress/pull/2479) Add cli argument to configure NGINX App Protect log level.
+* [2455](https://github.com/nginxinc/kubernetes-ingress/pull/2455) Increase memory available for NGINX App Protect xml parser.
+
+CHANGES:
+* [2580](https://github.com/nginxinc/kubernetes-ingress/pull/2580) Create -enable-oidc command line argument for OIDC policy.
+* [2566](https://github.com/nginxinc/kubernetes-ingress/pull/2566) Unbind policy from preview policies.
+* [2582](https://github.com/nginxinc/kubernetes-ingress/pull/2582) Rename Make targets from `openshift` to `ubi`.
+
+FIXES:
+* [2378](https://github.com/nginxinc/kubernetes-ingress/pull/2378) Fix healthcheck ports.
+* [2404](https://github.com/nginxinc/kubernetes-ingress/pull/2404) Start nginx with -e stderr parameter.
+* [2414](https://github.com/nginxinc/kubernetes-ingress/pull/2414) Fix in file nginx-plus.virtualserver.tmpl ApDosMonitor->ApDosMonitorURI.
+
+HELM CHART:
+* [2525](https://github.com/nginxinc/kubernetes-ingress/pull/2525) Extend helm chart to include NGINX Service Mesh fields.
+* [2294](https://github.com/nginxinc/kubernetes-ingress/pull/2294) Add extra containers to helm chart. Thanks to [Márk Sági-Kazár](https://github.com/sagikazarmark).
+
+UPGRADE:
+* For NGINX, use the 2.2.0 images from our [DockerHub](https://hub.docker.com/r/nginx/nginx-ingress/tags?page=1&ordering=last_updated&name=2.2.0), [GitHub Container](https://github.com/nginxinc/kubernetes-ingress/pkgs/container/kubernetes-ingress) or [Amazon ECR Public Gallery](https://gallery.ecr.aws/nginx/nginx-ingress).
+* For NGINX Plus, use the 2.2.0 images from the F5 Container registry or the [AWS Marketplace](https://aws.amazon.com/marketplace/search/?CREATOR=741df81b-dfdc-4d36-b8da-945ea66b522c&FULFILLMENT_OPTION_TYPE=CONTAINER&filters=CREATOR%2CFULFILLMENT_OPTION_TYPE) or build your own image using the 2.2.0 source code.
+* For Helm, use version 0.13.0 of the chart. If you're using custom resources like VirtualServer and TransportServer (`controller.enableCustomResources` is set to `true`), after you run the `helm upgrade` command, the CRDs will not be upgraded. After running the `helm upgrade` command, run `kubectl apply -f deployments/helm-chart/crds` to upgrade the CRDs.
+* When upgrading using the [manifests](https://docs.nginx.com/nginx-ingress-controller/installation/installation-with-manifests/), make sure to update the [ClusterRole](https://github.com/nginxinc/kubernetes-ingress/blob/v2.2.0/deployments/rbac/rbac.yaml). This is required to enable the cert-manager for VirtualServer resources integration.
+* The -enable-preview-policies cli argument has been deprecated, and is no longer required for any Policy resources.
+* Enabling OIDC Policies now requires the use of -enable-oidc cli argument instead of the -enable-preview-policies cli argument.
+
+SUPPORTED PLATFORMS:
+
+We will provide technical support for the NGINX Ingress Controller on any Kubernetes platform that is currently supported by its provider and which passes the Kubernetes conformance tests. This release was fully tested on the following Kubernetes versions: 1.19-1.23.
+
+## NGINX Ingress Controller 2.1.2
+
+29 Mar 2022
+
+CHANGES:
+* Update UBI based images to 8.
+
+HELM CHART:
+* The version of the Helm chart is now 0.12.2.
+
+UPGRADE:
+* For NGINX, use the 2.1.2 images from our [DockerHub](https://hub.docker.com/r/nginx/nginx-ingress/tags?page=1&ordering=last_updated&name=2.1.2), [GitHub Container](https://github.com/nginxinc/kubernetes-ingress/pkgs/container/kubernetes-ingress) or [Amazon ECR Public Gallery](https://gallery.ecr.aws/nginx/nginx-ingress).
+* For NGINX Plus, use the 2.1.2 images from the F5 Container registry or the [AWS Marketplace](https://aws.amazon.com/marketplace/search/?CREATOR=741df81b-dfdc-4d36-b8da-945ea66b522c&FULFILLMENT_OPTION_TYPE=CONTAINER&filters=CREATOR%2CFULFILLMENT_OPTION_TYPE) or build your own image using the 2.1.2 source code.
+* For Helm, use version 0.12.2 of the chart.
+
+## NGINX Ingress Controller 1.12.4
+
+23 March 2022
+
+CHANGES:
+* Update NGINX version to 1.21.6.
+* Update NGINX Plus version to R26.
+* Update Debian to Bullseye.
+* Update Alpine to 3.15.
+* Update UBI to 8.
+* Update Go to 1.17 and Go dependencies.
+
+FIXES:
+* Fix OpenTracing not working with NGINX Plus.
+
+HELM CHART:
+* The version of the Helm chart is now 0.10.4.
+
+UPGRADE:
+* For NGINX, use the 1.12.4 image from our DockerHub: `nginx/nginx-ingress:1.12.4`, `nginx/nginx-ingress:1.12.4-alpine` or `nginx/nginx-ingress:1.12.4-ubi`
+* For NGINX Plus, please build your own image using the 1.12.4 source code.
+* For Helm, use version 0.10.4 of the chart.
 
 ## NGINX Ingress Controller 2.1.1
 
@@ -661,8 +781,6 @@ UPGRADE:
 
 
 ## NGINX Ingress Controller 1.8.0
-
-### 1.8.0
 
 22 July 2020
 

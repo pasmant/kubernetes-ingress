@@ -53,6 +53,7 @@ type ConfigParams struct {
 	MainAppProtectCookieSeed               string
 	MainAppProtectCPUThresholds            string
 	MainAppProtectPhysicalMemoryThresholds string
+	MainAppProtectReconnectPeriod          string
 	AppProtectDosResource                  string
 	MainAppProtectDosLogFormat             []string
 	MainAppProtectDosLogFormatEscaping     string
@@ -119,10 +120,11 @@ type StaticConfigParams struct {
 	EnableInternalRoutes           bool
 	MainAppProtectLoadModule       bool
 	MainAppProtectDosLoadModule    bool
-	PodName                        string
+	InternalRouteServerName        string
 	EnableLatencyMetrics           bool
-	EnablePreviewPolicies          bool
+	EnableOIDC                     bool
 	SSLRejectHandshake             bool
+	EnableCertManager              bool
 }
 
 // GlobalConfigParams holds global configuration parameters. For now, it only holds listeners.

@@ -26,7 +26,7 @@ load_module modules/ngx_http_app_protect_dos_module.so;
 {{$value}}{{end}}
 {{- end}}
 
-{{if .PreviewPolicies}}
+{{if .OIDC}}
 load_module modules/ngx_http_js_module.so;
 {{- end}}
 
@@ -93,6 +93,7 @@ http {
     {{if .AppProtectCookieSeed}}app_protect_cookie_seed {{.AppProtectCookieSeed}};{{end}}
     {{if .AppProtectCPUThresholds}}app_protect_cpu_thresholds {{.AppProtectCPUThresholds}};{{end}}
     {{if .AppProtectPhysicalMemoryThresholds}}app_protect_physical_memory_util_thresholds {{.AppProtectPhysicalMemoryThresholds}};{{end}}
+    {{if .AppProtectReconnectPeriod}}app_protect_reconnect_period_seconds {{.AppProtectReconnectPeriod}};{{end}}
     include /etc/nginx/waf/nac-usersigs/index.conf;
     {{- end}}
 
@@ -139,7 +140,7 @@ http {
     {{if .ResolverTimeout}}resolver_timeout {{.ResolverTimeout}};{{end}}
     {{end}}
 
-    {{if .PreviewPolicies}}
+    {{if .OIDC}}
     include oidc/oidc_common.conf;
     {{- end}}
 
@@ -152,6 +153,7 @@ http {
         set $service "";
 
         listen 80 default_server{{if .ProxyProtocol}} proxy_protocol{{end}};
+        listen [::]:80 default_server{{if .ProxyProtocol}} proxy_protocol{{end}};
 
         {{if .TLSPassthrough}}
         listen unix:/var/lib/nginx/passthrough-https.sock ssl default_server{{if .HTTP2}} http2{{end}} proxy_protocol;
@@ -159,6 +161,7 @@ http {
         real_ip_header proxy_protocol;
         {{else}}
         listen 443 ssl default_server{{if .HTTP2}} http2{{end}}{{if .ProxyProtocol}} proxy_protocol{{end}};
+        listen [::]:443 ssl default_server{{if .HTTP2}} http2{{end}}{{if .ProxyProtocol}} proxy_protocol{{end}};
         {{end}}
 
         {{if .SSLRejectHandshake}}
@@ -199,6 +202,7 @@ http {
     # NGINX Plus APIs
     server {
         listen {{.NginxStatusPort}};
+        listen [::]:{{.NginxStatusPort}};
 
         root /usr/share/nginx/html;
 
@@ -258,6 +262,7 @@ http {
     {{if .InternalRouteServer}}
     server {
         listen 443 ssl;
+        listen [::]:443 ssl;
         server_name {{.InternalRouteServerName}};
         ssl_certificate /etc/nginx/secrets/spiffe_cert.pem;
         ssl_certificate_key /etc/nginx/secrets/spiffe_key.pem;
@@ -293,6 +298,7 @@ stream {
 
     server {
         listen 443;
+        listen [::]:443;
 
         ssl_preread on;
 

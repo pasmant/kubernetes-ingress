@@ -19,6 +19,8 @@ package k8s
 import (
 	"context"
 	"fmt"
+	"net"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -29,10 +31,11 @@ import (
 	"github.com/nginxinc/kubernetes-ingress/internal/k8s/appprotectcommon"
 	"github.com/nginxinc/kubernetes-ingress/internal/k8s/appprotectdos"
 	"k8s.io/client-go/informers"
+	"k8s.io/client-go/rest"
 
 	"github.com/golang/glog"
 	"github.com/nginxinc/kubernetes-ingress/internal/k8s/secrets"
-	"github.com/spiffe/go-spiffe/workload"
+	"github.com/spiffe/go-spiffe/v2/workloadapi"
 
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
@@ -44,6 +47,7 @@ import (
 	"k8s.io/client-go/tools/leaderelection"
 	"k8s.io/client-go/tools/record"
 
+	cm_controller "github.com/nginxinc/kubernetes-ingress/internal/certmanager"
 	"github.com/nginxinc/kubernetes-ingress/internal/configs"
 	"github.com/nginxinc/kubernetes-ingress/internal/metrics/collectors"
 
@@ -95,9 +99,10 @@ type LoadBalancerController struct {
 	client                        kubernetes.Interface
 	confClient                    k8s_nginx.Interface
 	dynClient                     dynamic.Interface
+	restConfig                    *rest.Config
 	cacheSyncs                    []cache.InformerSynced
 	sharedInformerFactory         informers.SharedInformerFactory
-	confSharedInformerFactorry    k8s_nginx_informers.SharedInformerFactory
+	confSharedInformerFactory     k8s_nginx_informers.SharedInformerFactory
 	configMapController           cache.Controller
 	dynInformerFactory            dynamicinformer.DynamicSharedInformerFactory
 	globalConfigurationController cache.Controller
@@ -143,11 +148,11 @@ type LoadBalancerController struct {
 	controllerNamespace           string
 	wildcardTLSSecret             string
 	areCustomResourcesEnabled     bool
-	enablePreviewPolicies         bool
+	enableOIDC                    bool
 	metricsCollector              collectors.ControllerCollector
 	globalConfigurationValidator  *validation.GlobalConfigurationValidator
 	transportServerValidator      *validation.TransportServerValidator
-	spiffeController              *SpiffeController
+	spiffeCertFetcher             *SpiffeCertFetcher
 	internalRoutesEnabled         bool
 	syncLock                      sync.Mutex
 	isNginxReady                  bool
@@ -158,6 +163,7 @@ type LoadBalancerController struct {
 	appProtectConfiguration       appprotect.Configuration
 	dosConfiguration              *appprotectdos.Configuration
 	configMap                     *api_v1.ConfigMap
+	certManagerController         *cm_controller.CmController
 }
 
 var keyFunc = cache.DeletionHandlingMetaNamespaceKeyFunc
@@ -167,6 +173,7 @@ type NewLoadBalancerControllerInput struct {
 	KubeClient                   kubernetes.Interface
 	ConfClient                   k8s_nginx.Interface
 	DynClient                    dynamic.Interface
+	RestConfig                   *rest.Config
 	ResyncPeriod                 time.Duration
 	Namespace                    string
 	NginxConfigurator            *configs.Configurator
@@ -185,7 +192,7 @@ type NewLoadBalancerControllerInput struct {
 	ConfigMaps                   string
 	GlobalConfiguration          string
 	AreCustomResourcesEnabled    bool
-	EnablePreviewPolicies        bool
+	EnableOIDC                   bool
 	MetricsCollector             collectors.ControllerCollector
 	GlobalConfigurationValidator *validation.GlobalConfigurationValidator
 	TransportServerValidator     *validation.TransportServerValidator
@@ -196,6 +203,7 @@ type NewLoadBalancerControllerInput struct {
 	IsLatencyMetricsEnabled      bool
 	IsTLSPassthroughEnabled      bool
 	SnippetsEnabled              bool
+	CertManagerEnabled           bool
 }
 
 // NewLoadBalancerController creates a controller
@@ -204,6 +212,7 @@ func NewLoadBalancerController(input NewLoadBalancerControllerInput) *LoadBalanc
 		client:                       input.KubeClient,
 		confClient:                   input.ConfClient,
 		dynClient:                    input.DynClient,
+		restConfig:                   input.RestConfig,
 		configurator:                 input.NginxConfigurator,
 		defaultServerSecret:          input.DefaultServerSecret,
 		appProtectEnabled:            input.AppProtectEnabled,
@@ -218,7 +227,7 @@ func NewLoadBalancerController(input NewLoadBalancerControllerInput) *LoadBalanc
 		controllerNamespace:          input.ControllerNamespace,
 		wildcardTLSSecret:            input.WildcardTLSSecret,
 		areCustomResourcesEnabled:    input.AreCustomResourcesEnabled,
-		enablePreviewPolicies:        input.EnablePreviewPolicies,
+		enableOIDC:                   input.EnableOIDC,
 		metricsCollector:             input.MetricsCollector,
 		globalConfigurationValidator: input.GlobalConfigurationValidator,
 		transportServerValidator:     input.TransportServerValidator,
@@ -238,10 +247,14 @@ func NewLoadBalancerController(input NewLoadBalancerControllerInput) *LoadBalanc
 	lbc.syncQueue = newTaskQueue(lbc.sync)
 	if input.SpireAgentAddress != "" {
 		var err error
-		lbc.spiffeController, err = NewSpiffeController(lbc.syncSVIDRotation, input.SpireAgentAddress)
+		lbc.spiffeCertFetcher, err = NewSpiffeCertFetcher(lbc.syncSVIDRotation, input.SpireAgentAddress)
 		if err != nil {
 			glog.Fatalf("failed to create Spiffe Controller: %v", err)
 		}
+	}
+
+	if input.CertManagerEnabled {
+		lbc.certManagerController = cm_controller.NewCmController(cm_controller.BuildOpts(context.TODO(), lbc.restConfig, lbc.client, lbc.namespace, lbc.recorder, lbc.confClient))
 	}
 
 	glog.V(3).Infof("Nginx Ingress Controller has class: %v", input.IngressClass)
@@ -256,7 +269,7 @@ func NewLoadBalancerController(input NewLoadBalancerControllerInput) *LoadBalanc
 	lbc.addPodHandler()
 
 	if lbc.areCustomResourcesEnabled {
-		lbc.confSharedInformerFactorry = k8s_nginx_informers.NewSharedInformerFactoryWithOptions(lbc.confClient, input.ResyncPeriod, k8s_nginx_informers.WithNamespace(lbc.namespace))
+		lbc.confSharedInformerFactory = k8s_nginx_informers.NewSharedInformerFactoryWithOptions(lbc.confClient, input.ResyncPeriod, k8s_nginx_informers.WithNamespace(lbc.namespace))
 
 		lbc.addVirtualServerHandler(createVirtualServerHandlers(lbc))
 		lbc.addVirtualServerRouteHandler(createVirtualServerRouteHandlers(lbc))
@@ -400,7 +413,7 @@ func (lbc *LoadBalancerController) addAppProtectDosLogConfHandler(handlers cache
 
 // addAppProtectDosLogConfHandler creates dynamic informer for custom appprotectdos logging config resource
 func (lbc *LoadBalancerController) addAppProtectDosProtectedResourceHandler(handlers cache.ResourceEventHandlerFuncs) {
-	informer := lbc.confSharedInformerFactorry.Appprotectdos().V1beta1().DosProtectedResources().Informer()
+	informer := lbc.confSharedInformerFactory.Appprotectdos().V1beta1().DosProtectedResources().Informer()
 	informer.AddEventHandler(handlers)
 	lbc.appProtectDosProtectedLister = informer.GetStore()
 
@@ -466,7 +479,7 @@ func (lbc *LoadBalancerController) addPodHandler() {
 }
 
 func (lbc *LoadBalancerController) addVirtualServerHandler(handlers cache.ResourceEventHandlerFuncs) {
-	informer := lbc.confSharedInformerFactorry.K8s().V1().VirtualServers().Informer()
+	informer := lbc.confSharedInformerFactory.K8s().V1().VirtualServers().Informer()
 	informer.AddEventHandler(handlers)
 	lbc.virtualServerLister = informer.GetStore()
 
@@ -474,7 +487,7 @@ func (lbc *LoadBalancerController) addVirtualServerHandler(handlers cache.Resour
 }
 
 func (lbc *LoadBalancerController) addVirtualServerRouteHandler(handlers cache.ResourceEventHandlerFuncs) {
-	informer := lbc.confSharedInformerFactorry.K8s().V1().VirtualServerRoutes().Informer()
+	informer := lbc.confSharedInformerFactory.K8s().V1().VirtualServerRoutes().Informer()
 	informer.AddEventHandler(handlers)
 	lbc.virtualServerRouteLister = informer.GetStore()
 
@@ -482,7 +495,7 @@ func (lbc *LoadBalancerController) addVirtualServerRouteHandler(handlers cache.R
 }
 
 func (lbc *LoadBalancerController) addPolicyHandler(handlers cache.ResourceEventHandlerFuncs) {
-	informer := lbc.confSharedInformerFactorry.K8s().V1().Policies().Informer()
+	informer := lbc.confSharedInformerFactory.K8s().V1().Policies().Informer()
 	informer.AddEventHandler(handlers)
 	lbc.policyLister = informer.GetStore()
 
@@ -504,7 +517,7 @@ func (lbc *LoadBalancerController) addGlobalConfigurationHandler(handlers cache.
 }
 
 func (lbc *LoadBalancerController) addTransportServerHandler(handlers cache.ResourceEventHandlerFuncs) {
-	informer := lbc.confSharedInformerFactorry.K8s().V1alpha1().TransportServers().Informer()
+	informer := lbc.confSharedInformerFactory.K8s().V1alpha1().TransportServers().Informer()
 	informer.AddEventHandler(handlers)
 	lbc.transportServerLister = informer.GetStore()
 
@@ -531,11 +544,14 @@ func (lbc *LoadBalancerController) addIngressLinkHandler(handlers cache.Resource
 func (lbc *LoadBalancerController) Run() {
 	lbc.ctx, lbc.cancel = context.WithCancel(context.Background())
 
-	if lbc.spiffeController != nil {
-		err := lbc.spiffeController.Start(lbc.ctx.Done(), lbc.addInternalRouteServer)
+	if lbc.spiffeCertFetcher != nil {
+		err := lbc.spiffeCertFetcher.Start(lbc.ctx, lbc.addInternalRouteServer)
 		if err != nil {
 			glog.Fatal(err)
 		}
+	}
+	if lbc.certManagerController != nil {
+		go lbc.certManagerController.Run(lbc.ctx.Done())
 	}
 	if lbc.leaderElector != nil {
 		go lbc.leaderElector.Run(lbc.ctx)
@@ -546,7 +562,7 @@ func (lbc *LoadBalancerController) Run() {
 		go lbc.configMapController.Run(lbc.ctx.Done())
 	}
 	if lbc.areCustomResourcesEnabled {
-		go lbc.confSharedInformerFactorry.Start(lbc.ctx.Done())
+		go lbc.confSharedInformerFactory.Start(lbc.ctx.Done())
 	}
 	if lbc.watchGlobalConfiguration {
 		go lbc.globalConfigurationController.Run(lbc.ctx.Done())
@@ -671,7 +687,10 @@ func (lbc *LoadBalancerController) syncConfigMap(task task) {
 	}
 	if configExists {
 		lbc.configMap = obj.(*api_v1.ConfigMap)
-		lbc.statusUpdater.SaveStatusFromExternalStatus(lbc.configMap.Data["external-status-address"])
+		externalStatusAddress, exists := lbc.configMap.Data["external-status-address"]
+		if exists {
+			lbc.statusUpdater.SaveStatusFromExternalStatus(externalStatusAddress)
+		}
 	} else {
 		lbc.configMap = nil
 	}
@@ -752,7 +771,7 @@ func (lbc *LoadBalancerController) preSyncSecrets() {
 
 func (lbc *LoadBalancerController) sync(task task) {
 	glog.V(3).Infof("Syncing %v", task.Key)
-	if lbc.spiffeController != nil {
+	if lbc.spiffeCertFetcher != nil {
 		lbc.syncLock.Lock()
 		defer lbc.syncLock.Unlock()
 	}
@@ -877,7 +896,7 @@ func (lbc *LoadBalancerController) syncPolicy(task task) {
 
 	if polExists && lbc.HasCorrectIngressClass(obj) {
 		pol := obj.(*conf_v1.Policy)
-		err := validation.ValidatePolicy(pol, lbc.isNginxPlus, lbc.enablePreviewPolicies, lbc.appProtectEnabled)
+		err := validation.ValidatePolicy(pol, lbc.isNginxPlus, lbc.enableOIDC, lbc.appProtectEnabled)
 		if err != nil {
 			msg := fmt.Sprintf("Policy %v/%v is invalid and was rejected: %v", pol.Namespace, pol.Name, err)
 			lbc.recorder.Eventf(pol, api_v1.EventTypeWarning, "Rejected", msg)
@@ -2077,7 +2096,7 @@ func (lbc *LoadBalancerController) updatePoliciesStatus() error {
 	for _, obj := range lbc.policyLister.List() {
 		pol := obj.(*conf_v1.Policy)
 
-		err := validation.ValidatePolicy(pol, lbc.isNginxPlus, lbc.enablePreviewPolicies, lbc.appProtectEnabled)
+		err := validation.ValidatePolicy(pol, lbc.isNginxPlus, lbc.enableOIDC, lbc.appProtectEnabled)
 		if err != nil {
 			msg := fmt.Sprintf("Policy %v/%v is invalid and was rejected: %v", pol.Namespace, pol.Name, err)
 			err = lbc.statusUpdater.UpdatePolicyStatus(pol, conf_v1.StateInvalid, "Rejected", msg)
@@ -2445,7 +2464,7 @@ func (lbc *LoadBalancerController) createVirtualServerEx(virtualServer *conf_v1.
 			if err != nil {
 				glog.Warningf("Error getting Service for Upstream %v: %v", u.Service, err)
 			} else {
-				endps = append(endps, fmt.Sprintf("%s:%d", s.Spec.ClusterIP, u.Port))
+				endps = append(endps, ipv6SafeAddrPort(s.Spec.ClusterIP, int32(u.Port)))
 			}
 
 		} else {
@@ -2625,7 +2644,7 @@ func (lbc *LoadBalancerController) getAllPolicies() []*conf_v1.Policy {
 	for _, obj := range lbc.policyLister.List() {
 		pol := obj.(*conf_v1.Policy)
 
-		err := validation.ValidatePolicy(pol, lbc.isNginxPlus, lbc.enablePreviewPolicies, lbc.appProtectEnabled)
+		err := validation.ValidatePolicy(pol, lbc.isNginxPlus, lbc.enableOIDC, lbc.appProtectEnabled)
 		if err != nil {
 			glog.V(3).Infof("Skipping invalid Policy %s/%s: %v", pol.Namespace, pol.Name, err)
 			continue
@@ -2667,7 +2686,7 @@ func (lbc *LoadBalancerController) getPolicies(policies []conf_v1.PolicyReferenc
 			continue
 		}
 
-		err = validation.ValidatePolicy(policy, lbc.isNginxPlus, lbc.enablePreviewPolicies, lbc.appProtectEnabled)
+		err = validation.ValidatePolicy(policy, lbc.isNginxPlus, lbc.enableOIDC, lbc.appProtectEnabled)
 		if err != nil {
 			errors = append(errors, fmt.Errorf("Policy %s is invalid: %w", policyKey, err))
 			continue
@@ -2786,19 +2805,37 @@ func (lbc *LoadBalancerController) addWAFPolicyRefs(
 			apPolRef[apPolKey] = apPolicy
 		}
 
-		if pol.Spec.WAF.SecurityLog != nil && pol.Spec.WAF.SecurityLog.ApLogConf != "" {
-			logConfKey := pol.Spec.WAF.SecurityLog.ApLogConf
-			if !strings.Contains(pol.Spec.WAF.SecurityLog.ApLogConf, "/") {
-				logConfKey = fmt.Sprintf("%v/%v", pol.Namespace, logConfKey)
-			}
+		if pol.Spec.WAF.SecurityLog != nil && pol.Spec.WAF.SecurityLogs == nil {
+			if pol.Spec.WAF.SecurityLog.ApLogConf != "" {
+				logConfKey := pol.Spec.WAF.SecurityLog.ApLogConf
+				if !strings.Contains(pol.Spec.WAF.SecurityLog.ApLogConf, "/") {
+					logConfKey = fmt.Sprintf("%v/%v", pol.Namespace, logConfKey)
+				}
 
-			logConf, err := lbc.appProtectConfiguration.GetAppResource(appprotect.LogConfGVK.Kind, logConfKey)
-			if err != nil {
-				return fmt.Errorf("WAF policy %q is invalid: %w", logConfKey, err)
+				logConf, err := lbc.appProtectConfiguration.GetAppResource(appprotect.LogConfGVK.Kind, logConfKey)
+				if err != nil {
+					return fmt.Errorf("WAF policy %q is invalid: %w", logConfKey, err)
+				}
+				logConfRef[logConfKey] = logConf
 			}
-			logConfRef[logConfKey] = logConf
 		}
 
+		if pol.Spec.WAF.SecurityLogs != nil {
+			for _, SecLog := range pol.Spec.WAF.SecurityLogs {
+				if SecLog.ApLogConf != "" {
+					logConfKey := SecLog.ApLogConf
+					if !strings.Contains(SecLog.ApLogConf, "/") {
+						logConfKey = fmt.Sprintf("%v/%v", pol.Namespace, logConfKey)
+					}
+
+					logConf, err := lbc.appProtectConfiguration.GetAppResource(appprotect.LogConfGVK.Kind, logConfKey)
+					if err != nil {
+						return fmt.Errorf("WAF policy %q is invalid: %w", logConfKey, err)
+					}
+					logConfRef[logConfKey] = logConf
+				}
+			}
+		}
 	}
 	return nil
 }
@@ -2845,6 +2882,13 @@ func getWAFPoliciesForAppProtectLogConf(pols []*conf_v1.Policy, key string) []*c
 	for _, pol := range pols {
 		if pol.Spec.WAF != nil && pol.Spec.WAF.SecurityLog != nil && isMatchingResourceRef(pol.Namespace, pol.Spec.WAF.SecurityLog.ApLogConf, key) {
 			policies = append(policies, pol)
+		}
+		if pol.Spec.WAF != nil && pol.Spec.WAF.SecurityLogs != nil {
+			for _, logConf := range pol.Spec.WAF.SecurityLogs {
+				if isMatchingResourceRef(pol.Namespace, logConf.ApLogConf, key) {
+					policies = append(policies, pol)
+				}
+			}
 		}
 	}
 
@@ -2972,7 +3016,7 @@ func getEndpointsBySubselectedPods(targetPort int32, pods []*api_v1.Pod, svcEps 
 				}
 				for _, address := range subset.Addresses {
 					if address.IP == pod.Status.PodIP {
-						addr := fmt.Sprintf("%v:%v", pod.Status.PodIP, targetPort)
+						addr := ipv6SafeAddrPort(pod.Status.PodIP, targetPort)
 						ownerType, ownerName := getPodOwnerTypeAndName(pod)
 						podEnd := podEndpoint{
 							Address: addr,
@@ -2989,6 +3033,10 @@ func getEndpointsBySubselectedPods(targetPort int32, pods []*api_v1.Pod, svcEps 
 		}
 	}
 	return endps
+}
+
+func ipv6SafeAddrPort(addr string, port int32) string {
+	return net.JoinHostPort(addr, strconv.Itoa(int(port)))
 }
 
 func getPodName(pod *api_v1.ObjectReference) string {
@@ -3103,7 +3151,7 @@ func (lbc *LoadBalancerController) getEndpointsForPort(endps api_v1.Endpoints, b
 			if port.Port == targetPort {
 				var endpoints []podEndpoint
 				for _, address := range subset.Addresses {
-					addr := fmt.Sprintf("%v:%v", address.IP, port.Port)
+					addr := ipv6SafeAddrPort(address.IP, port.Port)
 					podEnd := podEndpoint{
 						Address: addr,
 					}
@@ -3259,7 +3307,7 @@ func formatWarningMessages(w []string) string {
 	return strings.Join(w, "; ")
 }
 
-func (lbc *LoadBalancerController) syncSVIDRotation(svidResponse *workload.X509SVIDs) {
+func (lbc *LoadBalancerController) syncSVIDRotation(svidResponse *workloadapi.X509Context) {
 	lbc.syncLock.Lock()
 	defer lbc.syncLock.Unlock()
 	glog.V(3).Info("Rotating SPIFFE Certificates")

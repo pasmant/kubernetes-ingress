@@ -1,5 +1,5 @@
 ---
-title: Installation with Helm App Protect Dos Arbitrator
+title: Installation with Helm App Protect DoS Arbitrator
 description:
 weight: 1900
 doctypes: [""]
@@ -17,14 +17,13 @@ docs: "DOCS-582"
 
 This step is required if you're installing the chart using its sources. Additionally, the step is also required for managing the custom resource definitions (CRDs), which the Ingress Controller requires by default, or for upgrading/deleting the CRDs.
 
-1. Clone the Ingress controller repo:
+1. Clone the Ingress Controller repo:
     ```console
-    $ git clone https://github.com/nginxinc/kubernetes-ingress/
+    $ git clone https://github.com/nginxinc/kubernetes-ingress.git --branch v2.2.2
     ```
 2. Change your working directory to /deployments/helm-chart-dos-arbitrator:
     ```console
     $ cd kubernetes-ingress/deployments/helm-chart-dos-arbitrator
-    $ git checkout v2.1.1
     ```
 
 ## Adding the Helm Repository
@@ -55,7 +54,7 @@ To install the chart with the release name my-release-dos (my-release-dos is the
 $ helm install my-release-dos .
 ```
 
-The command deploys the App Protect Dos Arbitrator in your Kubernetes cluster in the default configuration. The configuration section lists the parameters that can be configured during installation.
+The command deploys the App Protect DoS Arbitrator in your Kubernetes cluster in the default configuration. The configuration section lists the parameters that can be configured during installation.
 
 ## Upgrading the Chart
 
@@ -89,7 +88,7 @@ The command removes all the Kubernetes components associated with the release an
 
 ## Configuration
 
-The following tables lists the configurable parameters of the NGINX App Protect Dos Arbitrator chart and their default values.
+The following tables lists the configurable parameters of the NGINX App Protect DoS Arbitrator chart and their default values.
 
 Parameter | Description | Default
 --- | --- | ---

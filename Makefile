@@ -30,17 +30,17 @@ all: test lint verify-codegen update-crds debian-image
 .PHONY: lint
 lint: ## Run linter
 	@git fetch
-	docker run --pull always --rm -v $(shell pwd):/kubernetes-ingress -w /kubernetes-ingress -v $(shell go env GOCACHE):/cache/go -e GOCACHE=/cache/go -e GOLANGCI_LINT_CACHE=/cache/go -v $(shell go env GOPATH)/pkg:/go/pkg golangci/golangci-lint:latest git diff -p origin/master > /tmp/diff.patch && golangci-lint --color always run -v --new-from-patch=/tmp/diff.patch
+	docker run --pull always --rm -v $(shell pwd):/kubernetes-ingress -w /kubernetes-ingress -v $(shell go env GOCACHE):/cache/go -e GOCACHE=/cache/go -e GOLANGCI_LINT_CACHE=/cache/go -v $(shell go env GOPATH)/pkg:/go/pkg golangci/golangci-lint:latest git diff -p origin/main > /tmp/diff.patch && golangci-lint --color always run -v --new-from-patch=/tmp/diff.patch
 
 .PHONY: test
 test: ## Run tests
-	go test -shuffle=on -race ./...
+	go test -tags=aws -shuffle=on -race ./...
 
 cover: ## Generate coverage report
 	@./hack/test-cover.sh
 
 cover-html: ## Generate and show coverage report in HTML format
-	go test -shuffle=on -race ./... -count=1 -cover -covermode=atomic -coverprofile=coverage.out
+	go test -tags=aws -shuffle=on -race ./... -count=1 -cover -covermode=atomic -coverprofile=coverage.out
 	go tool cover -html coverage.out
 
 .PHONY: verify-codegen
@@ -113,40 +113,41 @@ debian-image-dos-plus: build ## Create Docker image for Ingress Controller (Debi
 debian-image-nap-dos-plus: build ## Create Docker image for Ingress Controller (Debian with NGINX Plus, App Protect WAF and DoS)
 	$(DOCKER_CMD) $(PLUS_ARGS) --build-arg BUILD_OS=debian-plus-nap --build-arg DEBIAN_VERSION=buster-slim --build-arg NAP_MODULES=waf,dos
 
-.PHONY: openshift-image
-openshift-image: build ## Create Docker image for Ingress Controller (UBI)
+.PHONY: ubi-image
+ubi-image: build ## Create Docker image for Ingress Controller (UBI)
 	$(DOCKER_CMD) --build-arg BUILD_OS=ubi
 
-.PHONY: openshift-image-plus
-openshift-image-plus: build ## Create Docker image for Ingress Controller (UBI with NGINX Plus)
+.PHONY: ubi-image-plus
+ubi-image-plus: build ## Create Docker image for Ingress Controller (UBI with NGINX Plus)
 	$(DOCKER_CMD) $(PLUS_ARGS) --build-arg BUILD_OS=ubi-plus
 
-.PHONY: openshift-image-nap-plus
-openshift-image-nap-plus: build ## Create Docker image for Ingress Controller (UBI with NGINX Plus and App Protect WAF)
+.PHONY: ubi-image-nap-plus
+ubi-image-nap-plus: build ## Create Docker image for Ingress Controller (UBI with NGINX Plus and App Protect WAF)
 	$(DOCKER_CMD) $(PLUS_ARGS) --secret id=rhel_license,src=rhel_license --build-arg BUILD_OS=ubi-plus-nap --build-arg NAP_MODULES=waf
 
-.PHONY: openshift-image-dos-plus
-openshift-image-dos-plus: build ## Create Docker image for Ingress Controller (UBI with NGINX Plus and App Protect DoS)
+.PHONY: ubi-image-dos-plus
+ubi-image-dos-plus: build ## Create Docker image for Ingress Controller (UBI with NGINX Plus and App Protect DoS)
 	$(DOCKER_CMD) $(PLUS_ARGS) --secret id=rhel_license,src=rhel_license --build-arg BUILD_OS=ubi-plus-nap --build-arg NAP_MODULES=dos
 
-.PHONY: openshift-image-nap-dos-plus
-openshift-image-nap-dos-plus: build ## Create Docker image for Ingress Controller (UBI with NGINX Plus, App Protect WAF and DoS)
+.PHONY: ubi-image-nap-dos-plus
+ubi-image-nap-dos-plus: build ## Create Docker image for Ingress Controller (UBI with NGINX Plus, App Protect WAF and DoS)
 	$(DOCKER_CMD) $(PLUS_ARGS) --secret id=rhel_license,src=rhel_license --build-arg BUILD_OS=ubi-plus-nap --build-arg NAP_MODULES=waf,dos
 
+.PHONY: openshift-image openshift-image-plus openshift-image-nap-plus openshift-image-dos-plus openshift-image-nap-dos-plus
+openshift-image openshift-image-plus openshift-image-nap-plus openshift-image-dos-plus openshift-image-nap-dos-plus:
+	@printf "\033[0;31mWarning\033[0m: The target $(filter openshift-%,$(MAKECMDGOALS)) was renamed to $(subst openshift,ubi,$(filter openshift-%,$(MAKECMDGOALS))) and will be removed in a future release.\n"
+	@$(MAKE) $(subst openshift,ubi,$(MAKECMDGOALS)) $(MAKEFLAGS)
+
 .PHONY: alpine-image-opentracing
-alpine-image-opentracing: build ## Create Docker image for Ingress Controller (Alpine with OpenTracing)
-	$(DOCKER_CMD) --build-arg BUILD_OS=alpine-opentracing
+alpine-image-opentracing:
+	@echo "OpenTracing is now included in all Alpine based images"
 
-.PHONY: debian-image-opentracing
-debian-image-opentracing: build ## Create Docker image for Ingress Controller (Debian with OpenTracing)
-	$(DOCKER_CMD) --build-arg BUILD_OS=opentracing
-
-.PHONY: debian-image-opentracing-plus
-debian-image-opentracing-plus: build ## Create Docker image for Ingress Controller (Debian with OpenTracing and NGINX Plus)
-	$(DOCKER_CMD) $(PLUS_ARGS) --build-arg BUILD_OS=opentracing-plus
+.PHONY: debian-image-opentracing debian-image-opentracing-plus
+debian-image-opentracing debian-image-opentracing-plus:
+	@echo "OpenTracing is now included in all Debian based images"
 
 .PHONY: all-images ## Create all the Docker images for Ingress Controller
-all-images: alpine-image alpine-image-plus debian-image debian-image-plus debian-image-nap-plus debian-image-dos-plus debian-image-nap-dos-plus debian-image-opentracing debian-image-opentracing-plus openshift-image openshift-image-plus openshift-image-nap-plus openshift-image-dos-plus openshift-image-nap-dos-plus
+all-images: alpine-image alpine-image-plus debian-image debian-image-plus debian-image-nap-plus debian-image-dos-plus debian-image-nap-dos-plus ubi-image ubi-image-plus ubi-image-nap-plus ubi-image-dos-plus ubi-image-nap-dos-plus
 
 .PHONY: push
 push: ## Docker push to PREFIX and TAG

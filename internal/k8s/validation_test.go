@@ -254,6 +254,48 @@ func TestValidateNginxIngressAnnotations(t *testing.T) {
 		},
 		{
 			annotations: map[string]string{
+				"nginx.org/lb-method": "least_time header;",
+			},
+			specServices:          map[string]bool{},
+			isPlus:                true,
+			appProtectEnabled:     false,
+			appProtectDosEnabled:  false,
+			internalRoutesEnabled: false,
+			expectedErrors: []string{
+				`annotations.nginx.org/lb-method: Invalid value: "least_time header;": Invalid load balancing method: "least_time header;"`,
+			},
+			msg: "invalid nginx.org/lb-method annotation",
+		},
+		{
+			annotations: map[string]string{
+				"nginx.org/lb-method": "{least_time header}",
+			},
+			specServices:          map[string]bool{},
+			isPlus:                true,
+			appProtectEnabled:     false,
+			appProtectDosEnabled:  false,
+			internalRoutesEnabled: false,
+			expectedErrors: []string{
+				`annotations.nginx.org/lb-method: Invalid value: "{least_time header}": Invalid load balancing method: "{least_time header}"`,
+			},
+			msg: "invalid nginx.org/lb-method annotation",
+		},
+		{
+			annotations: map[string]string{
+				"nginx.org/lb-method": "$least_time header",
+			},
+			specServices:          map[string]bool{},
+			isPlus:                true,
+			appProtectEnabled:     false,
+			appProtectDosEnabled:  false,
+			internalRoutesEnabled: false,
+			expectedErrors: []string{
+				`annotations.nginx.org/lb-method: Invalid value: "$least_time header": Invalid load balancing method: "$least_time header"`,
+			},
+			msg: "invalid nginx.org/lb-method annotation",
+		},
+		{
+			annotations: map[string]string{
 				"nginx.org/lb-method": "invalid_method",
 			},
 			specServices:          map[string]bool{},
@@ -722,7 +764,74 @@ func TestValidateNginxIngressAnnotations(t *testing.T) {
 			expectedErrors:        nil,
 			msg:                   "valid nginx.org/proxy-hide-headers annotation, multi-value",
 		},
-
+		{
+			annotations: map[string]string{
+				"nginx.org/proxy-hide-headers": "header-1, header-2, header-3",
+			},
+			specServices:          map[string]bool{},
+			isPlus:                false,
+			appProtectEnabled:     false,
+			appProtectDosEnabled:  false,
+			internalRoutesEnabled: false,
+			expectedErrors:        nil,
+			msg:                   "valid nginx.org/proxy-hide-headers annotation, multi-value with spaces",
+		},
+		{
+			annotations: map[string]string{
+				"nginx.org/proxy-hide-headers": "$header1",
+			},
+			specServices:          map[string]bool{},
+			isPlus:                false,
+			appProtectEnabled:     false,
+			appProtectDosEnabled:  false,
+			internalRoutesEnabled: false,
+			expectedErrors: []string{
+				`annotations.nginx.org/proxy-hide-headers: Invalid value: "$header1": a valid HTTP header must consist of alphanumeric characters or '-' (e.g. 'X-Header-Name', regex used for validation is '[-A-Za-z0-9]+')`,
+			},
+			msg: "invalid nginx.org/proxy-hide-headers annotation, single-value containing '$'",
+		},
+		{
+			annotations: map[string]string{
+				"nginx.org/proxy-hide-headers": "{header1",
+			},
+			specServices:          map[string]bool{},
+			isPlus:                false,
+			appProtectEnabled:     false,
+			appProtectDosEnabled:  false,
+			internalRoutesEnabled: false,
+			expectedErrors: []string{
+				`annotations.nginx.org/proxy-hide-headers: Invalid value: "{header1": a valid HTTP header must consist of alphanumeric characters or '-' (e.g. 'X-Header-Name', regex used for validation is '[-A-Za-z0-9]+')`,
+			},
+			msg: "invalid nginx.org/proxy-hide-headers annotation, single-value containing '{'",
+		},
+		{
+			annotations: map[string]string{
+				"nginx.org/proxy-hide-headers": "$header1,header2",
+			},
+			specServices:          map[string]bool{},
+			isPlus:                false,
+			appProtectEnabled:     false,
+			appProtectDosEnabled:  false,
+			internalRoutesEnabled: false,
+			expectedErrors: []string{
+				`annotations.nginx.org/proxy-hide-headers: Invalid value: "$header1": a valid HTTP header must consist of alphanumeric characters or '-' (e.g. 'X-Header-Name', regex used for validation is '[-A-Za-z0-9]+')`,
+			},
+			msg: "invalid nginx.org/proxy-hide-headers annotation, multi-value containing '$'",
+		},
+		{
+			annotations: map[string]string{
+				"nginx.org/proxy-hide-headers": "header1,$header2",
+			},
+			specServices:          map[string]bool{},
+			isPlus:                false,
+			appProtectEnabled:     false,
+			appProtectDosEnabled:  false,
+			internalRoutesEnabled: false,
+			expectedErrors: []string{
+				`annotations.nginx.org/proxy-hide-headers: Invalid value: "$header2": a valid HTTP header must consist of alphanumeric characters or '-' (e.g. 'X-Header-Name', regex used for validation is '[-A-Za-z0-9]+')`,
+			},
+			msg: "invalid nginx.org/proxy-hide-headers annotation, multi-value containing '$' after valid header",
+		},
 		{
 			annotations: map[string]string{
 				"nginx.org/proxy-pass-headers": "header-1",
@@ -747,7 +856,74 @@ func TestValidateNginxIngressAnnotations(t *testing.T) {
 			expectedErrors:        nil,
 			msg:                   "valid nginx.org/proxy-pass-headers annotation, multi-value",
 		},
-
+		{
+			annotations: map[string]string{
+				"nginx.org/proxy-pass-headers": "header-1, header-2, header-3",
+			},
+			specServices:          map[string]bool{},
+			isPlus:                false,
+			appProtectEnabled:     false,
+			appProtectDosEnabled:  false,
+			internalRoutesEnabled: false,
+			expectedErrors:        nil,
+			msg:                   "valid nginx.org/proxy-pass-headers annotation, multi-value with spaces",
+		},
+		{
+			annotations: map[string]string{
+				"nginx.org/proxy-pass-headers": "$header1",
+			},
+			specServices:          map[string]bool{},
+			isPlus:                false,
+			appProtectEnabled:     false,
+			appProtectDosEnabled:  false,
+			internalRoutesEnabled: false,
+			expectedErrors: []string{
+				`annotations.nginx.org/proxy-pass-headers: Invalid value: "$header1": a valid HTTP header must consist of alphanumeric characters or '-' (e.g. 'X-Header-Name', regex used for validation is '[-A-Za-z0-9]+')`,
+			},
+			msg: "invalid nginx.org/proxy-pass-headers annotation, single-value containing '$'",
+		},
+		{
+			annotations: map[string]string{
+				"nginx.org/proxy-pass-headers": "{header1",
+			},
+			specServices:          map[string]bool{},
+			isPlus:                false,
+			appProtectEnabled:     false,
+			appProtectDosEnabled:  false,
+			internalRoutesEnabled: false,
+			expectedErrors: []string{
+				`annotations.nginx.org/proxy-pass-headers: Invalid value: "{header1": a valid HTTP header must consist of alphanumeric characters or '-' (e.g. 'X-Header-Name', regex used for validation is '[-A-Za-z0-9]+')`,
+			},
+			msg: "invalid nginx.org/proxy-pass-headers annotation, single-value containing '{'",
+		},
+		{
+			annotations: map[string]string{
+				"nginx.org/proxy-pass-headers": "$header1,header2",
+			},
+			specServices:          map[string]bool{},
+			isPlus:                false,
+			appProtectEnabled:     false,
+			appProtectDosEnabled:  false,
+			internalRoutesEnabled: false,
+			expectedErrors: []string{
+				`annotations.nginx.org/proxy-pass-headers: Invalid value: "$header1": a valid HTTP header must consist of alphanumeric characters or '-' (e.g. 'X-Header-Name', regex used for validation is '[-A-Za-z0-9]+')`,
+			},
+			msg: "invalid nginx.org/proxy-pass-headers annotation, multi-value containing '$'",
+		},
+		{
+			annotations: map[string]string{
+				"nginx.org/proxy-pass-headers": "header1,$header2",
+			},
+			specServices:          map[string]bool{},
+			isPlus:                false,
+			appProtectEnabled:     false,
+			appProtectDosEnabled:  false,
+			internalRoutesEnabled: false,
+			expectedErrors: []string{
+				`annotations.nginx.org/proxy-pass-headers: Invalid value: "$header2": a valid HTTP header must consist of alphanumeric characters or '-' (e.g. 'X-Header-Name', regex used for validation is '[-A-Za-z0-9]+')`,
+			},
+			msg: "invalid nginx.org/proxy-pass-headers annotation, multi-value containing '$' after valid header",
+		},
 		{
 			annotations: map[string]string{
 				"nginx.org/client-max-body-size": "16M",

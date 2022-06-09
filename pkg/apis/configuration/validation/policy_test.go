@@ -8,12 +8,13 @@ import (
 )
 
 func TestValidatePolicy(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
-		policy                *v1.Policy
-		isPlus                bool
-		enablePreviewPolicies bool
-		enableAppProtect      bool
-		msg                   string
+		policy           *v1.Policy
+		isPlus           bool
+		enableOIDC       bool
+		enableAppProtect bool
+		msg              string
 	}{
 		{
 			policy: &v1.Policy{
@@ -23,9 +24,9 @@ func TestValidatePolicy(t *testing.T) {
 					},
 				},
 			},
-			isPlus:                false,
-			enablePreviewPolicies: false,
-			enableAppProtect:      false,
+			isPlus:           false,
+			enableOIDC:       false,
+			enableAppProtect: false,
 		},
 		{
 			policy: &v1.Policy{
@@ -36,27 +37,28 @@ func TestValidatePolicy(t *testing.T) {
 					},
 				},
 			},
-			isPlus:                true,
-			enablePreviewPolicies: true,
-			enableAppProtect:      false,
-			msg:                   "use jwt(plus only) policy",
+			isPlus:           true,
+			enableOIDC:       false,
+			enableAppProtect: false,
+			msg:              "use jwt(plus only) policy",
 		},
 		{
 			policy: &v1.Policy{
 				Spec: v1.PolicySpec{
 					OIDC: &v1.OIDC{
-						AuthEndpoint:  "https://foo.bar/auth",
-						TokenEndpoint: "https://foo.bar/token",
-						JWKSURI:       "https://foo.bar/certs",
-						ClientID:      "random-string",
-						ClientSecret:  "random-secret",
-						Scope:         "openid",
+						AuthEndpoint:   "https://foo.bar/auth",
+						TokenEndpoint:  "https://foo.bar/token",
+						JWKSURI:        "https://foo.bar/certs",
+						ClientID:       "random-string",
+						ClientSecret:   "random-secret",
+						Scope:          "openid",
+						ZoneSyncLeeway: createPointerFromInt(10),
 					},
 				},
 			},
-			isPlus:                true,
-			enablePreviewPolicies: true,
-			msg:                   "use OIDC (plus only)",
+			isPlus:     true,
+			enableOIDC: true,
+			msg:        "use OIDC (plus only)",
 		},
 		{
 			policy: &v1.Policy{
@@ -66,27 +68,14 @@ func TestValidatePolicy(t *testing.T) {
 					},
 				},
 			},
-			isPlus:                true,
-			enablePreviewPolicies: true,
-			enableAppProtect:      true,
-			msg:                   "use WAF(plus only) policy",
-		},
-		{
-			policy: &v1.Policy{
-				Spec: v1.PolicySpec{
-					WAF: &v1.WAF{
-						Enable: true,
-					},
-				},
-			},
-			isPlus:                true,
-			enablePreviewPolicies: false,
-			enableAppProtect:      true,
-			msg:                   "WAF policy with preview policies disabled",
+			isPlus:           true,
+			enableOIDC:       false,
+			enableAppProtect: true,
+			msg:              "use WAF(plus only) policy",
 		},
 	}
 	for _, test := range tests {
-		err := ValidatePolicy(test.policy, test.isPlus, test.enablePreviewPolicies, test.enableAppProtect)
+		err := ValidatePolicy(test.policy, test.isPlus, test.enableOIDC, test.enableAppProtect)
 		if err != nil {
 			t.Errorf("ValidatePolicy() returned error %v for valid input for the case of %v", err, test.msg)
 		}
@@ -94,21 +83,22 @@ func TestValidatePolicy(t *testing.T) {
 }
 
 func TestValidatePolicyFails(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
-		policy                *v1.Policy
-		isPlus                bool
-		enablePreviewPolicies bool
-		enableAppProtect      bool
-		msg                   string
+		policy           *v1.Policy
+		isPlus           bool
+		enableOIDC       bool
+		enableAppProtect bool
+		msg              string
 	}{
 		{
 			policy: &v1.Policy{
 				Spec: v1.PolicySpec{},
 			},
-			isPlus:                false,
-			enablePreviewPolicies: false,
-			enableAppProtect:      false,
-			msg:                   "empty policy spec",
+			isPlus:           false,
+			enableOIDC:       false,
+			enableAppProtect: false,
+			msg:              "empty policy spec",
 		},
 		{
 			policy: &v1.Policy{
@@ -123,10 +113,10 @@ func TestValidatePolicyFails(t *testing.T) {
 					},
 				},
 			},
-			isPlus:                true,
-			enablePreviewPolicies: true,
-			enableAppProtect:      false,
-			msg:                   "multiple policies in spec",
+			isPlus:           true,
+			enableOIDC:       false,
+			enableAppProtect: false,
+			msg:              "multiple policies in spec",
 		},
 		{
 			policy: &v1.Policy{
@@ -137,10 +127,10 @@ func TestValidatePolicyFails(t *testing.T) {
 					},
 				},
 			},
-			isPlus:                false,
-			enablePreviewPolicies: true,
-			enableAppProtect:      false,
-			msg:                   "jwt(plus only) policy on OSS",
+			isPlus:           false,
+			enableOIDC:       false,
+			enableAppProtect: false,
+			msg:              "jwt(plus only) policy on OSS",
 		},
 		{
 			policy: &v1.Policy{
@@ -150,65 +140,10 @@ func TestValidatePolicyFails(t *testing.T) {
 					},
 				},
 			},
-			isPlus:                false,
-			enablePreviewPolicies: true,
-			enableAppProtect:      false,
-			msg:                   "WAF(plus only) policy on OSS",
-		},
-		{
-			policy: &v1.Policy{
-				Spec: v1.PolicySpec{
-					RateLimit: &v1.RateLimit{
-						Rate:     "10r/s",
-						ZoneSize: "10M",
-						Key:      "${request_uri}",
-					},
-				},
-			},
-			isPlus:                false,
-			enablePreviewPolicies: false,
-			enableAppProtect:      false,
-			msg:                   "rateLimit policy with preview policies disabled",
-		},
-		{
-			policy: &v1.Policy{
-				Spec: v1.PolicySpec{
-					JWTAuth: &v1.JWTAuth{
-						Realm:  "My Product API",
-						Secret: "my-jwk",
-					},
-				},
-			},
-			isPlus:                true,
-			enablePreviewPolicies: false,
-			enableAppProtect:      false,
-			msg:                   "jwt policy with preview policies disabled",
-		},
-		{
-			policy: &v1.Policy{
-				Spec: v1.PolicySpec{
-					IngressMTLS: &v1.IngressMTLS{
-						ClientCertSecret: "mtls-secret",
-					},
-				},
-			},
-			isPlus:                false,
-			enablePreviewPolicies: false,
-			enableAppProtect:      false,
-			msg:                   "ingressMTLS policy with preview policies disabled",
-		},
-		{
-			policy: &v1.Policy{
-				Spec: v1.PolicySpec{
-					EgressMTLS: &v1.EgressMTLS{
-						TLSSecret: "mtls-secret",
-					},
-				},
-			},
-			isPlus:                false,
-			enablePreviewPolicies: false,
-			enableAppProtect:      false,
-			msg:                   "egressMTLS policy with preview policies disabled",
+			isPlus:           false,
+			enableOIDC:       false,
+			enableAppProtect: false,
+			msg:              "WAF(plus only) policy on OSS",
 		},
 		{
 			policy: &v1.Policy{
@@ -223,9 +158,9 @@ func TestValidatePolicyFails(t *testing.T) {
 					},
 				},
 			},
-			isPlus:                true,
-			enablePreviewPolicies: false,
-			msg:                   "OIDC policy with preview policies disabled",
+			isPlus:     true,
+			enableOIDC: false,
+			msg:        "OIDC policy with enable OIDC flag disabled",
 		},
 		{
 			policy: &v1.Policy{
@@ -240,9 +175,9 @@ func TestValidatePolicyFails(t *testing.T) {
 					},
 				},
 			},
-			isPlus:                false,
-			enablePreviewPolicies: true,
-			msg:                   "OIDC policy in OSS",
+			isPlus:     false,
+			enableOIDC: true,
+			msg:        "OIDC policy in OSS",
 		},
 		{
 			policy: &v1.Policy{
@@ -252,14 +187,32 @@ func TestValidatePolicyFails(t *testing.T) {
 					},
 				},
 			},
-			isPlus:                true,
-			enablePreviewPolicies: true,
-			enableAppProtect:      false,
-			msg:                   "WAF policy with AP disabled",
+			isPlus:           true,
+			enableOIDC:       false,
+			enableAppProtect: false,
+			msg:              "WAF policy with AP disabled",
+		},
+		{
+			policy: &v1.Policy{
+				Spec: v1.PolicySpec{
+					OIDC: &v1.OIDC{
+						AuthEndpoint:   "https://foo.bar/auth",
+						TokenEndpoint:  "https://foo.bar/token",
+						JWKSURI:        "https://foo.bar/certs",
+						ClientID:       "random-string",
+						ClientSecret:   "random-secret",
+						Scope:          "openid",
+						ZoneSyncLeeway: createPointerFromInt(-1),
+					},
+				},
+			},
+			isPlus:     true,
+			enableOIDC: true,
+			msg:        "OIDC policy with invalid ZoneSyncLeeway",
 		},
 	}
 	for _, test := range tests {
-		err := ValidatePolicy(test.policy, test.isPlus, test.enablePreviewPolicies, test.enableAppProtect)
+		err := ValidatePolicy(test.policy, test.isPlus, test.enableOIDC, test.enableAppProtect)
 		if err == nil {
 			t.Errorf("ValidatePolicy() returned no error for invalid input")
 		}
@@ -267,6 +220,7 @@ func TestValidatePolicyFails(t *testing.T) {
 }
 
 func TestValidateAccessControl(t *testing.T) {
+	t.Parallel()
 	validInput := []*v1.AccessControl{
 		{
 			Allow: []string{},
@@ -291,6 +245,7 @@ func TestValidateAccessControl(t *testing.T) {
 }
 
 func TestValidateAccessControlFails(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		accessControl *v1.AccessControl
 		msg           string
@@ -332,6 +287,7 @@ func TestValidateAccessControlFails(t *testing.T) {
 }
 
 func TestValidateRateLimit(t *testing.T) {
+	t.Parallel()
 	dryRun := true
 	noDelay := false
 
@@ -384,6 +340,7 @@ func createInvalidRateLimit(f func(r *v1.RateLimit)) *v1.RateLimit {
 }
 
 func TestValidateRateLimitFails(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		rateLimit *v1.RateLimit
 		msg       string
@@ -443,6 +400,7 @@ func TestValidateRateLimitFails(t *testing.T) {
 }
 
 func TestValidateJWT(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		jwt *v1.JWTAuth
 		msg string
@@ -472,6 +430,7 @@ func TestValidateJWT(t *testing.T) {
 }
 
 func TestValidateJWTFails(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		msg string
 		jwt *v1.JWTAuth
@@ -534,6 +493,7 @@ func TestValidateJWTFails(t *testing.T) {
 }
 
 func TestValidateIPorCIDR(t *testing.T) {
+	t.Parallel()
 	validInput := []string{
 		"192.168.1.1",
 		"192.168.1.0/24",
@@ -564,6 +524,7 @@ func TestValidateIPorCIDR(t *testing.T) {
 }
 
 func TestValidateRate(t *testing.T) {
+	t.Parallel()
 	validInput := []string{
 		"10r/s",
 		"100r/m",
@@ -593,6 +554,7 @@ func TestValidateRate(t *testing.T) {
 }
 
 func TestValidatePositiveInt(t *testing.T) {
+	t.Parallel()
 	validInput := []int{1, 2}
 
 	for _, input := range validInput {
@@ -613,6 +575,7 @@ func TestValidatePositiveInt(t *testing.T) {
 }
 
 func TestValidateRateLimitZoneSize(t *testing.T) {
+	t.Parallel()
 	validInput := []string{"32", "32k", "32K", "10m"}
 
 	for _, test := range validInput {
@@ -633,6 +596,7 @@ func TestValidateRateLimitZoneSize(t *testing.T) {
 }
 
 func TestValidateRateLimitLogLevel(t *testing.T) {
+	t.Parallel()
 	validInput := []string{"error", "info", "warn", "notice"}
 
 	for _, test := range validInput {
@@ -653,6 +617,7 @@ func TestValidateRateLimitLogLevel(t *testing.T) {
 }
 
 func TestValidateJWTToken(t *testing.T) {
+	t.Parallel()
 	validTests := []struct {
 		token string
 		msg   string
@@ -715,6 +680,7 @@ func TestValidateJWTToken(t *testing.T) {
 }
 
 func TestValidateIngressMTLS(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		ing *v1.IngressMTLS
 		msg string
@@ -751,6 +717,7 @@ func TestValidateIngressMTLS(t *testing.T) {
 }
 
 func TestValidateIngressMTLSInvalid(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		ing *v1.IngressMTLS
 		msg string
@@ -792,6 +759,7 @@ func TestValidateIngressMTLSInvalid(t *testing.T) {
 }
 
 func TestValidateIngressMTLSVerifyClient(t *testing.T) {
+	t.Parallel()
 	validInput := []string{"on", "off", "optional", "optional_no_ca"}
 
 	for _, test := range validInput {
@@ -812,6 +780,7 @@ func TestValidateIngressMTLSVerifyClient(t *testing.T) {
 }
 
 func TestValidateEgressMTLS(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		eg  *v1.EgressMTLS
 		msg string
@@ -853,6 +822,7 @@ func TestValidateEgressMTLS(t *testing.T) {
 }
 
 func TestValidateEgressMTLSInvalid(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		eg  *v1.EgressMTLS
 		msg string
@@ -894,19 +864,21 @@ func TestValidateEgressMTLSInvalid(t *testing.T) {
 }
 
 func TestValidateOIDCValid(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		oidc *v1.OIDC
 		msg  string
 	}{
 		{
 			oidc: &v1.OIDC{
-				AuthEndpoint:  "https://accounts.google.com/o/oauth2/v2/auth",
-				TokenEndpoint: "https://oauth2.googleapis.com/token",
-				JWKSURI:       "https://www.googleapis.com/oauth2/v3/certs",
-				ClientID:      "random-string",
-				ClientSecret:  "random-secret",
-				Scope:         "openid",
-				RedirectURI:   "/foo",
+				AuthEndpoint:   "https://accounts.google.com/o/oauth2/v2/auth",
+				TokenEndpoint:  "https://oauth2.googleapis.com/token",
+				JWKSURI:        "https://www.googleapis.com/oauth2/v3/certs",
+				ClientID:       "random-string",
+				ClientSecret:   "random-secret",
+				Scope:          "openid",
+				RedirectURI:    "/foo",
+				ZoneSyncLeeway: createPointerFromInt(20),
 			},
 			msg: "verify full oidc",
 		},
@@ -955,6 +927,7 @@ func TestValidateOIDCValid(t *testing.T) {
 }
 
 func TestValidateOIDCInvalid(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		oidc *v1.OIDC
 		msg  string
@@ -1039,6 +1012,18 @@ func TestValidateOIDCInvalid(t *testing.T) {
 			},
 			msg: "invalid chars in clientID",
 		},
+		{
+			oidc: &v1.OIDC{
+				AuthEndpoint:   "http://127.0.0.1:8080/auth/realms/master/protocol/openid-connect/auth",
+				TokenEndpoint:  "http://127.0.0.1:8080/auth/realms/master/protocol/openid-connect/token",
+				JWKSURI:        "http://127.0.0.1:8080/auth/realms/master/protocol/openid-connect/certs",
+				ClientID:       "foobar",
+				ClientSecret:   "secret",
+				Scope:          "openid",
+				ZoneSyncLeeway: createPointerFromInt(-1),
+			},
+			msg: "invalid zoneSyncLeeway value",
+		},
 	}
 
 	for _, test := range tests {
@@ -1050,6 +1035,7 @@ func TestValidateOIDCInvalid(t *testing.T) {
 }
 
 func TestValidateClientID(t *testing.T) {
+	t.Parallel()
 	validInput := []string{"myid", "your.id", "id-sf-sjfdj.com", "foo_bar~vni"}
 
 	for _, test := range validInput {
@@ -1070,6 +1056,7 @@ func TestValidateClientID(t *testing.T) {
 }
 
 func TestValidateOIDCScope(t *testing.T) {
+	t.Parallel()
 	validInput := []string{"openid", "openid+profile", "openid+email", "openid+phone"}
 
 	for _, test := range validInput {
@@ -1090,6 +1077,7 @@ func TestValidateOIDCScope(t *testing.T) {
 }
 
 func TestValidateURL(t *testing.T) {
+	t.Parallel()
 	validInput := []string{"http://google.com/auth", "https://foo.bar/baz", "http://127.0.0.1/bar", "http://openid.connect.com:8080/foo"}
 
 	for _, test := range validInput {
@@ -1110,6 +1098,7 @@ func TestValidateURL(t *testing.T) {
 }
 
 func TestValidateWAF(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		waf *v1.WAF
 		msg string
@@ -1148,6 +1137,7 @@ func TestValidateWAF(t *testing.T) {
 }
 
 func TestValidateWAFInvalid(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		waf *v1.WAF
 		msg string

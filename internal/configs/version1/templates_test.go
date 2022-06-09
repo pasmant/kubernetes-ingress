@@ -18,8 +18,7 @@ var testUps = Upstream{
 	UpstreamZoneSize: "256k",
 	UpstreamServers: []UpstreamServer{
 		{
-			Address:     "127.0.0.1",
-			Port:        "8181",
+			Address:     "127.0.0.1:8181",
 			MaxFails:    0,
 			MaxConns:    0,
 			FailTimeout: "1s",
@@ -40,7 +39,6 @@ var (
 )
 
 var ingCfg = IngressNginxConfig{
-
 	Servers: []Server{
 		{
 			Name:         "test.example.com",
@@ -50,7 +48,7 @@ var ingCfg = IngressNginxConfig{
 				Key:                  "/etc/nginx/secrets/key.jwk",
 				Realm:                "closed site",
 				Token:                "$cookie_auth_token",
-				RedirectLocationName: "@login_url-default-cafe-ingres",
+				RedirectLocationName: "@login_url-default-cafe-ingress",
 			},
 			SSL:               true,
 			SSLCertificate:    "secret.pem",
@@ -118,6 +116,7 @@ var mainCfg = MainConfig{
 }
 
 func TestIngressForNGINXPlus(t *testing.T) {
+	t.Parallel()
 	tmpl, err := template.New(nginxPlusIngressTmpl).Funcs(helperFunctions).ParseFiles(nginxPlusIngressTmpl)
 	if err != nil {
 		t.Fatalf("Failed to parse template file: %v", err)
@@ -133,6 +132,7 @@ func TestIngressForNGINXPlus(t *testing.T) {
 }
 
 func TestIngressForNGINX(t *testing.T) {
+	t.Parallel()
 	tmpl, err := template.New(nginxIngressTmpl).Funcs(helperFunctions).ParseFiles(nginxIngressTmpl)
 	if err != nil {
 		t.Fatalf("Failed to parse template file: %v", err)
@@ -148,6 +148,7 @@ func TestIngressForNGINX(t *testing.T) {
 }
 
 func TestMainForNGINXPlus(t *testing.T) {
+	t.Parallel()
 	tmpl, err := template.New(nginxPlusMainTmpl).ParseFiles(nginxPlusMainTmpl)
 	if err != nil {
 		t.Fatalf("Failed to parse template file: %v", err)
@@ -163,6 +164,7 @@ func TestMainForNGINXPlus(t *testing.T) {
 }
 
 func TestMainForNGINX(t *testing.T) {
+	t.Parallel()
 	tmpl, err := template.New(nginxMainTmpl).ParseFiles(nginxMainTmpl)
 	if err != nil {
 		t.Fatalf("Failed to parse template file: %v", err)
@@ -178,6 +180,7 @@ func TestMainForNGINX(t *testing.T) {
 }
 
 func TestSplitHelperFunction(t *testing.T) {
+	t.Parallel()
 	const tpl = `{{range $n := split . ","}}{{$n}} {{end}}`
 
 	tmpl, err := template.New("testTemplate").Funcs(helperFunctions).Parse(tpl)
@@ -201,6 +204,7 @@ func TestSplitHelperFunction(t *testing.T) {
 }
 
 func TestTrimHelperFunction(t *testing.T) {
+	t.Parallel()
 	const tpl = `{{trim .}}`
 
 	tmpl, err := template.New("testTemplate").Funcs(helperFunctions).Parse(tpl)
