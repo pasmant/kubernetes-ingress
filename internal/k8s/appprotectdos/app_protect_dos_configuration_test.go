@@ -70,7 +70,6 @@ func TestCreateAppProtectDosLogConfEx(t *testing.T) {
 			logConf: &unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"spec": map[string]interface{}{
-						"content": map[string]interface{}{},
 						"filter":  map[string]interface{}{},
 					},
 				},
@@ -86,7 +85,6 @@ func TestCreateAppProtectDosLogConfEx(t *testing.T) {
 			logConf: &unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"spec": map[string]interface{}{
-						"content": map[string]interface{}{},
 					},
 				},
 			},

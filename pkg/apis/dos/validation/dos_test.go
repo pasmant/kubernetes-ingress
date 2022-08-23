@@ -248,7 +248,6 @@ func TestValidateAppProtectDosLogConf(t *testing.T) {
 			logConf: &unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"spec": map[string]interface{}{
-						"content": map[string]interface{}{},
 						"filter":  map[string]interface{}{},
 					},
 				},
@@ -260,18 +259,6 @@ func TestValidateAppProtectDosLogConf(t *testing.T) {
 			logConf: &unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"spec": map[string]interface{}{
-						"filter": map[string]interface{}{},
-					},
-				},
-			},
-			expectErr: true,
-			msg:       "invalid log conf with no content field",
-		},
-		{
-			logConf: &unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"spec": map[string]interface{}{
-						"content": map[string]interface{}{},
 					},
 				},
 			},
@@ -282,7 +269,6 @@ func TestValidateAppProtectDosLogConf(t *testing.T) {
 			logConf: &unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"something": map[string]interface{}{
-						"content": map[string]interface{}{},
 						"filter":  map[string]interface{}{},
 					},
 				},

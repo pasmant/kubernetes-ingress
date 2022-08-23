@@ -19,7 +19,6 @@ var appProtectDosPolicyRequiredFields = [][]string{
 }
 
 var appProtectDosLogConfRequiredFields = [][]string{
-	{"spec", "content"},
 	{"spec", "filter"},
 }
 
