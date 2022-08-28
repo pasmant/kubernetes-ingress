@@ -13,7 +13,7 @@ from suite.custom_resources_utils import (
     delete_dos_policy,
     delete_dos_protected,
 )
-from suite.dos_utils import check_learning_status_with_admd_s, find_in_log, log_content_to_dic
+from suite.dos_utils import check_learning_status_with_admd_s, find_in_log, log_content_to_dic, clean_good_bad_clients
 from suite.resources_utils import (
     clear_file_contents,
     create_example_app,
@@ -100,6 +100,8 @@ def dos_setup(
     :return: DosSetup
     """
 
+    # Clean old scripts if still running
+    clean_good_bad_clients()
     print(f"------------- Replace ConfigMap --------------")
     replace_configmap_from_yaml(
         kube_apis.v1,
@@ -133,6 +135,7 @@ def dos_setup(
         delete_dos_policy(kube_apis.custom_objects, pol_name, test_namespace)
         delete_dos_logconf(kube_apis.custom_objects, log_name, test_namespace)
         delete_dos_protected(kube_apis.custom_objects, protected_name, test_namespace)
+        clean_good_bad_clients()
         # delete_items_from_yaml(kube_apis, src_webapp_yaml, test_namespace)
         # delete_common_app(kube_apis, "dos", test_namespace)
         # write_to_json(f"reload-{get_test_file_name(request.node.fspath)}.json", reload_times)
