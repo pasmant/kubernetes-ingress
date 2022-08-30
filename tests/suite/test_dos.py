@@ -143,6 +143,7 @@ def dos_setup(
                 f"-enable-custom-resources",
                 f"-enable-app-protect-dos",
                 f"-v=3",
+                f"-app-protect-dos-debug",
             ]
         }
     ],
@@ -189,6 +190,10 @@ class TestDos:
 
         delete_items_from_yaml(kube_apis, src_ing_yaml, test_namespace)
 
+        print("\n===================== IC Logs Start =====================")
+        print(kube_apis.v1.read_namespaced_pod_log(pod_name, ingress_controller_prerequisites.namespace))
+        print("\n===================== IC Logs End =====================")
+
         for _ in conf_directive:
             assert _ in result_conf
 
@@ -231,6 +236,10 @@ class TestDos:
         delete_items_from_yaml(kube_apis, src_ing_yaml, test_namespace)
 
         print(log_contents)
+
+        print("\n===================== IC Logs Start =====================")
+        print(kube_apis.v1.read_namespaced_pod_log(pod_name, ingress_controller_prerequisites.namespace))
+        print("\n===================== IC Logs End =====================")
 
         assert 'product="app-protect-dos"' in log_contents
         assert f'vs_name="{test_namespace}/dos-protected/name"' in log_contents
@@ -311,6 +320,11 @@ class TestDos:
 
         log_contents = get_file_contents(kube_apis.v1, log_loc, syslog_pod, ingress_controller_prerequisites.namespace)
         log_info_dic = log_content_to_dic(log_contents)
+
+        print("\n===================== IC Logs Start =====================")
+        pod_name = self.getPodNameThatContains(kube_apis, ingress_controller_prerequisites.namespace, "nginx-ingress")
+        print(kube_apis.v1.read_namespaced_pod_log(pod_name, ingress_controller_prerequisites.namespace))
+        print("\n===================== IC Logs End =====================")
 
         # Analyze the log
         no_attack = False
@@ -420,6 +434,11 @@ class TestDos:
 
         delete_items_from_yaml(kube_apis, src_ing_yaml, test_namespace)
 
+        print("\n===================== IC Logs Start =====================")
+        pod_name = self.getPodNameThatContains(kube_apis, ingress_controller_prerequisites.namespace, "nginx-ingress")
+        print(kube_apis.v1.read_namespaced_pod_log(pod_name, ingress_controller_prerequisites.namespace))
+        print("\n===================== IC Logs End =====================")
+
         assert len(learning_units_hostname) == 2
 
     def test_dos_arbitrator_different_ns(
@@ -528,5 +547,10 @@ class TestDos:
             ingress_controller_prerequisites.namespace,
             f"{TEST_DATA}/dos/nginx-config.yaml",
         )
+
+        print("\n===================== IC Logs Start =====================")
+        pod_name = self.getPodNameThatContains(kube_apis, ingress_controller_prerequisites.namespace, "nginx-ingress")
+        print(kube_apis.v1.read_namespaced_pod_log(pod_name, ingress_controller_prerequisites.namespace))
+        print("\n===================== IC Logs End =====================")
 
         assert len(learning_units_hostname) == 2
