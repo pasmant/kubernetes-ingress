@@ -1,8 +1,9 @@
+import os
+import subprocess
+
 from kubernetes.client import CoreV1Api
 from kubernetes.stream import stream
 from suite.resources_utils import get_file_contents, wait_before_test
-import os
-import subprocess
 
 
 def log_content_to_dic(log_contents):

@@ -13,7 +13,7 @@ from suite.custom_resources_utils import (
     delete_dos_policy,
     delete_dos_protected,
 )
-from suite.dos_utils import check_learning_status_with_admd_s, find_in_log, log_content_to_dic, clean_good_bad_clients
+from suite.dos_utils import check_learning_status_with_admd_s, clean_good_bad_clients, find_in_log, log_content_to_dic
 from suite.resources_utils import (
     clear_file_contents,
     create_dos_arbitrator,
