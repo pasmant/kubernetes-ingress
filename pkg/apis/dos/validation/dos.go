@@ -92,11 +92,15 @@ func validateResourceReference(ref string) error {
 
 // validateDefaultContent log configuration support only splunk format
 func validateAppProtectDosLogConfDefaultContent(obj *unstructured.Unstructured) string {
-    content, _, _ := unstructured.NestedMap(obj.Object, "spec", "content")
-    if content["format"] != "splunk" {
-        unstructured.SetNestedField(obj.Object, "splunk", "spec", "content", "format")
-        return "Support only splunk format"
-    }
+	content, _, _ := unstructured.NestedMap(obj.Object, "spec", "content")
+	if content["format"] != "splunk" {
+		msg := "Support only splunk format"
+		err := unstructured.SetNestedField(obj.Object, "splunk", "spec", "content", "format")
+		if err != nil {
+			msg += ", Change format to splunk failed"
+		}
+		return msg
+	}
 
 	return ""
 }

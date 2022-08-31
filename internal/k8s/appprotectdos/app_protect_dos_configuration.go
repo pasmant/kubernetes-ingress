@@ -120,7 +120,7 @@ func (ci *Configuration) AddOrUpdatePolicy(policyObj *unstructured.Unstructured)
 		problems = append(problems, Problem{Object: policyObj, Reason: "Rejected", Message: err.Error()})
 	}
 
-    changes = append(changes, Change{Op: op, Resource: policy})
+	changes = append(changes, Change{Op: op, Resource: policy})
 
 	protectedResources := ci.GetDosProtectedThatReferencedDosPolicy(resNsName)
 	for _, p := range protectedResources {
@@ -139,11 +139,11 @@ func (ci *Configuration) AddOrUpdateLogConf(logConfObj *unstructured.Unstructure
 	ci.dosLogConfs[resNsName] = logConf
 	op := AddOrUpdate
 	if err != nil {
-        op = Delete
+		op = Delete
 		problems = append(problems, Problem{Object: logConfObj, Reason: "Rejected", Message: err.Error()})
 	}
 
-    changes = append(changes, Change{Op: op, Resource: logConf})
+	changes = append(changes, Change{Op: op, Resource: logConf})
 
 	protectedResources := ci.GetDosProtectedThatReferencedDosLogConf(resNsName)
 	for _, p := range protectedResources {
@@ -372,11 +372,11 @@ func createAppProtectDosLogConfEx(dosLogConfObj *unstructured.Unstructured) (*Do
 		}, err
 	}
 	if warning != "" {
-	    return &DosLogConfEx{
-    			Obj:      dosLogConfObj,
-    			IsValid:  true,
-    			ErrorMsg: warning,
-    		}, nil
+		return &DosLogConfEx{
+			Obj:      dosLogConfObj,
+			IsValid:  true,
+			ErrorMsg: warning,
+		}, nil
 	}
 	return &DosLogConfEx{
 		Obj:     dosLogConfObj,
