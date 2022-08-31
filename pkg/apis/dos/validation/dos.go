@@ -91,7 +91,7 @@ func validateResourceReference(ref string) error {
 }
 
 // validateDefaultContent log configuration support only splunk format
-func validateDefaultContent(obj *unstructured.Unstructured) string {
+func validateAppProtectDosLogConfDefaultContent(obj *unstructured.Unstructured) string {
     content, _, _ := unstructured.NestedMap(obj.Object, "spec", "content")
     if content["format"] != "splunk" {
         unstructured.SetNestedField(obj.Object, "splunk", "spec", "content", "format")
@@ -108,7 +108,7 @@ func ValidateAppProtectDosLogConf(logConf *unstructured.Unstructured) (string, e
 	if err != nil {
 		return "", fmt.Errorf("error validating App Protect Dos Log Configuration %v: %w", lcName, err)
 	}
-	warning := validateDefaultContent(logConf)
+	warning := validateAppProtectDosLogConfDefaultContent(logConf)
 
 	return warning, nil
 }
