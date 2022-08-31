@@ -13,7 +13,13 @@ from suite.custom_resources_utils import (
     delete_dos_policy,
     delete_dos_protected,
 )
-from suite.dos_utils import check_learning_status_with_admd_s, clean_good_bad_clients, find_in_log, log_content_to_dic
+from suite.dos_utils import (
+    check_learning_status_with_admd_s,
+    clean_good_bad_clients,
+    find_in_log,
+    log_content_to_dic,
+    print_admd_log,
+)
 from suite.resources_utils import (
     clear_file_contents,
     create_dos_arbitrator,
@@ -190,10 +196,6 @@ class TestDos:
 
         delete_items_from_yaml(kube_apis, src_ing_yaml, test_namespace)
 
-        print("\n===================== IC Logs Start =====================")
-        print(kube_apis.v1.read_namespaced_pod_log(pod_name, ingress_controller_prerequisites.namespace))
-        print("\n===================== IC Logs End =====================")
-
         for _ in conf_directive:
             assert _ in result_conf
 
@@ -236,10 +238,6 @@ class TestDos:
         delete_items_from_yaml(kube_apis, src_ing_yaml, test_namespace)
 
         print(log_contents)
-
-        print("\n===================== IC Logs Start =====================")
-        print(kube_apis.v1.read_namespaced_pod_log(pod_name, ingress_controller_prerequisites.namespace))
-        print("\n===================== IC Logs End =====================")
 
         assert 'product="app-protect-dos"' in log_contents
         assert f'vs_name="{test_namespace}/dos-protected/name"' in log_contents
@@ -320,11 +318,6 @@ class TestDos:
 
         log_contents = get_file_contents(kube_apis.v1, log_loc, syslog_pod, ingress_controller_prerequisites.namespace)
         log_info_dic = log_content_to_dic(log_contents)
-
-        print("\n===================== IC Logs Start =====================")
-        pod_name = self.getPodNameThatContains(kube_apis, ingress_controller_prerequisites.namespace, "nginx-ingress")
-        print(kube_apis.v1.read_namespaced_pod_log(pod_name, ingress_controller_prerequisites.namespace))
-        print("\n===================== IC Logs End =====================")
 
         # Analyze the log
         no_attack = False
@@ -434,11 +427,6 @@ class TestDos:
 
         delete_items_from_yaml(kube_apis, src_ing_yaml, test_namespace)
 
-        print("\n===================== IC Logs Start =====================")
-        pod_name = self.getPodNameThatContains(kube_apis, ingress_controller_prerequisites.namespace, "nginx-ingress")
-        print(kube_apis.v1.read_namespaced_pod_log(pod_name, ingress_controller_prerequisites.namespace))
-        print("\n===================== IC Logs End =====================")
-
         assert len(learning_units_hostname) == 2
 
     def test_dos_arbitrator_different_ns(
@@ -547,10 +535,5 @@ class TestDos:
             ingress_controller_prerequisites.namespace,
             f"{TEST_DATA}/dos/nginx-config.yaml",
         )
-
-        print("\n===================== IC Logs Start =====================")
-        pod_name = self.getPodNameThatContains(kube_apis, ingress_controller_prerequisites.namespace, "nginx-ingress")
-        print(kube_apis.v1.read_namespaced_pod_log(pod_name, ingress_controller_prerequisites.namespace))
-        print("\n===================== IC Logs End =====================")
 
         assert len(learning_units_hostname) == 2
