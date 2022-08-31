@@ -70,7 +70,8 @@ func TestCreateAppProtectDosLogConfEx(t *testing.T) {
 			logConf: &unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"spec": map[string]interface{}{
-						"content": map[string]interface{}{},
+						"content": map[string]interface{}{
+						    "format": "splunk"},
 						"filter":  map[string]interface{}{},
 					},
 				},
@@ -211,6 +212,11 @@ func TestAddOrUpdateDosPolicy(t *testing.T) {
 			},
 		},
 	}
+
+	basicPolicyResource := &DosPolicyEx{
+	    Obj:      basicTestPolicy,
+        IsValid:  true,
+     }
 	invalidTestPolicy := &unstructured.Unstructured{
 		Object: map[string]interface{}{
 			"metadata": map[string]interface{}{
@@ -245,6 +251,10 @@ func TestAddOrUpdateDosPolicy(t *testing.T) {
 		{
 			policy: basicTestPolicy,
 			expectedChanges: []Change{
+			    {
+                    Resource: basicPolicyResource,
+                    Op: AddOrUpdate,
+                },
 				{
 					Resource: &DosProtectedResourceEx{
 						Obj:     basicResource,
@@ -298,11 +308,16 @@ func TestAddOrUpdateDosLogConf(t *testing.T) {
 				"name":      "testlogconf",
 			},
 			"spec": map[string]interface{}{
-				"content": map[string]interface{}{},
+				"content": map[string]interface{}{
+				    "format": "splunk"},
 				"filter":  map[string]interface{}{},
 			},
 		},
 	}
+    validLogConfResource := &DosLogConfEx{
+        Obj:      validLogConf,
+        IsValid:  true,
+     }
 	invalidLogConf := &unstructured.Unstructured{
 		Object: map[string]interface{}{
 			"metadata": map[string]interface{}{
@@ -345,6 +360,10 @@ func TestAddOrUpdateDosLogConf(t *testing.T) {
 		{
 			logconf: validLogConf,
 			expectedChanges: []Change{
+			    {
+			        Resource: validLogConfResource,
+			        Op: AddOrUpdate,
+			    },
 				{
 					Resource: &DosProtectedResourceEx{
 						Obj:     basicResource,
