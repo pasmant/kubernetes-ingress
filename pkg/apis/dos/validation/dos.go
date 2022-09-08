@@ -19,7 +19,6 @@ var appProtectDosPolicyRequiredFields = [][]string{
 }
 
 var appProtectDosLogConfRequiredFields = [][]string{
-	{"spec", "content"},
 	{"spec", "filter"},
 }
 
@@ -90,15 +89,12 @@ func validateResourceReference(ref string) error {
 	return nil
 }
 
-// validateDefaultContent log configuration support only splunk format
-func validateAppProtectDosLogConfDefaultContent(obj *unstructured.Unstructured) string {
-	content, _, _ := unstructured.NestedMap(obj.Object, "spec", "content")
-	if content["format"] != "splunk" {
-		msg := "Support only splunk format"
-		err := unstructured.SetNestedField(obj.Object, "splunk", "spec", "content", "format")
-		if err != nil {
-			msg += ", Change format to splunk failed"
-		}
+// checkAppProtectDosLogConfContentField check conetent field doesnt appear in dos log
+func checkAppProtectDosLogConfContentField(obj *unstructured.Unstructured) string {
+	_, found, err := unstructured.NestedMap(obj.Object, "spec", "content")
+	if err == nil && found {
+		unstructured.RemoveNestedField(obj.Object, "spec", "content")
+		msg := "Content field doesn't supported, use splunk format."
 		return msg
 	}
 
@@ -112,7 +108,7 @@ func ValidateAppProtectDosLogConf(logConf *unstructured.Unstructured) (string, e
 	if err != nil {
 		return "", fmt.Errorf("error validating App Protect Dos Log Configuration %v: %w", lcName, err)
 	}
-	warning := validateAppProtectDosLogConfDefaultContent(logConf)
+	warning := checkAppProtectDosLogConfContentField(logConf)
 
 	return warning, nil
 }

@@ -249,9 +249,6 @@ func TestValidateAppProtectDosLogConf(t *testing.T) {
 			logConf: &unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"spec": map[string]interface{}{
-						"content": map[string]interface{}{
-							"format": "splunk",
-						},
 						"filter": map[string]interface{}{},
 					},
 				},
@@ -263,21 +260,7 @@ func TestValidateAppProtectDosLogConf(t *testing.T) {
 		{
 			logConf: &unstructured.Unstructured{
 				Object: map[string]interface{}{
-					"spec": map[string]interface{}{
-						"filter": map[string]interface{}{},
-					},
-				},
-			},
-			expectErr:  true,
-			expectWarn: false,
-			msg:        "invalid log conf with no content field",
-		},
-		{
-			logConf: &unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"spec": map[string]interface{}{
-						"content": map[string]interface{}{},
-					},
+					"spec": map[string]interface{}{},
 				},
 			},
 			expectErr:  true,
@@ -288,8 +271,7 @@ func TestValidateAppProtectDosLogConf(t *testing.T) {
 			logConf: &unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"something": map[string]interface{}{
-						"content": map[string]interface{}{},
-						"filter":  map[string]interface{}{},
+						"filter": map[string]interface{}{},
 					},
 				},
 			},
@@ -311,6 +293,21 @@ func TestValidateAppProtectDosLogConf(t *testing.T) {
 			expectErr:  false,
 			expectWarn: true,
 			msg:        "Support only splunk format",
+		},
+		{
+			logConf: &unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"spec": map[string]interface{}{
+						"filter": map[string]interface{}{},
+						"content": map[string]interface{}{
+							"format": "user-defined",
+						},
+					},
+				},
+			},
+			expectErr:  false,
+			expectWarn: true,
+			msg:        "valid log conf with warning filter field",
 		},
 	}
 

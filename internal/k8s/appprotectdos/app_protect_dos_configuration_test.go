@@ -70,9 +70,6 @@ func TestCreateAppProtectDosLogConfEx(t *testing.T) {
 			logConf: &unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"spec": map[string]interface{}{
-						"content": map[string]interface{}{
-							"format": "splunk",
-						},
 						"filter": map[string]interface{}{},
 					},
 				},
@@ -88,8 +85,37 @@ func TestCreateAppProtectDosLogConfEx(t *testing.T) {
 			logConf: &unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"spec": map[string]interface{}{
-						"content": map[string]interface{}{},
+						"content": map[string]interface{}{
+							"format": "splunk",
+						},
+						"filter": map[string]interface{}{},
 					},
+				},
+			},
+			expectedLogConfEx: &DosLogConfEx{
+				IsValid:  true,
+				ErrorMsg: "Content field doesn't supported, use splunk format.",
+			},
+			wantErr: false,
+			msg:     "Valid DosLogConf with warning",
+		},
+		{
+			logConf: &unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"spec": map[string]interface{}{},
+				},
+			},
+			expectedLogConfEx: &DosLogConfEx{
+				IsValid:  true,
+				ErrorMsg: "Content field doesn't supported, use splunk format.",
+			},
+			wantErr: false,
+			msg:     "Valid DosLogConf with warning",
+		},
+		{
+			logConf: &unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"spec": map[string]interface{}{},
 				},
 			},
 			expectedLogConfEx: &DosLogConfEx{
@@ -309,9 +335,6 @@ func TestAddOrUpdateDosLogConf(t *testing.T) {
 				"name":      "testlogconf",
 			},
 			"spec": map[string]interface{}{
-				"content": map[string]interface{}{
-					"format": "splunk",
-				},
 				"filter": map[string]interface{}{},
 			},
 		},
@@ -326,9 +349,7 @@ func TestAddOrUpdateDosLogConf(t *testing.T) {
 				"namespace": "testing",
 				"name":      "invalid-logconf",
 			},
-			"spec": map[string]interface{}{
-				"content": map[string]interface{}{},
-			},
+			"spec": map[string]interface{}{},
 		},
 	}
 	basicResource := &v1beta1.DosProtectedResource{
