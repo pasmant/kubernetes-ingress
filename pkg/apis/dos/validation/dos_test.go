@@ -250,7 +250,8 @@ func TestValidateAppProtectDosLogConf(t *testing.T) {
 				Object: map[string]interface{}{
 					"spec": map[string]interface{}{
 						"content": map[string]interface{}{
-							"format": "splunk"},
+							"format": "splunk",
+						},
 						"filter": map[string]interface{}{},
 					},
 				},
@@ -301,7 +302,8 @@ func TestValidateAppProtectDosLogConf(t *testing.T) {
 				Object: map[string]interface{}{
 					"spec": map[string]interface{}{
 						"content": map[string]interface{}{
-							"format": "user-defined"},
+							"format": "user-defined",
+						},
 						"filter": map[string]interface{}{},
 					},
 				},

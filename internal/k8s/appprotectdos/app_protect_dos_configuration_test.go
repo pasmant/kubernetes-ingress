@@ -71,7 +71,8 @@ func TestCreateAppProtectDosLogConfEx(t *testing.T) {
 				Object: map[string]interface{}{
 					"spec": map[string]interface{}{
 						"content": map[string]interface{}{
-							"format": "splunk"},
+							"format": "splunk",
+						},
 						"filter": map[string]interface{}{},
 					},
 				},
@@ -309,7 +310,8 @@ func TestAddOrUpdateDosLogConf(t *testing.T) {
 			},
 			"spec": map[string]interface{}{
 				"content": map[string]interface{}{
-					"format": "splunk"},
+					"format": "splunk",
+				},
 				"filter": map[string]interface{}{},
 			},
 		},
