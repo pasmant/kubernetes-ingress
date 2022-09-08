@@ -106,19 +106,6 @@ func TestCreateAppProtectDosLogConfEx(t *testing.T) {
 				},
 			},
 			expectedLogConfEx: &DosLogConfEx{
-				IsValid:  true,
-				ErrorMsg: "Content field doesn't supported, use splunk format.",
-			},
-			wantErr: false,
-			msg:     "Valid DosLogConf with warning",
-		},
-		{
-			logConf: &unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"spec": map[string]interface{}{},
-				},
-			},
-			expectedLogConfEx: &DosLogConfEx{
 				IsValid:  false,
 				ErrorMsg: "failed to store ApDosLogconf: error validating App Protect Dos Log Configuration : required field map[] not found",
 			},
