@@ -142,9 +142,6 @@ def dos_setup(
         delete_dos_logconf(kube_apis.custom_objects, log_name, test_namespace)
         delete_dos_protected(kube_apis.custom_objects, protected_name, test_namespace)
         clean_good_bad_clients()
-        # delete_items_from_yaml(kube_apis, src_webapp_yaml, test_namespace)
-        # delete_common_app(kube_apis, "dos", test_namespace)
-        # write_to_json(f"reload-{get_test_file_name(request.node.fspath)}.json", reload_times)
 
     request.addfinalizer(fin)
 
