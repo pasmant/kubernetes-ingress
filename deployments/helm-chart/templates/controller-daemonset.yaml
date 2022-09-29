@@ -153,7 +153,7 @@ spec:
           - -nginx-configmaps=$(POD_NAMESPACE)/{{ include "nginx-ingress.configName" . }}
 {{- if .Values.controller.defaultTLS.secret }}
           - -default-server-tls-secret={{ .Values.controller.defaultTLS.secret }}
-{{ else }}
+{{ else if and (.Values.controller.defaultTLS.cert) (.Values.controller.defaultTLS.key) }}
           - -default-server-tls-secret=$(POD_NAMESPACE)/{{ include "nginx-ingress.defaultTLSName" . }}
 {{- end }}
           - -ingress-class={{ .Values.controller.ingressClass }}
@@ -216,11 +216,11 @@ spec:
 {{- if .Values.controller.initContainers }}
       initContainers: {{ toYaml .Values.controller.initContainers | nindent 8 }}
 {{- end }}
-{{- end }}
 {{- if .Values.controller.strategy }}
   updateStrategy:
 {{ toYaml .Values.controller.strategy | indent 4 }}
 {{- end }}
 {{- if .Values.controller.minReadySeconds }}
   minReadySeconds: {{ .Values.controller.minReadySeconds }}
+{{- end }}
 {{- end }}
