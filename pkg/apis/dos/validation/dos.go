@@ -94,7 +94,7 @@ func checkAppProtectDosLogConfContentField(obj *unstructured.Unstructured) strin
 	_, found, err := unstructured.NestedMap(obj.Object, "spec", "content")
 	if err == nil && found {
 		unstructured.RemoveNestedField(obj.Object, "spec", "content")
-		msg := "Content field doesn't supported, use splunk format."
+		msg := "the content field is not supported, defaulting to splunk format."
 		return msg
 	}
 

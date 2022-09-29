@@ -94,7 +94,7 @@ func TestCreateAppProtectDosLogConfEx(t *testing.T) {
 			},
 			expectedLogConfEx: &DosLogConfEx{
 				IsValid:  true,
-				ErrorMsg: "Content field doesn't supported, use splunk format.",
+				ErrorMsg: "the content field is not supported, defaulting to splunk format.",
 			},
 			wantErr: false,
 			msg:     "Valid DosLogConf with warning",
