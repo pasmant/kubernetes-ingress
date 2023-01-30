@@ -10,7 +10,7 @@ urllib3==1.26.12
 pytest-html==3.1.1
 pytest-profiling==1.7.0
 more-itertools==8.14.0
-mock==4.0.3
+mock==5.0.1
 grpcio==1.47.0
 grpcio-tools==1.47.0
 flaky==3.7.0
