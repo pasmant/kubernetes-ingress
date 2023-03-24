@@ -55,7 +55,7 @@ jobs:
         run: |
           echo "::set-output name=k8s_latest::$(grep -m1 'FROM kindest/node' <tests/docker/Dockerfile | awk -F'[:v]' '{print $3}')"
       - name: Setup Golang Environment
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v4
         with:
           go-version-file: go.mod
           cache: true
@@ -84,7 +84,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Setup Golang Environment
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v4
         with:
           go-version-file: go.mod
           cache: true
@@ -112,7 +112,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
       - name: Setup Golang Environment
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v4
         with:
           go-version-file: go.mod
           cache: true
@@ -245,7 +245,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Setup Golang Environment
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v4
         with:
           go-version-file: go.mod
           cache: true
