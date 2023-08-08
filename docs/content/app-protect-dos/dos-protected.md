@@ -32,7 +32,7 @@ spec:
 {{% table %}}
 |Field | Description | Type | Required |
 | ---| ---| ---| --- |
-|``enable`` | Enables NGINX App Protect DoS. | ``bool`` | No |
+|``enable`` | Enables NGINX App Protect DoS, Default value: false. | ``bool`` | No |
 |``name`` | Name of the protected object, max of 63 characters. | ``string`` | Yes |
 |``dosAccessLogDest`` | The log destination for the access log with dos log format. Accepted variables are ``syslog:server=<ip-address &#124; localhost &#124; dns-name>:<port>``, ``stderr``, ``<absolute path to file>``. | ``string`` | No |
 |``apDosMonitor.uri`` | The destination to the desired protected object. [App Protect DoS monitor](#dosprotectedresourceapdosmonitor) Default value: None, URL will be extracted from the first request which arrives and taken from "Host" header or from destination ip+port. | ``string`` | No |
