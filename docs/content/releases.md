@@ -7,6 +7,26 @@ toc: true
 docs: "DOCS-616"
 ---
 
+## NGINX Ingress Controller 3.2.1
+
+17 Aug 2023
+
+CHANGES:
+
+- Update NGINX version to 1.25.2.
+- Update NGINX Plus version to R30.
+- Update Go to 1.21 and Go dependencies.
+
+HELM CHART:
+
+- The version of the Helm chart is now 0.18.1.
+
+UPGRADE:
+
+- For NGINX, use the 3.2.1 images from our [DockerHub](https://hub.docker.com/r/nginx/nginx-ingress/tags?page=1&ordering=last_updated&name=3.2.1), [GitHub Container](https://github.com/nginxinc/kubernetes-ingress/pkgs/container/kubernetes-ingress), [Amazon ECR Public Gallery](https://gallery.ecr.aws/nginx/nginx-ingress) or [Quay.io](https://quay.io/repository/nginx/nginx-ingress).
+- For NGINX Plus, use the 3.2.1 images from the F5 Container registry, the [AWS Marketplace](https://aws.amazon.com/marketplace/search/?CREATOR=741df81b-dfdc-4d36-b8da-945ea66b522c&FULFILLMENT_OPTION_TYPE=CONTAINER&filters=CREATOR%2CFULFILLMENT_OPTION_TYPE), the [GCP Marketplace](https://console.cloud.google.com/marketplace/browse?filter=partner:F5,%20Inc.&filter=solution-type:k8s&filter=category:networking) or build your own image using the 3.2.1 source code
+- For Helm, use version 0.18.1 of the chart.
+
 ## NGINX Ingress Controller 3.2.0
 
 27 June 2023
@@ -28,7 +48,7 @@ FIXES:
 - [3798](https://github.com/nginxinc/kubernetes-ingress/pull/3798) Update VirtualServer template to generate an internal jwt auth location per policy applied.
 - [3844](https://github.com/nginxinc/kubernetes-ingress/pull/3844) Fix gunzip support for VS and add python tests.
 - [3870](https://github.com/nginxinc/kubernetes-ingress/pull/3870) Add Funcs() method to UpdateVirtualServerTemplate method. Thanks to [Bryan Hendryx](https://github.com/coolbry95).
-- [3933](https://github.com/nginxinc/kubernetes-ingress/pull/3933) fix --enternal-service flag when using serviceNameOverride. Thanks to [Tim N](https://github.com/timnee).
+- [3933](https://github.com/nginxinc/kubernetes-ingress/pull/3933) fix --external-service flag when using serviceNameOverride. Thanks to [Tim N](https://github.com/timnee).
 
 CHANGES:
 
@@ -348,7 +368,7 @@ FEATURES:
 - [2914](https://github.com/nginxinc/kubernetes-ingress/pull/2914) Support watching multiple namespaces.
 - [2884](https://github.com/nginxinc/kubernetes-ingress/pull/2884) Include year in logs.
 - [2993](https://github.com/nginxinc/kubernetes-ingress/pull/2993) Accept proxy protocol when TLS passthrough enabled.
-- [3041](https://github.com/nginxinc/kubernetes-ingress/pull/3041) Support external name service for TansportServer.
+- [3041](https://github.com/nginxinc/kubernetes-ingress/pull/3041) Support external name service for TransportServer.
 - [2939](https://github.com/nginxinc/kubernetes-ingress/pull/2939) Add support for wildcard hostname in VirtualServer.
 
 IMPROVEMENTS:

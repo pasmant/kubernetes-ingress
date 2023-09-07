@@ -30,7 +30,7 @@ Run the below command to generate a ConfigMap with the contents of the `oidc.con
 **NOTE** The ConfigMap must be deployed in the same `namespace` as the F5 NGINX Ingress Controller.
 
 ```console
-kubectl create configmap oidc-config-map --from-literal=oidc.conf="$(curl -k https://raw.githubusercontent.com/nginxinc/kubernetes-ingress/v3.2.0/internal/configs/oidc/oidc.conf)"
+kubectl create configmap oidc-config-map --from-literal=oidc.conf="$(curl -k https://raw.githubusercontent.com/nginxinc/kubernetes-ingress/v3.2.1/internal/configs/oidc/oidc.conf)"
 ```
 
 Use the `kubectl describe` command to confirm the contents of the ConfigMap are correct.
@@ -61,7 +61,7 @@ oidc.conf:
     # Rest of configuration file truncated
 ```
 
-## Step 2 - Customising the default configuration
+## Step 2 - Customizing the default configuration
 
 Once the contents of the `oidc.conf` file has been added to the ConfigMap, you are free to customize the contents of this ConfigMap.
 This example demonstrates adding a comment to the top of the file. The comment will be shown at the top of the `oidc.conf` file.
