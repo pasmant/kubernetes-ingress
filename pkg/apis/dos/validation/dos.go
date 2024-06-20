@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"net"
 
 	validation2 "github.com/nginxinc/kubernetes-ingress/pkg/apis/configuration/validation"
 	"github.com/nginxinc/kubernetes-ingress/pkg/apis/dos/v1beta1"
@@ -40,6 +41,13 @@ func ValidateDosProtectedResource(protected *v1beta1.DosProtectedResource) error
 		err = validateAppProtectDosMonitor(*protected.Spec.ApDosMonitor)
 		if err != nil {
 			return fmt.Errorf("error validating DosProtectedResource: %v invalid field: %v err: %w", protected.Name, "apDosMonitor", err)
+		}
+	}
+
+	if protected.Spec.AllowList != nil {
+		err = ValidateAppProtectDosAllowList(protected.Spec.AllowList)
+		if err != nil {
+			return fmt.Errorf("error validating DosProtectedResource: %v invalid field: %v err: %w", protected.Name, "allowList", err)
 		}
 	}
 
@@ -188,4 +196,19 @@ func ValidateAppProtectDosPolicy(policy *unstructured.Unstructured) error {
 	}
 
 	return nil
+}
+
+func ValidateAppProtectDosAllowList(allowList []v1beta1.AllowListEntry) error {
+	for _, entry := range allowList {
+		ipValid := isValidIPWithMask(entry.IPWithMask)
+		if !ipValid {
+			return fmt.Errorf("Invalid IP with subnet mask: %s", entry.IPWithMask)
+		}
+	}
+	return nil
+}
+
+func isValidIPWithMask(ipWithMask string) bool {
+	_, _, err := net.ParseCIDR(ipWithMask)
+	return err == nil
 }
