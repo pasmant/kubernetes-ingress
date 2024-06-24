@@ -4554,6 +4554,7 @@ func TestGenerateVirtualServerConfigForVirtualServerRoutesWithDos(t *testing.T) 
 			AppProtectDosName:            "my-dos-juice",
 			AppProtectDosAccessLogDst:    "svc.dns.com:123",
 			AppProtectDosPolicyFile:      "",
+			AppProtectDosLogConfFile:     "",
 			AppProtectDosAllowListPath:   "/etc/nginx/dos/allowlist/default_juice",
 		},
 	}
