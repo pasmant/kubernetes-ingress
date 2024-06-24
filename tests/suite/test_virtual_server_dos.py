@@ -241,7 +241,7 @@ class TestDos:
             f"app_protect_dos_security_log_enable on;",
             f"app_protect_dos_security_log /etc/nginx/dos/logconfs/{test_namespace}_{dos_setup.log_name}.json syslog:server=syslog-svc.{ingress_controller_prerequisites.namespace}.svc.cluster.local:514;",
             f"access_log syslog:server=accesslog-svc.{ingress_controller_prerequisites.namespace}.svc.cluster.local:514 log_dos if=$loggable;",
-            f"app_protect_dos_access_file \"/etc/nginx/dos/allowlist/{test_namespace}_{dos_setup.protected_name}.json\";"
+            f'app_protect_dos_access_file "/etc/nginx/dos/allowlist/{test_namespace}_{dos_setup.protected_name}.json";',
         ]
 
         print("\n confirm response for standard request")

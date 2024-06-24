@@ -181,7 +181,7 @@ class TestDos:
             f"app_protect_dos_security_log /etc/nginx/dos/logconfs/{test_namespace}_{dos_setup.log_name}.json syslog:server=syslog-svc.{ingress_controller_prerequisites.namespace}.svc.cluster.local:514;",
             f"set $loggable '0';",
             f"access_log syslog:server=accesslog-svc.{ingress_controller_prerequisites.namespace}.svc.cluster.local:514 log_dos if=$loggable;",
-            f"app_protect_dos_access_file \"/etc/nginx/dos/allowlist/{test_namespace}_{dos_setup.protected_name}.json\";"
+            f'app_protect_dos_access_file "/etc/nginx/dos/allowlist/{test_namespace}_{dos_setup.protected_name}.json";',
         ]
 
         conf_nginx_directive = ["app_protect_dos_api on;", "location = /dashboard-dos.html"]
@@ -251,7 +251,9 @@ class TestDos:
         retry = 0
         while 'product="app-protect-dos"' not in log_contents and retry < 20:
             wait_before_test(1)
-            log_contents = get_file_contents(kube_apis.v1, log_loc, syslog_pod, ingress_controller_prerequisites.namespace, print_log=False)
+            log_contents = get_file_contents(
+                kube_apis.v1, log_loc, syslog_pod, ingress_controller_prerequisites.namespace, print_log=False
+            )
             retry += 1
 
         print(log_contents)
@@ -260,7 +262,6 @@ class TestDos:
 
         assert f'vs_name="{test_namespace}/dos-protected/name"' in log_contents
         assert "bad_actor" in log_contents
-
 
     def test_dos_allowlist(
         self, kube_apis, ingress_controller_prerequisites, crd_ingress_controller_with_dos, dos_setup, test_namespace
@@ -281,14 +282,18 @@ class TestDos:
 
         print("----------------------- Send request to check allowlist ----------------------")
         wait_before_test(5)
-        response = requests.get(dos_setup.req_url, headers={"host": "dos.example.com", "X-Forwarded-For": "10.10.10.10"}, verify=False)
+        response = requests.get(
+            dos_setup.req_url, headers={"host": "dos.example.com", "X-Forwarded-For": "10.10.10.10"}, verify=False
+        )
         print(response.text)
 
         retry = 0
         log_contents = ""
         while 'reason=AllowList"' not in log_contents and retry < 20:
             wait_before_test(1)
-            log_contents = get_file_contents(kube_apis.v1, log_loc, accesslog_pod, ingress_controller_prerequisites.namespace, print_log=False)
+            log_contents = get_file_contents(
+                kube_apis.v1, log_loc, accesslog_pod, ingress_controller_prerequisites.namespace, print_log=False
+            )
             retry += 1
 
         delete_items_from_yaml(kube_apis, src_ing_yaml, test_namespace)
@@ -296,7 +301,6 @@ class TestDos:
         print(log_contents)
 
         assert "reason=Allowlist" in log_contents
-
 
     @pytest.mark.dos_learning
     def test_dos_under_attack_with_learning(
