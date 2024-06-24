@@ -1673,11 +1673,11 @@ func (cnf *Configurator) updateApResources(ingEx *IngressEx) *AppProtectResource
 
 func (cnf *Configurator) updateDosResource(dosEx *DosEx) {
 	if dosEx != nil {
-	    if dosEx.DosProtected != nil {
-            allowListFileName := appProtectDosAllowListFileName(dosEx.DosProtected.GetNamespace(), dosEx.DosProtected.GetName())
-            allowListContent := generateApDosAllowListFileContent(dosEx.DosProtected.Spec.AllowList)
-            cnf.nginxManager.CreateAppProtectResourceFile(allowListFileName, allowListContent)
-        }
+		if dosEx.DosProtected != nil {
+			allowListFileName := appProtectDosAllowListFileName(dosEx.DosProtected.GetNamespace(), dosEx.DosProtected.GetName())
+			allowListContent := generateApDosAllowListFileContent(dosEx.DosProtected.Spec.AllowList)
+			cnf.nginxManager.CreateAppProtectResourceFile(allowListFileName, allowListContent)
+		}
 		if dosEx.DosPolicy != nil {
 			policyFileName := appProtectDosPolicyFileName(dosEx.DosPolicy.GetNamespace(), dosEx.DosPolicy.GetName())
 			policyContent := generateApResourceFileContent(dosEx.DosPolicy)
@@ -1756,25 +1756,25 @@ func generateApDosAllowListFileContent(allowList []v1beta1.AllowListEntry) []byt
 	}
 
 	ipAddresses := make([]IPAddress, len(allowList))
-    for i, entry := range allowList {
-        ipAddresses[i] = IPAddress{IPAddress: entry.IPWithMask}
-    }
+	for i, entry := range allowList {
+		ipAddresses[i] = IPAddress{IPAddress: entry.IPWithMask}
+	}
 
 	allowListPolicy := AllowListPolicy{
-        Policy: Policy{
-            IPAddressLists: []IPAddressList{
-                {
-                    IPAddresses:   ipAddresses,
-                    BlockRequests: "transparent",
-                },
-            },
-        },
-    }
+		Policy: Policy{
+			IPAddressLists: []IPAddressList{
+				{
+					IPAddresses:   ipAddresses,
+					BlockRequests: "transparent",
+				},
+			},
+		},
+	}
 
-    data, err := json.Marshal(allowListPolicy)
-    if err != nil {
-        return nil
-    }
+	data, err := json.Marshal(allowListPolicy)
+	if err != nil {
+		return nil
+	}
 
 	return data
 }

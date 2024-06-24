@@ -2467,13 +2467,13 @@ func TestGenerateNginxCfgForMergeableIngressesForAppProtectDos(t *testing.T) {
 	isPlus := true
 	configParams := NewDefaultConfigParams(isPlus)
 	dosResource := &appProtectDosResource{
-		AppProtectDosEnable:       "on",
-		AppProtectDosName:         "dos.example.com",
-		AppProtectDosMonitorURI:   "monitor-name",
-		AppProtectDosAccessLogDst: "access-log-dest",
-		AppProtectDosPolicyFile:   "/etc/nginx/dos/policies/default_policy",
-		AppProtectDosLogEnable:    true,
-		AppProtectDosLogConfFile:  "/etc/nginx/dos/logconfs/default_logconf syslog:server=127.0.0.1:514",
+		AppProtectDosEnable:        "on",
+		AppProtectDosName:          "dos.example.com",
+		AppProtectDosMonitorURI:    "monitor-name",
+		AppProtectDosAccessLogDst:  "access-log-dest",
+		AppProtectDosPolicyFile:    "/etc/nginx/dos/policies/default_policy",
+		AppProtectDosLogEnable:     true,
+		AppProtectDosLogConfFile:   "/etc/nginx/dos/logconfs/default_logconf syslog:server=127.0.0.1:514",
 		AppProtectDosAllowListPath: "/etc/nginx/dos/allowlist/default_dos",
 	}
 	staticCfgParams := &StaticConfigParams{

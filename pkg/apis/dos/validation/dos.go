@@ -2,11 +2,11 @@ package validation
 
 import (
 	"fmt"
+	"net"
 	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
-	"net"
 
 	validation2 "github.com/nginxinc/kubernetes-ingress/pkg/apis/configuration/validation"
 	"github.com/nginxinc/kubernetes-ingress/pkg/apis/dos/v1beta1"

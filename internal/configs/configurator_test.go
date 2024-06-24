@@ -1,10 +1,11 @@
 package configs
 
 import (
+	"encoding/json"
 	"os"
 	"reflect"
 	"testing"
-    "encoding/json"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/prometheus/client_golang/prometheus"
 	networking "k8s.io/api/networking/v1"
@@ -1654,62 +1655,62 @@ var (
 )
 
 func TestGenerateApDosAllowListFileContent(t *testing.T) {
-    tests := []struct {
-        name       string
-        allowList  []v1beta1.AllowListEntry
-        want       []byte
-        wantErr    bool
-    }{
-        {
-            name:      "Empty allow list",
-            allowList: []v1beta1.AllowListEntry{},
-            want: []byte(`{"policy":{"ip-address-lists":[{"ipAddresses":[],"blockRequests":"transparent"}]}}`),
-            wantErr: false,
-        },
-        {
-            name: "Single valid IPv4 entry",
-            allowList: []v1beta1.AllowListEntry{
-                {IPWithMask: "192.168.1.1/32"},
-            },
-            want: []byte(`{"policy":{"ip-address-lists":[{"ipAddresses":[{"ipAddress":"192.168.1.1/32"}],"blockRequests":"transparent"}]}}`),
-            wantErr: false,
-        },
-        {
-            name: "Single valid IPv6 entry",
-            allowList: []v1beta1.AllowListEntry{
-                {IPWithMask: "2001:0db8:85a3:0000:0000:8a2e:0370:7334/128"},
-            },
-            want: []byte(`{"policy":{"ip-address-lists":[{"ipAddresses":[{"ipAddress":"2001:0db8:85a3:0000:0000:8a2e:0370:7334/128"}],"blockRequests":"transparent"}]}}`),
-            wantErr: false,
-        },
-        {
-            name: "Multiple valid entries",
-            allowList: []v1beta1.AllowListEntry{
-                {IPWithMask: "192.168.1.1/32"},
-                {IPWithMask: "2001:0db8:85a3:0000:0000:8a2e:0370:7334/128"},
-            },
-            want: []byte(`{"policy":{"ip-address-lists":[{"ipAddresses":[{"ipAddress":"192.168.1.1/32"},{"ipAddress":"2001:0db8:85a3:0000:0000:8a2e:0370:7334/128"}],"blockRequests":"transparent"}]}}`),
-            wantErr: false,
-        },
-    }
+	tests := []struct {
+		name      string
+		allowList []v1beta1.AllowListEntry
+		want      []byte
+		wantErr   bool
+	}{
+		{
+			name:      "Empty allow list",
+			allowList: []v1beta1.AllowListEntry{},
+			want:      []byte(`{"policy":{"ip-address-lists":[{"ipAddresses":[],"blockRequests":"transparent"}]}}`),
+			wantErr:   false,
+		},
+		{
+			name: "Single valid IPv4 entry",
+			allowList: []v1beta1.AllowListEntry{
+				{IPWithMask: "192.168.1.1/32"},
+			},
+			want:    []byte(`{"policy":{"ip-address-lists":[{"ipAddresses":[{"ipAddress":"192.168.1.1/32"}],"blockRequests":"transparent"}]}}`),
+			wantErr: false,
+		},
+		{
+			name: "Single valid IPv6 entry",
+			allowList: []v1beta1.AllowListEntry{
+				{IPWithMask: "2001:0db8:85a3:0000:0000:8a2e:0370:7334/128"},
+			},
+			want:    []byte(`{"policy":{"ip-address-lists":[{"ipAddresses":[{"ipAddress":"2001:0db8:85a3:0000:0000:8a2e:0370:7334/128"}],"blockRequests":"transparent"}]}}`),
+			wantErr: false,
+		},
+		{
+			name: "Multiple valid entries",
+			allowList: []v1beta1.AllowListEntry{
+				{IPWithMask: "192.168.1.1/32"},
+				{IPWithMask: "2001:0db8:85a3:0000:0000:8a2e:0370:7334/128"},
+			},
+			want:    []byte(`{"policy":{"ip-address-lists":[{"ipAddresses":[{"ipAddress":"192.168.1.1/32"},{"ipAddress":"2001:0db8:85a3:0000:0000:8a2e:0370:7334/128"}],"blockRequests":"transparent"}]}}`),
+			wantErr: false,
+		},
+	}
 
-    for _, tt := range tests {
-        t.Run(tt.name, func(t *testing.T) {
-            got := generateApDosAllowListFileContent(tt.allowList)
-            if (got == nil) != tt.wantErr {
-                t.Errorf("generateApDosAllowListFileContent() error = %v, wantErr %v", got == nil, tt.wantErr)
-                return
-            }
-            if !tt.wantErr && !reflect.DeepEqual(got, tt.want) {
-                var gotFormatted, wantFormatted interface{}
-                if err := json.Unmarshal(got, &gotFormatted); err != nil {
-                    t.Errorf("Failed to unmarshal got: %v", err)
-                }
-                if err := json.Unmarshal(tt.want, &wantFormatted); err != nil {
-                    t.Errorf("Failed to unmarshal want: %v", err)
-                }
-                t.Errorf("generateApDosAllowListFileContent() = \n%#v, \nwant \n%#v", gotFormatted, wantFormatted)
-            }
-        })
-    }
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := generateApDosAllowListFileContent(tt.allowList)
+			if (got == nil) != tt.wantErr {
+				t.Errorf("generateApDosAllowListFileContent() error = %v, wantErr %v", got == nil, tt.wantErr)
+				return
+			}
+			if !tt.wantErr && !reflect.DeepEqual(got, tt.want) {
+				var gotFormatted, wantFormatted interface{}
+				if err := json.Unmarshal(got, &gotFormatted); err != nil {
+					t.Errorf("Failed to unmarshal got: %v", err)
+				}
+				if err := json.Unmarshal(tt.want, &wantFormatted); err != nil {
+					t.Errorf("Failed to unmarshal want: %v", err)
+				}
+				t.Errorf("generateApDosAllowListFileContent() = \n%#v, \nwant \n%#v", gotFormatted, wantFormatted)
+			}
+		})
+	}
 }
