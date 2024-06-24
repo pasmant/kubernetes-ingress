@@ -198,6 +198,7 @@ func ValidateAppProtectDosPolicy(policy *unstructured.Unstructured) error {
 	return nil
 }
 
+// ValidateAppProtectDosAllowList validates AllowList if all IP and Mask are correct
 func ValidateAppProtectDosAllowList(allowList []v1beta1.AllowListEntry) error {
 	for _, entry := range allowList {
 		ipValid := isValidIPWithMask(entry.IPWithMask)
