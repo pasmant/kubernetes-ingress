@@ -3245,6 +3245,10 @@ func (lbc *LoadBalancerController) createVirtualServerEx(virtualServer *conf_v1.
 	if err != nil {
 		glog.Warningf("Error getting OIDC secrets for VirtualServer %v/%v: %v", virtualServer.Namespace, virtualServer.Name, err)
 	}
+	err = lbc.addAPIKeySecretRefs(virtualServerEx.SecretRefs, policies)
+	if err != nil {
+		glog.Warningf("Error getting APIKey secrets for VirtualServer %v/%v: %v", virtualServer.Namespace, virtualServer.Name, err)
+	}
 
 	err = lbc.addWAFPolicyRefs(virtualServerEx.ApPolRefs, virtualServerEx.LogConfRefs, policies)
 	if err != nil {
@@ -3368,6 +3372,12 @@ func (lbc *LoadBalancerController) createVirtualServerEx(virtualServer *conf_v1.
 		if err != nil {
 			glog.Warningf("Error getting OIDC secrets for VirtualServer %v/%v: %v", virtualServer.Namespace, virtualServer.Name, err)
 		}
+
+		err = lbc.addAPIKeySecretRefs(virtualServerEx.SecretRefs, vsRoutePolicies)
+		if err != nil {
+			glog.Warningf("Error getting APIKey secrets for VirtualServer %v/%v: %v", virtualServer.Namespace, virtualServer.Name, err)
+		}
+
 	}
 
 	for _, vsr := range virtualServerRoutes {
@@ -3396,6 +3406,11 @@ func (lbc *LoadBalancerController) createVirtualServerEx(virtualServer *conf_v1.
 			err = lbc.addOIDCSecretRefs(virtualServerEx.SecretRefs, vsrSubroutePolicies)
 			if err != nil {
 				glog.Warningf("Error getting OIDC secrets for VirtualServerRoute %v/%v: %v", vsr.Namespace, vsr.Name, err)
+			}
+
+			err = lbc.addAPIKeySecretRefs(virtualServerEx.SecretRefs, vsrSubroutePolicies)
+			if err != nil {
+				glog.Warningf("Error getting APIKey secrets for VirtualServerRoute %v/%v: %v", vsr.Namespace, vsr.Name, err)
 			}
 
 			err = lbc.addWAFPolicyRefs(virtualServerEx.ApPolRefs, virtualServerEx.LogConfRefs, vsrSubroutePolicies)
@@ -3651,6 +3666,25 @@ func (lbc *LoadBalancerController) addOIDCSecretRefs(secretRefs map[string]*secr
 	return nil
 }
 
+func (lbc *LoadBalancerController) addAPIKeySecretRefs(secretRefs map[string]*secrets.SecretReference, policies []*conf_v1.Policy) error {
+	for _, pol := range policies {
+		if pol.Spec.APIKey == nil {
+			continue
+		}
+
+		secretKey := fmt.Sprintf("%v/%v", pol.Namespace, pol.Spec.APIKey.ClientSecret)
+		secretRef := lbc.secretStore.GetSecret(secretKey)
+
+		secretRefs[secretKey] = secretRef
+
+		if secretRef.Error != nil {
+			return secretRef.Error
+		}
+
+	}
+	return nil
+}
+
 // addWAFPolicyRefs ensures the app protect resources that are referenced in policies exist.
 func (lbc *LoadBalancerController) addWAFPolicyRefs(
 	apPolRef, logConfRef map[string]*unstructured.Unstructured,
@@ -3728,6 +3762,8 @@ func findPoliciesForSecret(policies []*conf_v1.Policy, secretNamespace string, s
 		} else if pol.Spec.EgressMTLS != nil && pol.Spec.EgressMTLS.TrustedCertSecret == secretName && pol.Namespace == secretNamespace {
 			res = append(res, pol)
 		} else if pol.Spec.OIDC != nil && pol.Spec.OIDC.ClientSecret == secretName && pol.Namespace == secretNamespace {
+			res = append(res, pol)
+		} else if pol.Spec.APIKey != nil && pol.Spec.APIKey.ClientSecret == secretName && pol.Namespace == secretNamespace {
 			res = append(res, pol)
 		}
 	}
