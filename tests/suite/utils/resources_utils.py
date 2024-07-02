@@ -296,6 +296,14 @@ def wait_until_all_pods_are_ready(v1: CoreV1Api, namespace) -> None:
         wait_before_test()
         counter = counter + 1
     if counter >= 300:
+        print("\n===================== IC Logs Start =====================")
+        try:
+            pod_name = get_pod_name_that_contains(kube_apis.v1, "nginx-ingress", "nginx-ingress")
+            logs = kube_apis.v1.read_namespaced_pod_log(pod_name, "nginx-ingress")
+            print(logs)
+        except:
+            print("Failed to load logs for nginx-ingress pod")
+        print("\n===================== IC Logs End =====================")
         raise PodNotReadyException()
     print("All pods are Ready")
 
@@ -938,32 +946,6 @@ def get_file_contents(v1: CoreV1Api, file_path, pod_name, pod_namespace, print_l
     return result_conf
 
 
-def clear_file_contents(v1: CoreV1Api, file_path, pod_name, pod_namespace) -> str:
-    """
-    Execute 'truncate -s 0 file_path' command in a pod.
-
-    :param v1: CoreV1Api
-    :param pod_name: pod name
-    :param pod_namespace: pod namespace
-    :param file_path: an absolute path to a file in the pod
-    :return: str
-    """
-    command = ["truncate", "-s", "0", file_path]
-    resp = stream(
-        v1.connect_get_namespaced_pod_exec,
-        pod_name,
-        pod_namespace,
-        command=command,
-        stderr=True,
-        stdin=False,
-        stdout=True,
-        tty=False,
-    )
-    result_conf = str(resp)
-
-    return result_conf
-
-
 def nginx_reload(v1: CoreV1Api, pod_name, pod_namespace) -> str:
     """
     Execute 'nginx -s reload' command in a pod.
@@ -1595,7 +1577,7 @@ def ensure_response_from_backend(req_url, host, additional_headers=None, check40
             if resp.status_code != 502 and resp.status_code != 504:
                 print(f"After {_} retries at 1 second interval, got non 502|504 response. Continue with tests...")
                 return
-            time.sleep(1)
+            wait_before_test()
         pytest.fail(f"Keep getting 502|504 from {req_url} after 60 seconds. Exiting...")
 
 
