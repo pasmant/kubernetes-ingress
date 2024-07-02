@@ -278,7 +278,7 @@ class TestDos:
 
         print("------------------------- Deploy ingress -----------------------------")
         create_ingress_with_dos_annotations(kube_apis, src_ing_yaml, test_namespace, test_namespace + "/dos-protected")
-        ingress_host = get_first_ingress_host_from_yaml(src_ing_yaml)
+        get_first_ingress_host_from_yaml(src_ing_yaml)
 
         print("----------------------- Send request to check allowlist ----------------------")
         wait_before_test(5)
