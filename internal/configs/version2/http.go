@@ -287,6 +287,7 @@ type HealthCheck struct {
 	Mandatory           bool
 	Persistent          bool
 	KeepaliveTime       string
+	IsGRPC              bool
 }
 
 // TLSRedirect defines a redirect in a Server.
